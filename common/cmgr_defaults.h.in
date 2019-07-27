@@ -1,0 +1,87 @@
+/* cmgr_defaults.h
+ *
+ * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the sale,
+ * use or other dealings in this Software without prior written
+ * authorization.
+ */
+
+#ifndef CMGR_DEFAULTS_H
+
+#define CMGR_VERSION "@version@"
+#define CMGR_CONFIG_DIRECTORY "@config_dir@"
+
+#ifndef CMGR_CONFIG_FILE_NAME
+#define CMGR_CONFIG_FILE_NAME "crashmanager.conf"
+#endif
+
+#ifndef CMGR_USER_NAME
+#define CMGR_USER_NAME "root"
+#endif
+
+#ifndef CMGR_GROUP_NAME
+#define CMGR_GROUP_NAME "root"
+#endif
+
+#ifndef CMGR_CRASHDUMP_DIR
+#define CMGR_CRASHDUMP_DIR "var/cache/crashmanager/crashdumps"
+#endif
+
+#ifndef CMGR_ELEVATED_NICE_VALUE
+#define CMGR_ELEVATED_NICE_VALUE (-19)
+#endif
+
+#ifndef CMGR_DATABASE_FILE
+#define CMGR_DATABASE_FILE "/var/coredumper/coredumps.info"
+#endif
+
+#ifndef CMGR_RUN_DIR
+#define CMGR_RUN_DIR "/run/crashmanager"
+#endif
+
+#ifndef CMGR_KDUMPSOURCE_DIR
+#define CMGR_KDUMPSOURCE_DIR "/var/dumps"
+#endif
+
+#ifndef CMGR_CRASHDUMP_DIR_MIN_SIZE
+#define CMGR_CRASHDUMP_DIR_MIN_SIZE (100)
+#endif
+
+#ifndef CMGR_CRASHDUMP_DIR_MAX_SIZE
+#define CMGR_CRASHDUMP_MAX_SIZE (512)
+#endif
+
+#ifndef CMGR_CRASHFILES_MAX_COUNT
+#define CMGR_CRASHFILES_MAX_COUNT (10)
+#endif
+
+#ifndef CMGR_IPC_SOCK_ADDR
+#define CMGR_IPC_SOCK_ADDR ".cdmipc.sock"
+#endif
+
+#ifndef CMGR_IPC_TIMEOUT_SEC
+#define CMGR_IPC_TIMEOUT_SEC (15)
+#endif
+
+#endif /* CMGR_DEFAULTS_H */

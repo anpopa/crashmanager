@@ -1,0 +1,7 @@
+option('WITH_LXC', type : 'boolean', value : false, description : 'Build LXC support for context mapping')
+option('WITH_SYSTEMD', type : 'boolean', value : true, description : 'Build systemd support service watchdog')
+option('WITH_GENIVI', type : 'boolean', value : false, description : 'Use GENIVI infrustructure for logging and lifecycle')
+option('WITH_DEBUG_ATTACH', type : 'boolean', value : false, description : 'Stop crashhandler in main for debugging')
+option('WITH_TESTS', type : 'boolean', value : false, description : 'Build unit tests')
+option('WITH_CRASHTEST', type : 'boolean', value : true, description : 'Build crashtest application')
+option('WITH_SANITIZER', type : 'boolean', value : false, description : 'Build components with ASAN')
