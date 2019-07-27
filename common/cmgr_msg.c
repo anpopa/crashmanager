@@ -28,6 +28,7 @@
  */
 
 #include "cmgr_msg.h"
+
 #include <assert.h>
 #include <memory.h>
 #include <stdint.h>

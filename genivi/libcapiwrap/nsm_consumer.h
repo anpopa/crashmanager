@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#include "cdh_types.h"
+#include "cmgr_types.h"
 #include <assert.h>
 #include <errno.h>
 #include <memory.h>
@@ -70,11 +70,11 @@ typedef struct nsm_consumer {
     void *private_data; /**< Reference to private data object */
 
     void (*proxy_availability_cb)(void *client, lifecycle_proxy_state_t state,
-                                  cdh_status_t error); /**< Proxy availability callback */
+                                  int error); /**< Proxy availability callback */
     void (*registration_state_cb)(void *client, lifecycle_registration_state_t state,
-                                  cdh_status_t error); /**< Registration state callback */
+                                  int error); /**< Registration state callback */
     void (*session_state_cb)(void *client, lifecycle_session_state_t state,
-                             cdh_status_t error); /**< Session state callback */
+                             int error); /**< Session state callback */
 } nsm_consumer_t;
 
 /**
@@ -107,7 +107,7 @@ void nsm_consumer_set_client(nsm_consumer_t *n, void *client);
 void nsm_consumer_set_proxy_cb(nsm_consumer_t *n,
                                void (*proxy_availability_cb)(void *client,
                                                              lifecycle_proxy_state_t state,
-                                                             cdh_status_t error));
+                                                             int error));
 
 /**
  * @brief Callback setter for NSM registration status
@@ -116,8 +116,7 @@ void nsm_consumer_set_proxy_cb(nsm_consumer_t *n,
  */
 void nsm_consumer_set_registration_cb(
     nsm_consumer_t *n,
-    void (*registration_state_cb)(void *client, lifecycle_registration_state_t state,
-                                  cdh_status_t error));
+    void (*registration_state_cb)(void *client, lifecycle_registration_state_t state, int error));
 
 /**
  * @brief Callback setter for NSM session status
@@ -127,7 +126,7 @@ void nsm_consumer_set_registration_cb(
 void nsm_consumer_set_session_cb(nsm_consumer_t *n,
                                  void (*session_state_cb)(void *client,
                                                           lifecycle_session_state_t state,
-                                                          cdh_status_t error));
+                                                          int error));
 
 /**
  * @brief Lifecycle proxy state getter
@@ -178,7 +177,7 @@ void nsm_consumer_set_registration_state(nsm_consumer_t *n, lifecycle_registrati
  * @param n A pointer to the nsm_consumer object
  * @return The status of the request
  */
-cdh_status_t nsm_consumer_build_proxy(nsm_consumer_t *n);
+int nsm_consumer_build_proxy(nsm_consumer_t *n);
 
 /**
  * @brief Request NSM consumer to register.
@@ -187,7 +186,7 @@ cdh_status_t nsm_consumer_build_proxy(nsm_consumer_t *n);
  * @param n A pointer to the nsm_consumer object
  * @return The status of the request
  */
-cdh_status_t nsm_consumer_register(nsm_consumer_t *n);
+int nsm_consumer_register(nsm_consumer_t *n);
 
 /**
  * @brief Request NSM consumer a new state.
@@ -196,7 +195,7 @@ cdh_status_t nsm_consumer_register(nsm_consumer_t *n);
  * @param n A pointer to the nsm_consumer object
  * @return The status of the request
  */
-cdh_status_t nsm_consumer_request_state(nsm_consumer_t *n, lifecycle_session_state_t state);
+int nsm_consumer_request_state(nsm_consumer_t *n, lifecycle_session_state_t state);
 
 #ifdef __cplusplus
 }

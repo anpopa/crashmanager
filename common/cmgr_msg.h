@@ -27,7 +27,6 @@
  * authorization.
  */
 
-
 #ifndef CMGR_MSG_H
 #define CMGR_MSG_H
 

@@ -10,6 +10,7 @@
  */
 
 #include "nsm_consumer.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <memory.h>
@@ -56,19 +57,19 @@ typedef struct lifecycle_data {
  * @param session_name The consumer NSM session name
  * @param session_owner The consumer NSM session owner
  *
- * @return CDH_OK on success and CDH_NOK on failure
+ * @return (0) on success and (-1) on failure
  */
-static cdh_status_t init_lifecycle_data(lifecycle_data_t *l, const char *session_name,
-                                        const char *session_owner);
+static int init_lifecycle_data(lifecycle_data_t *l, const char *session_name,
+                               const char *session_owner);
 
 /**
  * @brief Deinitialize lifecycle data
  *
  * @param l A pointer to the lifecycle object
  *
- * @return CDH_OK on success and CDH_NOK on failure
+ * @return (0) on success and (-1) on failure
  */
-static cdh_status_t deinit_lifecycle_data(lifecycle_data_t *l);
+static int deinit_lifecycle_data(lifecycle_data_t *l);
 
 /**
  * @brief Async callback to be used for set session state call
@@ -124,7 +125,7 @@ nsm_consumer_t *nsm_consumer_new(const char *session_name, const char *session_o
     }
 
     if (init_lifecycle_data(static_cast<lifecycle_data_t *>(n->private_data), session_name,
-                            session_owner) != CDH_OK) {
+                            session_owner) != (0)) {
         delete static_cast<lifecycle_data_t *>(n->private_data);
         free(n);
 
@@ -154,7 +155,7 @@ void nsm_consumer_set_client(nsm_consumer_t *n, void *client)
 void nsm_consumer_set_proxy_cb(nsm_consumer_t *n,
                                void (*proxy_availability_cb)(void *client,
                                                              lifecycle_proxy_state_t state,
-                                                             cdh_status_t error))
+                                                             int error))
 {
     assert(n);
     n->proxy_availability_cb = proxy_availability_cb;
@@ -162,8 +163,7 @@ void nsm_consumer_set_proxy_cb(nsm_consumer_t *n,
 
 void nsm_consumer_set_registration_cb(
     nsm_consumer_t *n,
-    void (*registration_state_cb)(void *client, lifecycle_registration_state_t state,
-                                  cdh_status_t error))
+    void (*registration_state_cb)(void *client, lifecycle_registration_state_t state, int error))
 {
     assert(n);
     n->registration_state_cb = registration_state_cb;
@@ -172,7 +172,7 @@ void nsm_consumer_set_registration_cb(
 void nsm_consumer_set_session_cb(nsm_consumer_t *n,
                                  void (*session_state_cb)(void *client,
                                                           lifecycle_session_state_t state,
-                                                          cdh_status_t error))
+                                                          int error))
 {
     assert(n);
     n->session_state_cb = session_state_cb;
@@ -250,9 +250,9 @@ void nsm_consumer_set_registration_state(nsm_consumer_t *n, lifecycle_registrati
     d->registration_state = state;
 }
 
-cdh_status_t nsm_consumer_build_proxy(nsm_consumer_t *n)
+int nsm_consumer_build_proxy(nsm_consumer_t *n)
 {
-    cdh_status_t status = CDH_OK;
+    int status = (0);
     lifecycle_data_t *d = nullptr;
 
     assert(n);
@@ -263,12 +263,12 @@ cdh_status_t nsm_consumer_build_proxy(nsm_consumer_t *n)
     std::shared_ptr<CommonAPI::Runtime> runtime = CommonAPI::Runtime::get();
 
     if (runtime == nullptr) {
-        status = CDH_NOK;
+        status = (-1);
     } else {
         d->consumer_proxy =
             runtime->buildProxy<NSM::ConsumerProxy>("local", NSM::Consumer_NSMConsumer, "Consumer");
         if (d->consumer_proxy == nullptr) {
-            status = CDH_NOK;
+            status = (-1);
         } else {
             using namespace std::placeholders;
             d->subscription = d->consumer_proxy->getProxyStatusEvent().subscribe(
@@ -279,9 +279,9 @@ cdh_status_t nsm_consumer_build_proxy(nsm_consumer_t *n)
     return status;
 }
 
-cdh_status_t nsm_consumer_register(nsm_consumer_t *n)
+int nsm_consumer_register(nsm_consumer_t *n)
 {
-    cdh_status_t status = CDH_OK;
+    int status = (0);
     lifecycle_data_t *d = nullptr;
 
     assert(n);
@@ -300,15 +300,15 @@ cdh_status_t nsm_consumer_register(nsm_consumer_t *n)
                                                    : NSMSessionState::NsmSessionState_Inactive),
             std::bind(&register_session_listener, n, _1, _2), &info);
     } else {
-        status = CDH_NOK;
+        status = (-1);
     }
 
     return status;
 }
 
-cdh_status_t nsm_consumer_request_state(nsm_consumer_t *n, lifecycle_session_state state)
+int nsm_consumer_request_state(nsm_consumer_t *n, lifecycle_session_state state)
 {
-    cdh_status_t status = CDH_OK;
+    int status = (0);
     lifecycle_data_t *d = nullptr;
 
     assert(n);
@@ -336,16 +336,16 @@ cdh_status_t nsm_consumer_request_state(nsm_consumer_t *n, lifecycle_session_sta
                 &info);
         }
     } else {
-        status = CDH_NOK;
+        status = (-1);
     }
 
     return status;
 }
 
-static cdh_status_t init_lifecycle_data(lifecycle_data_t *d, const char *session_name,
-                                        const char *session_owner)
+static int init_lifecycle_data(lifecycle_data_t *d, const char *session_name,
+                               const char *session_owner)
 {
-    cdh_status_t status = CDH_OK;
+    int status = (0);
 
     assert(d);
 
@@ -358,9 +358,9 @@ static cdh_status_t init_lifecycle_data(lifecycle_data_t *d, const char *session
     return status;
 }
 
-static cdh_status_t deinit_lifecycle_data(lifecycle_data_t *d)
+static int deinit_lifecycle_data(lifecycle_data_t *d)
 {
-    cdh_status_t status = CDH_OK;
+    int status = (0);
 
     assert(d);
 
@@ -377,16 +377,16 @@ static cdh_status_t deinit_lifecycle_data(lifecycle_data_t *d)
 
             if (call_status == CommonAPI::CallStatus::SUCCESS) {
                 if (error_status != NSMTypes::NsmErrorStatus_e::NsmErrorStatus_Ok) {
-                    status = CDH_NOK;
+                    status = (-1);
                 }
             } else {
-                status = CDH_NOK;
+                status = (-1);
             }
         }
 
         d->consumer_proxy->getProxyStatusEvent().unsubscribe(d->subscription);
     } else {
-        status = CDH_NOK;
+        status = (-1);
     }
 
     return status;
@@ -396,20 +396,20 @@ static void session_state_listener(nsm_consumer_t *n, const CommonAPI::CallStatu
                                    const NSMErrorState error_status, NSMSessionState session_state)
 {
     lifecycle_session_state_t state = LC_SESSION_INACTIVE;
-    cdh_status_t error = CDH_OK;
+    int error = (0);
 
     assert(n);
 
     if (call_status == CommonAPI::CallStatus::SUCCESS) {
         if (error_status != NSMTypes::NsmErrorStatus_e::NsmErrorStatus_Ok) {
-            error = CDH_NOK;
+            error = (-1);
         } else {
             state =
                 (session_state == NSMSessionState::NsmSessionState_Active ? LC_SESSION_ACTIVE
                                                                           : LC_SESSION_INACTIVE);
         }
     } else {
-        error = CDH_NOK;
+        error = (-1);
     }
 
     if (n->session_state_cb != NULL) {
@@ -421,7 +421,7 @@ static void register_session_listener(nsm_consumer_t *n, const CommonAPI::CallSt
                                       const NSMErrorState error_status)
 {
     lifecycle_registration_state_t state = LC_UNREGISTERED;
-    cdh_status_t error = CDH_OK;
+    int error = (0);
 
     assert(n);
 
@@ -432,7 +432,7 @@ static void register_session_listener(nsm_consumer_t *n, const CommonAPI::CallSt
             state = LC_REGISTERED;
         }
     } else {
-        error = CDH_NOK;
+        error = (-1);
     }
 
     if (n->registration_state_cb != NULL) {
@@ -458,6 +458,6 @@ static void proxy_availability_listener(nsm_consumer_t *n, CommonAPI::Availabili
     }
 
     if (n->proxy_availability_cb != NULL) {
-        n->proxy_availability_cb(n->client, state, CDH_OK);
+        n->proxy_availability_cb(n->client, state, (0));
     }
 }
