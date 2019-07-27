@@ -1,4 +1,4 @@
-/* cmgr_msg.c
+/* cdm_msg.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,7 +27,7 @@
  * authorization.
  */
 
-#include "cmgr_msg.h"
+#include "cdm_msg.h"
 
 #include <assert.h>
 #include <memory.h>
@@ -36,17 +36,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void cmgr_msg_init(cmgr_msg_t *m, cmgr_msgtype_t type, uint16_t session)
+void cdm_msg_init(CdmMsg *m, CdmMsgType type, uint16 session)
 {
     assert(m);
 
-    memset(m, 0, sizeof(cmgr_msg_t));
+    memset(m, 0, sizeof(cdm_msg));
     m->hdr.type = type;
-    m->hdr.hsh = CMGR_MSG_START_HASH;
+    m->hdr.hsh = CDM_MSG_START_HASH;
     m->hdr.session = session;
 }
 
-void cmgr_msg_set_data(cmgr_msg_t *m, void *data, uint32_t size)
+void cdm_msg_set_data(CdmMsg *m, void *data, uint32 size)
 {
     assert(m);
     assert(data);
@@ -55,7 +55,7 @@ void cmgr_msg_set_data(cmgr_msg_t *m, void *data, uint32_t size)
     m->data = data;
 }
 
-void cmgr_msg_free_data(cmgr_msg_t *m)
+void cdm_msg_free_data(CdmMsg *m)
 {
     assert(m);
 
@@ -64,73 +64,73 @@ void cmgr_msg_free_data(cmgr_msg_t *m)
     }
 }
 
-bool cmgr_msg_is_valid(cmgr_msg_t *m)
+bool cdm_msg_is_valid(CdmMsg *m)
 {
     if (m == NULL) {
         return false;
     }
 
-    if (m->hdr.hsh != CMGR_MSG_START_HASH) {
+    if (m->hdr.hsh != CDM_MSG_START_HASH) {
         return false;
     }
 
     return true;
 }
 
-cmgr_msgtype_t cmgr_msg_get_type(cmgr_msg_t *m)
+CdmMsgType cdm_msg_getype(CdmMsg *m)
 {
     assert(m);
     return m->hdr.type;
 }
 
-int cmgr_msg_set_version(cmgr_msg_t *m, const char *version)
+CdmStatus cdm_msg_set_version(CdmMsg *m, const char *version)
 {
     assert(m);
 
-    snprintf((char *)m->hdr.version, CMGR_VERSION_STRING_LEN, "%s", version);
+    snprintf((char *)m->hdr.version, CDM_VERSION_STRING_LEN, "%s", version);
 
-    return (0);
+    return CDM_OK;
 }
 
-int cmgr_msg_read(int fd, cmgr_msg_t *m)
+CdmStatus cdm_msg_read(int fd, CdmMsg *m)
 {
-    ssize_t sz;
+    ssize sz;
 
     assert(m);
 
-    sz = read(fd, &m->hdr, sizeof(cmgr_msghdr_t));
+    sz = read(fd, &m->hdr, sizeof(CdmMsgHdr));
 
-    if (sz != sizeof(cmgr_msghdr_t) || !cmgr_msg_is_valid(m)) {
-        return (-1);
+    if (sz != sizeof(CdmMsgHdr) || !cdm_msg_is_valid(m)) {
+        return CDM_ERROR;
     }
 
     m->data = calloc(1, m->hdr.data_size);
     if (m->data == NULL) {
-        return (-1);
+        return CDM_ERROR;
     }
 
     sz = read(fd, m->data, m->hdr.data_size);
 
-    return sz == m->hdr.data_size ? (0) : (-1);
+    return sz == m->hdr.data_size ? CDM_OK : CDM_ERROR;
 }
 
-int cmgr_msg_write(int fd, cmgr_msg_t *m)
+CdmStatus cdm_msg_write(int fd, CdmMsg *m)
 {
-    ssize_t sz;
+    ssize sz;
 
     assert(m);
 
-    if (!cmgr_msg_is_valid(m)) {
-        return (-1);
+    if (!cdm_msg_is_valid(m)) {
+        return CDM_ERROR;
     }
 
-    sz = write(fd, &m->hdr, sizeof(cmgr_msghdr_t));
+    sz = write(fd, &m->hdr, sizeof(CdmMsgHdr));
 
-    if (sz != sizeof(cmgr_msghdr_t)) {
-        return (-1);
+    if (sz != sizeof(CdmMsgHdr)) {
+        return CDM_ERROR;
     }
 
     sz = write(fd, m->data, m->hdr.data_size);
 
-    return sz == m->hdr.data_size ? (0) : (-1);
+    return sz == m->hdr.data_size ? CDM_OK : CDM_ERROR;
 }

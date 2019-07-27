@@ -1,3 +1,0 @@
-# Use coredumper as default coredump handler
-
-kernel.core_pattern=|@CMAKE_INSTALL_PREFIX@/bin/coredumper %t %P %p %s %e

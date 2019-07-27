@@ -10,7 +10,7 @@ Wants=dlt-system.service
 
 [Service]
 Type=simple
-ExecStart=@CMAKE_INSTALL_PREFIX@/bin/coremanager
+ExecStart=@install_prefix@/bin/crashmanager
 WatchdogSec=30
 
 [Install]

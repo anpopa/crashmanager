@@ -1,4 +1,4 @@
-/* cmgr_msgtyp.c
+/* cdm_msgtyp.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,8 +27,8 @@
  * authorization.
  */
 
-#ifndef CMGR_MSGTYP_H
-#define CMGR_MSGTYP_H
+#ifndef CDM_MSGTYP_H
+#define CDM_MSGTYP_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,69 +37,68 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CMGR_BUILDTIME_VERSION "@version@"
-#define CMGR_MSG_START_HASH (0xECDE)
+#define CDM_BUILDTIME_VERSION "@version@"
+#define CDM_MSG_START_HASH (0xECDE)
 
-#define CMGR_MSG_PROCNAME_LEN (32)
-#define CMGR_MSG_FILENAME_LEN (256)
-#define CMGR_CRASHID_LEN (32)
-#define CMGR_CRASHCONTEXT_LEN (32)
-#define CMGR_VERSION_STRING_LEN (8)
+#define CDM_MSG_PROCNAME_LEN (32)
+#define CDM_MSG_FILENAME_LEN (256)
+#define CDM_CRASHID_LEN (32)
+#define CDM_CRASHCONTEXT_LEN (32)
+#define CDM_VERSION_STRING_LEN (8)
 
-#ifndef CMGR_MSG_PACKED
-#define CMGR_MSG_PACKED __attribute__((aligned(1), packed))
+#ifndef CDM_MSG_PACKED
+#define CDM_MSG_PACKED __attribute__((aligned(1), packed))
 #endif
 
-typedef enum cmgr_msgtype {
-    CMGR_CORE_UNKNOWN,
-    CMGR_CORE_NEW,
-    CMGR_CORE_UPDATE,
-    CMGR_CORE_COMPLETE,
-    CMGR_CORE_FAILED,
-    CMGR_MSG_CHAR,
-    CMGR_MSG_RAW
-} cmgr_msgtype_t;
+typedef enum _CdmMsgType {
+    CDM_CORE_UNKNOWN,
+    CDM_CORE_NEW,
+    CDM_CORE_UPDATE,
+    CDM_CORE_COMPLETE,
+    CDM_CORE_FAILED,
+    CDM_MSG_CHAR,
+    CDM_MSG_RAW
+} cdm_msgtype;
 
-typedef struct cmgr_corenew {
+typedef struct _CdmCoreNew {
     int pid;
     int coresig;
-    uint64_t tstamp;
-    char pname[CMGR_MSG_PROCNAME_LEN];
-    char tname[CMGR_MSG_PROCNAME_LEN];
-} cmgr_corenew_t;
+    uint64 tstamp;
+    char pname[CDM_MSG_PROCNAME_LEN];
+    char tname[CDM_MSG_PROCNAME_LEN];
+} CdmCoreNew;
 
-typedef struct cmgr_coreupdate {
-    char crashid[CMGR_CRASHID_LEN];
-    char vectorid[CMGR_CRASHID_LEN];
-    char contextid[CMGR_CRASHCONTEXT_LEN];
-} cmgr_coreupdate_t;
+typedef struct _CdmCoreUpdate {
+    char crashid[CDM_CRASHID_LEN];
+    char vectorid[CDM_CRASHID_LEN];
+    char contextid[CDM_CRASHCONTEXT_LEN];
+} CdmCoreUpdate;
 
-typedef struct cmgr_corecomplete {
-    char core_file[CMGR_MSG_FILENAME_LEN];
-    char context_file[CMGR_MSG_FILENAME_LEN];
-} cmgr_corecomplete_t;
+typedef struct _CdmCoreComplete {
+    char core_file[CDM_MSG_FILENAME_LEN];
+} CdmCoreComplete;
 
-typedef union cmgr_msg_data {
-    cmgr_corenew_t regnew;
-    cmgr_coreupdate_t update;
-    cmgr_corecomplete_t complete;
-} cmgr_msgdata_t;
+typedef union _CdmMsgData {
+    CdmCoreNew regnew;
+    CdmCoreUpdate update;
+    CdmCoreComplete complete;
+} CdmMsgData;
 
-typedef struct cmgr_msghdr {
-    uint16_t hsh;
-    uint16_t session;
-    uint8_t version[CMGR_VERSION_STRING_LEN];
-    cmgr_msgtype_t type;
-    uint32_t data_size;
-} CMGR_MSG_PACKED cmgr_msghdr_t;
+typedef struct _CdmMsgHdr {
+    uint16 hsh;
+    uint16 session;
+    uint8 version[CDM_VERSION_STRING_LEN];
+    CdmMsgType type;
+    uint32 data_size;
+} CDM_MSG_PACKED CdmMsgHdr;
 
-typedef struct cmgr_msg {
-    cmgr_msghdr_t hdr;
+typedef struct _CdmMsg {
+    CdmMsgHdr hdr;
     void *data;
-} CMGR_MSG_PACKED cmgr_msg_t;
+} CDM_MSG_PACKED CdmMsg;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CMGR_MSGTYP_H */
+#endif /* CDM_MSGTYP_H */

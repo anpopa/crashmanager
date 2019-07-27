@@ -1,4 +1,4 @@
-/* cmgr_msg.h
+/* cdm_msg.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,15 +27,16 @@
  * authorization.
  */
 
-#ifndef CMGR_MSG_H
-#define CMGR_MSG_H
+#ifndef CDM_MSG_H
+#define CDM_MSG_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "cmgr_msgtyp.h"
-#include "cmgr_types.h"
+#include "cdm_msgtyp.h"
+#include "cdm_types.h"
+
 
 /*
  * @brief Initialize a pre-allocated mesage object
@@ -44,7 +45,7 @@ extern "C" {
  * @param type The message type
  * @param session Unique session identifier
  */
-void cmgr_msg_init(cmgr_msg_t *m, cmgr_msgtype_t type, uint16_t session);
+void cdm_msg_init(CdmMsg *m, CdmMsgType type, uint16 session);
 
 /*
  * @brief Message data setter
@@ -53,7 +54,7 @@ void cmgr_msg_init(cmgr_msg_t *m, cmgr_msgtype_t type, uint16_t session);
  * @param data The message data to set
  * @param size The message data size
  */
-void cmgr_msg_set_data(cmgr_msg_t *m, void *data, uint32_t size);
+void cdm_msg_set_data(CdmMsg *m, void *data, uint32 size);
 
 /*
  * @brief Message data free
@@ -62,19 +63,19 @@ void cmgr_msg_set_data(cmgr_msg_t *m, void *data, uint32_t size);
  *
  * @param m The message object
  */
-void cmgr_msg_free_data(cmgr_msg_t *m);
+void cdm_msg_free_data(CdmMsg *m);
 
 /*
  * @brief Validate if the message object is consistent
  * @param m The message object
  */
-bool cmgr_msg_is_valid(cmgr_msg_t *m);
+bool cdm_msg_is_valid(CdmMsg *m);
 
 /*
  * @brief Get message type
  * @param m The message object
  */
-cmgr_msgtype_t cmgr_msg_get_type(cmgr_msg_t *m);
+CdmMsgType cdm_msg_getype(CdmMsg *m);
 
 /*
  * @brief Set message version
@@ -82,9 +83,9 @@ cmgr_msgtype_t cmgr_msg_get_type(cmgr_msg_t *m);
  * @param m The message object
  * @param version Version string
  *
- * @return (0) on success, (-1) otherwise
+ * @return CDM_OK on success, CDM_NOK otherwise
  */
-int cmgr_msg_set_version(cmgr_msg_t *m, const char *version);
+CdmStatus cdm_msg_set_version(CdmMsg *m, const char *version);
 
 /*
  * @brief Read data into message object
@@ -94,9 +95,9 @@ int cmgr_msg_set_version(cmgr_msg_t *m, const char *version);
  * @param m The message object
  * @param fd File descriptor to read from
  *
- * @return (0) on success, (-1) otherwise
+ * @return CDM_OK on success, CDM_NOK otherwise
  */
-int cmgr_msg_read(int fd, cmgr_msg_t *m);
+CdmStatus cdm_msg_read(int fd, CdmMsg *m);
 
 /*
  * @brief Write data into message object
@@ -104,12 +105,12 @@ int cmgr_msg_read(int fd, cmgr_msg_t *m);
  * @param m The message object
  * @param fd File descriptor to write to
  *
- * @return (0) on success, (-1) otherwise
+ * @return CDM_OK on success, CDM_NOK otherwise
  */
-int cmgr_msg_write(int fd, cmgr_msg_t *m);
+CdmStatus cdm_msg_write(int fd, CdmMsg *m);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CMGR_MSG_H */
+#endif /* CDM_MSG_H */

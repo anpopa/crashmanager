@@ -1,4 +1,4 @@
-/* cmgr_defaults.h
+/* cdm_defaults.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,61 +27,62 @@
  * authorization.
  */
 
-#ifndef CMGR_DEFAULTS_H
+#ifndef CDM_DEFAULTS_H
+#define CDM_DEFAULTS_H
 
-#define CMGR_VERSION "@version@"
-#define CMGR_CONFIG_DIRECTORY "@config_dir@"
+#define CDM_VERSION "@version@"
+#define CDM_CONFIG_DIRECTORY "@config_dir@"
 
-#ifndef CMGR_CONFIG_FILE_NAME
-#define CMGR_CONFIG_FILE_NAME "crashmanager.conf"
+#ifndef CDM_CONFIG_FILE_NAME
+#define CDM_CONFIG_FILE_NAME "crashmanager.conf"
 #endif
 
-#ifndef CMGR_USER_NAME
-#define CMGR_USER_NAME "root"
+#ifndef CDM_USER_NAME
+#define CDM_USER_NAME "root"
 #endif
 
-#ifndef CMGR_GROUP_NAME
-#define CMGR_GROUP_NAME "root"
+#ifndef CDM_GROUP_NAME
+#define CDM_GROUP_NAME "root"
 #endif
 
-#ifndef CMGR_CRASHDUMP_DIR
-#define CMGR_CRASHDUMP_DIR "var/cache/crashmanager/crashdumps"
+#ifndef CDM_CRASHDUMP_DIR
+#define CDM_CRASHDUMP_DIR "var/cache/crashmanager/crashdumps"
 #endif
 
-#ifndef CMGR_ELEVATED_NICE_VALUE
-#define CMGR_ELEVATED_NICE_VALUE (-19)
+#ifndef CDM_ELEVATED_NICE_VALUE
+#define CDM_ELEVATED_NICE_VALUE (-19)
 #endif
 
-#ifndef CMGR_DATABASE_FILE
-#define CMGR_DATABASE_FILE "/var/coredumper/coredumps.info"
+#ifndef CDM_DATABASE_FILE
+#define CDM_DATABASE_FILE "/var/coredumper/coredumps.info"
 #endif
 
-#ifndef CMGR_RUN_DIR
-#define CMGR_RUN_DIR "/run/crashmanager"
+#ifndef CDM_RUN_DIR
+#define CDM_RUN_DIR "/run/crashmanager"
 #endif
 
-#ifndef CMGR_KDUMPSOURCE_DIR
-#define CMGR_KDUMPSOURCE_DIR "/var/dumps"
+#ifndef CDM_KDUMPSOURCE_DIR
+#define CDM_KDUMPSOURCE_DIR "/var/dumps"
 #endif
 
-#ifndef CMGR_CRASHDUMP_DIR_MIN_SIZE
-#define CMGR_CRASHDUMP_DIR_MIN_SIZE (100)
+#ifndef CDM_CRASHDUMP_DIR_MIN_SIZE
+#define CDM_CRASHDUMP_DIR_MIN_SIZE (100)
 #endif
 
-#ifndef CMGR_CRASHDUMP_DIR_MAX_SIZE
-#define CMGR_CRASHDUMP_MAX_SIZE (512)
+#ifndef CDM_CRASHDUMP_DIR_MAX_SIZE
+#define CDM_CRASHDUMP_MAX_SIZE (512)
 #endif
 
-#ifndef CMGR_CRASHFILES_MAX_COUNT
-#define CMGR_CRASHFILES_MAX_COUNT (10)
+#ifndef CDM_CRASHFILES_MAX_COUNT
+#define CDM_CRASHFILES_MAX_COUNT (10)
 #endif
 
-#ifndef CMGR_IPC_SOCK_ADDR
-#define CMGR_IPC_SOCK_ADDR ".cdmipc.sock"
+#ifndef CDM_IPC_SOCK_ADDR
+#define CDM_IPC_SOCK_ADDR ".cdmipc.sock"
 #endif
 
-#ifndef CMGR_IPC_TIMEOUT_SEC
-#define CMGR_IPC_TIMEOUT_SEC (15)
+#ifndef CDM_IPC_TIMEOUT_SEC
+#define CDM_IPC_TIMEOUT_SEC (15)
 #endif
 
-#endif /* CMGR_DEFAULTS_H */
+#endif /* CDM_DEFAULTS_H */

@@ -1,4 +1,4 @@
-/* cmgr_types.h
+/* cmgr_main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,60 +27,32 @@
  * authorization.
  */
 
-#ifndef CMGR_TYPES_H
-#define CMGR_TYPES_H
+#include "cdm_defaults.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <glib.h>
+#include <stdlib.h>
 
-#include "cmgr_msgtyp.h"
-#include <elf.h>
+gint main(gint argc, gchar *argv[])
+{
+    g_autoptr(GOptionContext) context = NULL;
+    g_autoptr(GError) error = NULL;
+    gboolean version = FALSE;
+    GOptionEntry main_entries[] = {
+        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL}
+    };
 
-#ifndef CMGR_UNUSED
-#define CMGR_UNUSED(x) (void)(x)
-#endif
+    context = g_option_context_new("- my command line tool");
+    g_option_context_add_main_entries(context, main_entries, NULL);
 
-#ifndef CMGR_PATH_MAX
-#define CMGR_PATH_MAX (1024)
-#endif
+    if (!g_option_context_parse(context, &argc, &argv, &error)) {
+        g_printerr("%s\n", error->message);
+        return EXIT_FAILURE;
+    }
 
-#ifndef CORE_MAX_FILENAME_LENGTH
-#define CORE_MAX_FILENAME_LENGTH CMGR_MSG_FILENAME_LEN
-#endif
+    if (version) {
+        g_printerr("%s\n", CDM_VERSION);
+        return EXIT_SUCCESS;
+    }
 
-#ifndef MAX_PROC_NAME_LENGTH
-#define MAX_PROC_NAME_LENGTH CMGR_MSG_PROCNAME_LEN
-#endif
-
-#ifndef CRASH_ID_LEN
-#define CRASH_ID_LEN CMGR_CRASHID_LEN
-#endif
-
-#ifndef CRASH_CONTEXT_LEN
-#define CRASH_CONTEXT_LEN CMGR_CRASHCONTEXT_LEN
-#endif
-
-#ifndef ARCHIVE_NAME_PATTERN
-#define ARCHIVE_NAME_PATTERN "%s/core_%s_%d_%lu.cdh.gz"
-#endif
-
-enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
-
-typedef struct cmgr_registers {
-#ifdef __aarch64__
-    uint64_t pc;
-    uint64_t lr;
-#elif __x86_64__
-    uint64_t rip;
-    uint64_t rbp;
-#else
-    static_assert(false, "Don't know whow to handle this arhitecture");
-#endif
-} cmgr_registers_t;
-
-#ifdef __cplusplus
+    return EXIT_SUCCESS;
 }
-#endif
-
-#endif /* CMGR_TYPES_H */

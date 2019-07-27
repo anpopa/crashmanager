@@ -1,4 +1,4 @@
-/* cdec_main.c
+/* cdmypes.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,31 +27,65 @@
  * authorization.
  */
 
-#include "cmgr_defaults.h"
+#ifndef CDM_TYPES_H
+#define CDM_TYPES_H
 
-#include <glib.h>
-#include <stdlib.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-gint main(gint argc, gchar *argv[])
-{
-    g_autoptr(GOptionContext) context = NULL;
-    g_autoptr(GError) error = NULL;
-    gboolean version = FALSE;
-    GOptionEntry main_entries[] = {
-        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version"}, {NULL}};
+#include "cdm_msgtyp.h"
+#include <elf.h>
 
-    context = g_option_context_new("- my command line tool");
-    g_option_context_add_main_entries(context, main_entries, NULL);
+#ifndef CDM_UNUSED
+#define CDM_UNUSED(x) (void)(x)
+#endif
 
-    if (!g_option_context_parse(context, &argc, &argv, &error)) {
-        g_printerr("%s\n", error->message);
-        return EXIT_FAILURE;
-    }
+#ifndef CDM_PATH_MAX
+#define CDM_PATH_MAX (1024)
+#endif
 
-    if (version) {
-        g_printerr("%s\n", CMGR_VERSION);
-        return EXIT_SUCCESS;
-    }
+#ifndef CORE_MAX_FILENAME_LENGTH
+#define CORE_MAX_FILENAME_LENGTH CDM_MSG_FILENAME_LEN
+#endif
 
-    return EXIT_SUCCESS;
+#ifndef MAX_PROC_NAME_LENGTH
+#define MAX_PROC_NAME_LENGTH CDM_MSG_PROCNAME_LEN
+#endif
+
+#ifndef CRASH_ID_LEN
+#define CRASH_ID_LEN CDM_CRASHID_LEN
+#endif
+
+#ifndef CRASH_CONTEXT_LEN
+#define CRASH_CONTEXT_LEN CDM_CRASHCONTEXT_LEN
+#endif
+
+#ifndef ARCHIVE_NAME_PATTERN
+#define ARCHIVE_NAME_PATTERN "%s/core_%s_%d_%lu.cdh.gz"
+#endif
+
+enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
+
+typedef enum _CdmStatus {
+  CDM_ERROR = -1,
+  CDM_OK
+} CdmStatus;
+
+typedef struct _CdmRegisters {
+#ifdef __aarch64__
+    uint64 pc;
+    uint64 lr;
+#elif __x86_64__
+    uint64 rip;
+    uint64 rbp;
+#else
+    static_assert(false, "Don't know whow to handle this arhitecture");
+#endif
+} CdmRegisters;
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* CDM_TYPES_H */

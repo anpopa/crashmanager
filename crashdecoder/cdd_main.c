@@ -1,4 +1,4 @@
-/* cmgr_main.c
+/* cdec_main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,7 +27,7 @@
  * authorization.
  */
 
-#include "cmgr_defaults.h"
+#include "cdm_defaults.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -38,7 +38,8 @@ gint main(gint argc, gchar *argv[])
     g_autoptr(GError) error = NULL;
     gboolean version = FALSE;
     GOptionEntry main_entries[] = {
-        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version"}, {NULL}};
+        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL}
+    };
 
     context = g_option_context_new("- my command line tool");
     g_option_context_add_main_entries(context, main_entries, NULL);
@@ -49,7 +50,7 @@ gint main(gint argc, gchar *argv[])
     }
 
     if (version) {
-        g_printerr("%s\n", CMGR_VERSION);
+        g_printerr("%s\n", CDM_VERSION);
         return EXIT_SUCCESS;
     }
 
