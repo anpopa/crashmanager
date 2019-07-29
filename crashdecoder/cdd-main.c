@@ -1,4 +1,4 @@
-/* cdm_defaults.h
+/* cdd_main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,62 +27,32 @@
  * authorization.
  */
 
-#ifndef CD_DEFAULTS_H
-#define CD_DEFAULTS_H
+#include "cd_defaults.h"
 
-#define CD_VERSION "@version@"
-#define CD_CONFIG_DIRECTORY "@config_dir@"
+#include <glib.h>
+#include <stdlib.h>
 
-#ifndef CD_CONFIG_FILE_NAME
-#define CD_CONFIG_FILE_NAME "crashmanager.conf"
-#endif
+gint main(gint argc, gchar *argv[])
+{
+    g_autoptr(GOptionContext) context = NULL;
+    g_autoptr(GError) error = NULL;
+    gboolean version = FALSE;
+    GOptionEntry main_entries[] = {
+        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL}
+    };
 
-#ifndef CD_USER_NAME
-#define CD_USER_NAME "root"
-#endif
+    context = g_option_context_new("- my command line tool");
+    g_option_context_add_main_entries(context, main_entries, NULL);
 
-#ifndef CD_GROUP_NAME
-#define CD_GROUP_NAME "root"
-#endif
+    if (!g_option_context_parse(context, &argc, &argv, &error)) {
+        g_printerr("%s\n", error->message);
+        return EXIT_FAILURE;
+    }
 
-#ifndef CD_CRASHDUMP_DIR
-#define CD_CRASHDUMP_DIR "/var/cache/crashmanager/crashdumps"
-#endif
+    if (version) {
+        g_printerr("%s\n", CD_VERSION);
+        return EXIT_SUCCESS;
+    }
 
-#ifndef CD_ELEVATED_NICE_VALUE
-#define CD_ELEVATED_NICE_VALUE (-19)
-#endif
-
-#ifndef CD_DATABASE_FILE
-#define CD_DATABASE_FILE "/var/cache/crashmanager/cdm.db"
-#endif
-
-#ifndef CD_RUN_DIR
-#define CD_RUN_DIR "/run/crashmanager"
-#endif
-
-#ifndef CD_KDUMPSOURCE_DIR
-#define CD_KDUMPSOURCE_DIR "/var/dumps"
-#endif
-
-#ifndef CD_CRASHDUMP_DIR_MIN_SIZE
-#define CD_CRASHDUMP_DIR_MIN_SIZE (100)
-#endif
-
-#ifndef CD_CRASHDUMP_DIR_MAX_SIZE
-#define CD_CRASHDUMP_MAX_SIZE (512)
-#endif
-
-#ifndef CD_CRASHFILES_MAX_COUNT
-#define CD_CRASHFILES_MAX_COUNT (10)
-#endif
-
-#ifndef CD_IPC_SOCK_ADDR
-#define CD_IPC_SOCK_ADDR ".cdmipc.sock"
-#endif
-
-#ifndef CD_IPC_TIMEOUT_SEC
-#define CD_IPC_TIMEOUT_SEC (15)
-#endif
-
-#endif /* CD_DEFAULTS_H */
+    return EXIT_SUCCESS;
+}

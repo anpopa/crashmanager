@@ -27,8 +27,8 @@
  * authorization.
  */
 
-#ifndef CD_MESSAGE_TYPE_H
-#define CD_MESSAGE_TYPE_H
+#ifndef CDM_MESSAGE_TYPE_H
+#define CDM_MESSAGE_TYPE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,68 +37,68 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CD_BUILDTIME_VERSION "@version@"
-#define CD_MESSAGE_START_HASH (0xECDE)
+#define CDM_BUILDTIME_VERSION "@version@"
+#define CDM_MESSAGE_START_HASH (0xECDE)
 
-#define CD_MESSAGE_PROCNAME_LEN (32)
-#define CD_MESSAGE_FILENAME_LEN (256)
-#define CD_CRASHID_LEN (32)
-#define CD_CRASHCONTEXT_LEN (32)
-#define CD_VERSION_STRING_LEN (8)
+#define CDM_MESSAGE_PROCNAME_LEN (32)
+#define CDM_MESSAGE_FILENAME_LEN (256)
+#define CDM_CRASHID_LEN (32)
+#define CDM_CRASHCONTEXT_LEN (32)
+#define CDM_VERSION_STRING_LEN (8)
 
-#ifndef CD_MESSAGE_PACKED
-#define CD_MESSAGE_PACKED __attribute__((aligned(1), packed))
+#ifndef CDM_MESSAGE_PACKED
+#define CDM_MESSAGE_PACKED __attribute__((aligned(1), packed))
 #endif
 
-typedef enum _CDMessageType {
-    CD_CORE_UNKNOWN,
-    CD_CORE_NEW,
-    CD_CORE_UPDATE,
-    CD_CORE_COMPLETE,
-    CD_CORE_FAILED,
-    CD_MESSAGE_CHAR,
-    CD_MESSAGE_RAW
-} cdm_msgtype;
+typedef enum _CdmMessageType {
+    CDM_CORE_UNKNOWN,
+    CDM_CORE_NEW,
+    CDM_CORE_UPDATE,
+    CDM_CORE_COMPLETE,
+    CDM_CORE_FAILED,
+    CDM_MESSAGE_CHAR,
+    CDM_MESSAGE_RAW
+} CdmMessageType;
 
-typedef struct _CDInfoNew {
+typedef struct _CdmMessageDataNew {
     int pid;
     int coresig;
     uint64 tstamp;
-    char pname[CD_MESSAGE_PROCNAME_LEN];
-    char tname[CD_MESSAGE_PROCNAME_LEN];
-} CDInfoNew;
+    char pname[CDM_MESSAGE_PROCNAME_LEN];
+    char tname[CDM_MESSAGE_PROCNAME_LEN];
+} CdmMessageDataNew;
 
-typedef struct _CDInfoUpdate {
-    char crashid[CD_CRASHID_LEN];
-    char vectorid[CD_CRASHID_LEN];
-    char contextid[CD_CRASHCONTEXT_LEN];
-} CDInfoUpdate;
+typedef struct _CdmMessageDataUpdate {
+    char crashid[CDM_CRASHID_LEN];
+    char vectorid[CDM_CRASHID_LEN];
+    char contextid[CDM_CRASHCONTEXT_LEN];
+} CdmMessageDataUpdate;
 
 typedef struct _CDInfoComplete {
-    char core_file[CD_MESSAGE_FILENAME_LEN];
-} CDInfoComplete;
+    char core_file[CDM_MESSAGE_FILENAME_LEN];
+} CdmMessageDataComplete;
 
-typedef union _CDMessageData {
-    CDInfoNew regnew;
-    CDInfoUpdate update;
-    CDInfoComplete complete;
-} CDMessageData;
+typedef union _CdmMessageData {
+    CdmMessageDataNew msgnew;
+    CdmMessageDataUpdate update;
+    CdmMessageDataComplete complete;
+} CdmMessageData;
 
-typedef struct _CDMessageHdr {
+typedef struct _CdmMessageHdr {
     uint16 hsh;
     uint16 session;
-    uint8 version[CD_VERSION_STRING_LEN];
-    CDMessageType type;
+    uint8 version[CDM_VERSION_STRING_LEN];
+    CdmMessageType type;
     uint32 data_size;
-} CD_MESSAGE_PACKED CDMessageHdr;
+} CDM_MESSAGE_PACKED CdmMessageHdr;
 
-typedef struct _CDMessage {
-    CDMessageHdr hdr;
+typedef struct _CdmMessage {
+    CdmMessageHdr hdr;
     void *data;
-} CD_MESSAGE_PACKED CDMessage;
+} CDM_MESSAGE_PACKED CdmMessage;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CD_MESSAGE_TYPE_H */
+#endif /* CDM_MESSAGE_TYPE_H */

@@ -1,4 +1,4 @@
-/* cd_message.h
+/* cdm_message.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,15 +27,15 @@
  * authorization.
  */
 
-#ifndef CD_MESSAGE_H
-#define CD_MESSAGE_H
+#ifndef CDM_MESSAGE_H
+#define CDM_MESSAGE_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "cd_message_type.h"
-#include "cd_types.h"
+#include "cdm-message-type.h"
+#include "cdm-types.h"
 
 
 /*
@@ -45,7 +45,7 @@ extern "C" {
  * @param type The message type
  * @param session Unique session identifier
  */
-void cd_message_init(CDMessage *m, CDMessageType type, uint16 session);
+void cdm_message_init(CdmMessage *m, CdmMessageType type, uint16 session);
 
 /*
  * @brief Message data setter
@@ -54,7 +54,7 @@ void cd_message_init(CDMessage *m, CDMessageType type, uint16 session);
  * @param data The message data to set
  * @param size The message data size
  */
-void cd_message_set_data(CDMessage *m, void *data, uint32 size);
+void cdm_message_set_data(CdmMessage *m, void *data, uint32 size);
 
 /*
  * @brief Message data free
@@ -63,19 +63,19 @@ void cd_message_set_data(CDMessage *m, void *data, uint32 size);
  *
  * @param m The message object
  */
-void cd_message_free_data(CDMessage *m);
+void cdm_message_free_data(CdmMessage *m);
 
 /*
  * @brief Validate if the message object is consistent
  * @param m The message object
  */
-bool cd_message_is_valid(CDMessage *m);
+bool cdm_message_is_valid(CdmMessage *m);
 
 /*
  * @brief Get message type
  * @param m The message object
  */
-CDMessageType cd_message_getype(CDMessage *m);
+CdmMessageType cdm_message_getype(CdmMessage *m);
 
 /*
  * @brief Set message version
@@ -83,9 +83,9 @@ CDMessageType cd_message_getype(CDMessage *m);
  * @param m The message object
  * @param version Version string
  *
- * @return CD_STATUS_OK on success, CD_STATUS_ERROR otherwise
+ * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CDStatus cd_message_set_version(CDMessage *m, const char *version);
+CdmStatus cdm_message_set_version(CdmMessage *m, const char *version);
 
 /*
  * @brief Read data into message object
@@ -95,9 +95,9 @@ CDStatus cd_message_set_version(CDMessage *m, const char *version);
  * @param m The message object
  * @param fd File descriptor to read from
  *
- * @return CD_STATUS_OK on success, CD_STATUS_ERROR otherwise
+ * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CDStatus cd_message_read(int fd, CDMessage *m);
+CdmStatus cdm_message_read(int fd, CdmMessage *m);
 
 /*
  * @brief Write data into message object
@@ -105,12 +105,12 @@ CDStatus cd_message_read(int fd, CDMessage *m);
  * @param m The message object
  * @param fd File descriptor to write to
  *
- * @return CD_STATUS_OK on success, CD_STATUS_ERROR otherwise
+ * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CDStatus cd_message_write(int fd, CDMessage *m);
+CdmStatus cdm_message_write(int fd, CdmMessage *m);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CD_MESSAGE_H */
+#endif /* CDM_MESSAGE_H */

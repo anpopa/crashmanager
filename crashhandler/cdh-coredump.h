@@ -1,4 +1,4 @@
-/* cdm_main.c
+/* cdm-coredump.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,32 +27,26 @@
  * authorization.
  */
 
-#include "cdm_defaults.h"
+#ifndef CDH_COREDUMP_H
+#define CDH_COREDUMP_H
 
-#include <glib.h>
-#include <stdlib.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-gint main(gint argc, gchar *argv[])
-{
-    g_autoptr(GOptionContext) context = NULL;
-    g_autoptr(GError) error = NULL;
-    gboolean version = FALSE;
-    GOptionEntry main_entries[] = {
-        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL}
-    };
+#include "cdh-data.h"
 
-    context = g_option_context_new("- my command line tool");
-    g_option_context_add_main_entries(context, main_entries, NULL);
+/* @brief Generate coredump file
+ *
+ * @param d Global cdh data
+ * @param tmpdir Temp directory to store the coredump file into
+ *
+ * @return CDM_STATUS_OK on success
+ */
+CdmStatus cdh_coredump_generate(CdhData *d);
 
-    if (!g_option_context_parse(context, &argc, &argv, &error)) {
-        g_printerr("%s\n", error->message);
-        return EXIT_FAILURE;
-    }
-
-    if (version) {
-        g_printerr("%s\n", CDM_VERSION);
-        return EXIT_SUCCESS;
-    }
-
-    return EXIT_SUCCESS;
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* COREDUMP_H */

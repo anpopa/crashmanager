@@ -27,38 +27,38 @@
  * authorization.
  */
 
-#ifndef CD_TYPES_H
-#define CD_TYPES_H
+#ifndef CDM_TYPES_H
+#define CDM_TYPES_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "cd_message_type.h"
+#include "cdm-message-type.h"
 #include <elf.h>
 
-#ifndef CD_UNUSED
-#define CD_UNUSED(x) (void)(x)
+#ifndef CDM_UNUSED
+#define CDM_UNUSED(x) (void)(x)
 #endif
 
-#ifndef CD_PATH_MAX
-#define CD_PATH_MAX (1024)
+#ifndef CDM_PATH_MAX
+#define CDM_PATH_MAX (1024)
 #endif
 
 #ifndef CORE_MAX_FILENAME_LENGTH
-#define CORE_MAX_FILENAME_LENGTH CD_MESSAGE_FILENAME_LEN
+#define CORE_MAX_FILENAME_LENGTH CDM_MESSAGE_FILENAME_LEN
 #endif
 
 #ifndef MAX_PROC_NAME_LENGTH
-#define MAX_PROC_NAME_LENGTH CD_MESSAGE_PROCNAME_LEN
+#define MAX_PROC_NAME_LENGTH CDM_MESSAGE_PROCNAME_LEN
 #endif
 
 #ifndef CRASH_ID_LEN
-#define CRASH_ID_LEN CD_CRASHID_LEN
+#define CRASH_ID_LEN CDM_CRASHID_LEN
 #endif
 
 #ifndef CRASH_CONTEXT_LEN
-#define CRASH_CONTEXT_LEN CD_CRASHCONTEXT_LEN
+#define CRASH_CONTEXT_LEN CDM_CRASHCONTEXT_LEN
 #endif
 
 #ifndef ARCHIVE_NAME_PATTERN
@@ -67,12 +67,12 @@ extern "C" {
 
 enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
 
-typedef enum _CDStatus {
-  CD_STATUS_ERROR = -1,
-  CD_STATUS_OK
-} CDStatus;
+typedef enum _CdmStatus {
+  CDM_STATUS_ERROR = -1,
+  CDM_STATUS_OK
+} CdmStatus;
 
-typedef struct _CDRegisters {
+typedef struct _CdmRegisters {
 #ifdef __aarch64__
     uint64 pc;
     uint64 lr;
@@ -82,10 +82,10 @@ typedef struct _CDRegisters {
 #else
     static_assert(false, "Don't know whow to handle this arhitecture");
 #endif
-} CDRegisters;
+} CdmRegisters;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CD_TYPES_H */
+#endif /* CDM_TYPES_H */

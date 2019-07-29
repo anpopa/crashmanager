@@ -1,0 +1,88 @@
+/* cdm_defaults.h
+ *
+ * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the sale,
+ * use or other dealings in this Software without prior written
+ * authorization.
+ */
+
+#ifndef CDM_DEFAULTS_H
+#define CDM_DEFAULTS_H
+
+#define CDM_VERSION "@version@"
+#define CDM_CONFIG_DIRECTORY "@config_dir@"
+
+#ifndef CDM_CONFIG_FILE_NAME
+#define CDM_CONFIG_FILE_NAME "crashmanager.conf"
+#endif
+
+#ifndef CDM_USER_NAME
+#define CDM_USER_NAME "root"
+#endif
+
+#ifndef CDM_GROUP_NAME
+#define CDM_GROUP_NAME "root"
+#endif
+
+#ifndef CDM_CRASHDUMP_DIR
+#define CDM_CRASHDUMP_DIR "/var/cache/crashmanager/crashdumps"
+#endif
+
+#ifndef CDM_ELEVATED_NICE_VALUE
+#define CDM_ELEVATED_NICE_VALUE (-19)
+#endif
+
+#ifndef CDM_DATABASE_FILE
+#define CDM_DATABASE_FILE "/var/cache/crashmanager/cdm.db"
+#endif
+
+#ifndef CDM_RUN_DIR
+#define CDM_RUN_DIR "/run/crashmanager"
+#endif
+
+#ifndef CDM_KDUMPSOURCE_DIR
+#define CDM_KDUMPSOURCE_DIR "/var/dumps"
+#endif
+
+#ifndef CDM_CRASHDUMP_DIR_MIN_SIZE
+#define CDM_CRASHDUMP_DIR_MIN_SIZE (100)
+#endif
+
+#ifndef CDM_CRASHDUMP_DIR_MAX_SIZE
+#define CDM_CRASHDUMP_MAX_SIZE (512)
+#endif
+
+#ifndef CDM_CRASHFILES_MAX_COUNT
+#define CDM_CRASHFILES_MAX_COUNT (10)
+#endif
+
+#ifndef CDM_IPC_SOCK_ADDR
+#define CDM_IPC_SOCK_ADDR ".cdmipc.sock"
+#endif
+
+#ifndef CDM_IPC_TIMEOUT_SEC
+#define CDM_IPC_TIMEOUT_SEC (15)
+#endif
+
+#endif /* CDM_DEFAULTS_H */

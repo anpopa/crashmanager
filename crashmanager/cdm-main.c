@@ -1,4 +1,4 @@
-/* cdd_main.c
+/* cdm_main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,7 +27,7 @@
  * authorization.
  */
 
-#include "cdm_defaults.h"
+#include "cdm-defaults.h"
 
 #include <glib.h>
 #include <stdlib.h>
