@@ -88,11 +88,11 @@ typedef struct _NSMConsumer {
     void *private_data; /**< Reference to private data object */
 
     void (*proxy_availability_cb)(void *client, LifecycleProxyState state,
-                                  CdmStatus error); /**< Proxy availability callback */
+                                  CDStatus error); /**< Proxy availability callback */
     void (*registration_state_cb)(void *client, LifecycleRegistrationState state,
-                                  CdmStatus error); /**< Registration state callback */
+                                  CDStatus error); /**< Registration state callback */
     void (*session_state_cb)(void *client, LifecycleSessionState state,
-                             CdmStatus error); /**< Session state callback */
+                             CDStatus error); /**< Session state callback */
 } NSMConsumer;
 
 /**
@@ -125,7 +125,7 @@ void nsm_consumer_set_client(NSMConsumer *n, void *client);
 void nsm_consumer_set_proxy_cb(NSMConsumer *n,
                                void (*proxy_availability_cb)(void *client,
                                                              LifecycleProxyState state,
-                                                             CdmStatus error));
+                                                             CDStatus error));
 
 /**
  * @brief Callback setter for NSM registration status
@@ -135,7 +135,7 @@ void nsm_consumer_set_proxy_cb(NSMConsumer *n,
 void nsm_consumer_set_registration_cb(
     NSMConsumer *n,
     void (*registration_state_cb)(void *client, LifecycleRegistrationState state,
-                                  CdmStatus error));
+                                  CDStatus error));
 
 /**
  * @brief Callback setter for NSM session status
@@ -145,7 +145,7 @@ void nsm_consumer_set_registration_cb(
 void nsm_consumer_set_session_cb(NSMConsumer *n,
                                  void (*session_state_cb)(void *client,
                                                           LifecycleSessionState state,
-                                                          CdmStatus error));
+                                                          CDStatus error));
 
 /**
  * @brief Lifecycle proxy state getter
@@ -196,7 +196,7 @@ void nsm_consumer_set_registration_state(NSMConsumer *n, LifecycleRegistrationSt
  * @param n A pointer to the NSMConsumer object
  * @return The status of the request
  */
-CdmStatus nsm_consumer_build_proxy(NSMConsumer *n);
+CDStatus nsm_consumer_build_proxy(NSMConsumer *n);
 
 /**
  * @brief Request NSM consumer to register.
@@ -205,7 +205,7 @@ CdmStatus nsm_consumer_build_proxy(NSMConsumer *n);
  * @param n A pointer to the NSMConsumer object
  * @return The status of the request
  */
-CdmStatus nsm_consumer_register(NSMConsumer *n);
+CDStatus nsm_consumer_register(NSMConsumer *n);
 
 /**
  * @brief Request NSM consumer a new state.
@@ -214,7 +214,7 @@ CdmStatus nsm_consumer_register(NSMConsumer *n);
  * @param n A pointer to the NSMConsumer object
  * @return The status of the request
  */
-CdmStatus nsm_consumer_request_state(NSMConsumer *n, LifecycleSessionState state);
+CDStatus nsm_consumer_request_state(NSMConsumer *n, LifecycleSessionState state);
 
 #ifdef __cplusplus
 }

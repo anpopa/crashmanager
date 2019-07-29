@@ -36,17 +36,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void cdm_msg_init(CdmMsg *m, CdmMsgType type, uint16 session)
+void cdm_msg_init(CDMessage *m, CDMessageType type, uint16 session)
 {
     assert(m);
 
-    memset(m, 0, sizeof(cdm_msg));
+    memset(m, 0, sizeof(CDMessage));
     m->hdr.type = type;
     m->hdr.hsh = CDM_MSG_START_HASH;
     m->hdr.session = session;
 }
 
-void cdm_msg_set_data(CdmMsg *m, void *data, uint32 size)
+void cdm_msg_set_data(CDMessage *m, void *data, uint32 size)
 {
     assert(m);
     assert(data);
@@ -55,7 +55,7 @@ void cdm_msg_set_data(CdmMsg *m, void *data, uint32 size)
     m->data = data;
 }
 
-void cdm_msg_free_data(CdmMsg *m)
+void cdm_msg_free_data(CDMessage *m)
 {
     assert(m);
 
@@ -64,7 +64,7 @@ void cdm_msg_free_data(CdmMsg *m)
     }
 }
 
-bool cdm_msg_is_valid(CdmMsg *m)
+bool cdm_msg_is_valid(CDMessage *m)
 {
     if (m == NULL) {
         return false;
@@ -77,60 +77,60 @@ bool cdm_msg_is_valid(CdmMsg *m)
     return true;
 }
 
-CdmMsgType cdm_msg_getype(CdmMsg *m)
+CDMessageType cdm_msg_getype(CDMessage *m)
 {
     assert(m);
     return m->hdr.type;
 }
 
-CdmStatus cdm_msg_set_version(CdmMsg *m, const char *version)
+CDStatus cdm_msg_set_version(CDMessage *m, const char *version)
 {
     assert(m);
 
     snprintf((char *)m->hdr.version, CDM_VERSION_STRING_LEN, "%s", version);
 
-    return CDM_OK;
+    return CD_STATUS_OK;
 }
 
-CdmStatus cdm_msg_read(int fd, CdmMsg *m)
+CDStatus cdm_msg_read(int fd, CDMessage *m)
 {
-    ssize sz;
+    ssize_t sz;
 
     assert(m);
 
-    sz = read(fd, &m->hdr, sizeof(CdmMsgHdr));
+    sz = read(fd, &m->hdr, sizeof(CDMessageHdr));
 
-    if (sz != sizeof(CdmMsgHdr) || !cdm_msg_is_valid(m)) {
-        return CDM_ERROR;
+    if (sz != sizeof(CDMessageHdr) || !cdm_msg_is_valid(m)) {
+        return CD_STATUS_ERROR;
     }
 
     m->data = calloc(1, m->hdr.data_size);
     if (m->data == NULL) {
-        return CDM_ERROR;
+        return CD_STATUS_ERROR;
     }
 
     sz = read(fd, m->data, m->hdr.data_size);
 
-    return sz == m->hdr.data_size ? CDM_OK : CDM_ERROR;
+    return sz == m->hdr.data_size ? CD_STATUS_OK : CD_STATUS_ERROR;
 }
 
-CdmStatus cdm_msg_write(int fd, CdmMsg *m)
+CDStatus cdm_msg_write(int fd, CDMessage *m)
 {
-    ssize sz;
+    ssize_t sz;
 
     assert(m);
 
     if (!cdm_msg_is_valid(m)) {
-        return CDM_ERROR;
+        return CD_STATUS_ERROR;
     }
 
-    sz = write(fd, &m->hdr, sizeof(CdmMsgHdr));
+    sz = write(fd, &m->hdr, sizeof(CDMessageHdr));
 
-    if (sz != sizeof(CdmMsgHdr)) {
-        return CDM_ERROR;
+    if (sz != sizeof(CDMessageHdr)) {
+        return CD_STATUS_ERROR;
     }
 
     sz = write(fd, m->data, m->hdr.data_size);
 
-    return sz == m->hdr.data_size ? CDM_OK : CDM_ERROR;
+    return sz == m->hdr.data_size ? CD_STATUS_OK : CD_STATUS_ERROR;
 }

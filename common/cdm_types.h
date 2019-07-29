@@ -67,12 +67,12 @@ extern "C" {
 
 enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
 
-typedef enum _CdmStatus {
-  CDM_ERROR = -1,
-  CDM_OK
-} CdmStatus;
+typedef enum _CDStatus {
+  CD_STATUS_ERROR = -1,
+  CD_STATUS_OK
+} CDStatus;
 
-typedef struct _CdmRegisters {
+typedef struct _CDRegisters {
 #ifdef __aarch64__
     uint64 pc;
     uint64 lr;
@@ -82,7 +82,7 @@ typedef struct _CdmRegisters {
 #else
     static_assert(false, "Don't know whow to handle this arhitecture");
 #endif
-} CdmRegisters;
+} CDRegisters;
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-/* cmgr_main.c
+/* cdm_main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *

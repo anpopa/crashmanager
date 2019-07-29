@@ -45,7 +45,7 @@ extern "C" {
  * @param type The message type
  * @param session Unique session identifier
  */
-void cdm_msg_init(CdmMsg *m, CdmMsgType type, uint16 session);
+void cdm_msg_init(CDMessage *m, CDMessageType type, uint16 session);
 
 /*
  * @brief Message data setter
@@ -54,7 +54,7 @@ void cdm_msg_init(CdmMsg *m, CdmMsgType type, uint16 session);
  * @param data The message data to set
  * @param size The message data size
  */
-void cdm_msg_set_data(CdmMsg *m, void *data, uint32 size);
+void cdm_msg_set_data(CDMessage *m, void *data, uint32 size);
 
 /*
  * @brief Message data free
@@ -63,19 +63,19 @@ void cdm_msg_set_data(CdmMsg *m, void *data, uint32 size);
  *
  * @param m The message object
  */
-void cdm_msg_free_data(CdmMsg *m);
+void cdm_msg_free_data(CDMessage *m);
 
 /*
  * @brief Validate if the message object is consistent
  * @param m The message object
  */
-bool cdm_msg_is_valid(CdmMsg *m);
+bool cdm_msg_is_valid(CDMessage *m);
 
 /*
  * @brief Get message type
  * @param m The message object
  */
-CdmMsgType cdm_msg_getype(CdmMsg *m);
+CDMessageType cdm_msg_getype(CDMessage *m);
 
 /*
  * @brief Set message version
@@ -83,9 +83,9 @@ CdmMsgType cdm_msg_getype(CdmMsg *m);
  * @param m The message object
  * @param version Version string
  *
- * @return CDM_OK on success, CDM_NOK otherwise
+ * @return CD_STATUS_OK on success, CD_STATUS_ERROR otherwise
  */
-CdmStatus cdm_msg_set_version(CdmMsg *m, const char *version);
+CDStatus cdm_msg_set_version(CDMessage *m, const char *version);
 
 /*
  * @brief Read data into message object
@@ -95,9 +95,9 @@ CdmStatus cdm_msg_set_version(CdmMsg *m, const char *version);
  * @param m The message object
  * @param fd File descriptor to read from
  *
- * @return CDM_OK on success, CDM_NOK otherwise
+ * @return CD_STATUS_OK on success, CD_STATUS_ERROR otherwise
  */
-CdmStatus cdm_msg_read(int fd, CdmMsg *m);
+CDStatus cdm_msg_read(int fd, CDMessage *m);
 
 /*
  * @brief Write data into message object
@@ -105,9 +105,9 @@ CdmStatus cdm_msg_read(int fd, CdmMsg *m);
  * @param m The message object
  * @param fd File descriptor to write to
  *
- * @return CDM_OK on success, CDM_NOK otherwise
+ * @return CD_STATUS_OK on success, CD_STATUS_ERROR otherwise
  */
-CdmStatus cdm_msg_write(int fd, CdmMsg *m);
+CDStatus cdm_msg_write(int fd, CDMessage *m);
 
 #ifdef __cplusplus
 }

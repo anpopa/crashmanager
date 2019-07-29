@@ -1,11 +1,11 @@
 project('crashmanager', 'c',
-        version: '0.1.0',
+  version: '0.1.0',
   meson_version: '>= 0.40.0',
-)
+  )
 
 add_project_arguments([
   '-I' + meson.build_root(),
-], language: 'c')
+  ], language: 'c')
 
 cdm_c_compiler_args = [
   '-Wall',
@@ -34,27 +34,27 @@ cdm_c_compiler_args = [
   '-Walloc-zero',
   '-Wcast-align',
   '-Wredundant-decls'
-]
+  ]
 
 cdm_defaults_data = configuration_data()
 cdm_defaults_data.set('version', meson.project_version())
 cdm_defaults_data.set('config_dir', get_option('CONFDIR'))
 configure_file(input : 'common/cdm_defaults.h.in',
-             output : 'cdm_defaults.h',
-             configuration : cdm_defaults_data)
+  output : 'cdm_defaults.h',
+  configuration : cdm_defaults_data)
 
 cdm_msgtype_data = configuration_data()
 cdm_msgtype_data.set('version', meson.project_version())
 configure_file(input : 'common/cdm_msgtyp.h.in',
-             output : 'cdm_msgtyp.h',
-             configuration : cdm_msgtype_data)
+  output : 'cdm_msgtyp.h',
+  configuration : cdm_msgtype_data)
 
 cdm_config_data = configuration_data()
 cdm_config_data.set('version', meson.project_version())
 configure_file(input : 'config/crashmanager.conf.in',
-             output : 'crashmanager.conf',
-             configuration : cdm_config_data,
-             install_dir : get_option('CONFDIR'))
+  output : 'crashmanager.conf',
+  configuration : cdm_config_data,
+  install_dir : get_option('CONFDIR'))
 
 dep_lxc = declare_dependency()
 if get_option('LXC')
@@ -70,9 +70,9 @@ if get_option('SYSTEMD')
   sd_service_data = configuration_data()
   sd_service_data.set('install_prefix', get_option('prefix'))
   configure_file(input : 'config/crashmanager.service.in',
-             output : 'crashmanager.service',
-             configuration : sd_service_data,
-             install_dir : '/etc/systemd/system')
+	output : 'crashmanager.service',
+	configuration : sd_service_data,
+	install_dir : '/etc/systemd/system')
 endif
 
 dep_genivi_dlt = declare_dependency()
@@ -86,20 +86,20 @@ if get_option('GENIVI_NSM')
   add_project_arguments('-DWITH_GENIVI_NSM', language : 'c')
   dep_genivi_nsm += dependency('CommonAPI', method : 'cmake', modules : ['CommonAPI'])
   dep_genivi_nsm += dependency('CommonAPI-SomeIP', method : 'cmake', modules : [
-    'org.genivi.nodestatemanager.proxy.core',
-    'org.genivi.nodestatemanager.proxy.someip'
-    ])
+	'org.genivi.nodestatemanager.proxy.core',
+	'org.genivi.nodestatemanager.proxy.someip'
+	])
 
   libcapiwrap_sources = [
-    'genivi/libcapiwrap/nsm_consumer.c',
-    ]
+	'genivi/libcapiwrap/nsm_consumer.c',
+	]
 
   libcapiwrap_deps = [dep_genivi_nsm]
 
   dep_libcapiwrap = static_library('libcapiwrap', libcapiwrap_sources,
-    dependencies: libcapiwrap_deps,
-    install: true,
-    )
+	dependencies: libcapiwrap_deps,
+	install: true,
+	)
 
   dep_genivi_nsm += dep_libcapiwrap
 endif
@@ -114,15 +114,15 @@ endif
 
 if get_option('CRASHTEST')
   crashtest_sources = [
-    'testing/crashtest/crashtest.c',
-    ]
+	'testing/crashtest/crashtest.c',
+	]
 
   crashtest_deps = []
 
   executable('crashtest', crashtest_sources,
-    dependencies: crashtest_deps,
-    install: true,
-    )
+	dependencies: crashtest_deps,
+	install: true,
+	)
 endif
 
 if get_option('SANITIZER')
@@ -133,55 +133,55 @@ dep_glib = dependency('glib-2.0')
 
 if get_option('CRASHMANAGER')
   crashmanager_sources = [
-    'crashmanager/cdm_main.c',
-  ]
+	'crashmanager/cdm_main.c',
+	]
 
   crashmanager_deps = [
-    dep_glib,
-    dep_lxc,
-    dep_systemd,
-    dep_genivi_dlt,
-    dep_genivi_nsm
-  ]
+	dep_glib,
+	dep_lxc,
+	dep_systemd,
+	dep_genivi_dlt,
+	dep_genivi_nsm
+	]
 
   executable('crashmanager', crashmanager_sources,
-    dependencies: crashmanager_deps,
-    c_args: cdm_c_compiler_args,
-    install: true,
-  )
+	dependencies: crashmanager_deps,
+	c_args: cdm_c_compiler_args,
+	install: true,
+	)
 endif
 
 if get_option('CRASHHANDLER')
   sysctl_data = configuration_data()
   sysctl_data.set('install_prefix', get_option('prefix'))
   configure_file(input : 'config/20-crashhandler.conf.in',
-             output : '20-crashhandler.conf',
-             configuration : sysctl_data,
-             install_dir : '/etc/sysctl.d')
+	output : '20-crashhandler.conf',
+	configuration : sysctl_data,
+	install_dir : '/etc/sysctl.d')
 
   crashhandler_sources = [
-    'crashhandler/cdh_main.c',
-  ]
+	'crashhandler/cdh_main.c',
+	]
 
   crashhandler_deps = [dep_glib]
 
   executable('crashhandler', crashhandler_sources,
-    dependencies: crashhandler_deps,
-    c_args: cdm_c_compiler_args,
-    install: true,
-  )
+	dependencies: crashhandler_deps,
+	c_args: cdm_c_compiler_args,
+	install: true,
+	)
 endif
 
 if get_option('CRASHDECODER')
   crashdecoder_sources = [
-    'crashdecoder/cdd_main.c',
-  ]
+	'crashdecoder/cdd_main.c',
+	]
 
   crashdecoder_deps = [dep_glib]
 
   executable('crashdecoder', crashdecoder_sources,
-    dependencies: crashdecoder_deps,
-    c_args: cdm_c_compiler_args,
-    install: true,
-  )
+	dependencies: crashdecoder_deps,
+	c_args: cdm_c_compiler_args,
+	install: true,
+	)
 endif

@@ -38,7 +38,7 @@
 
 #define TEST_BUFFER_MB(x) (sizeof(uint8_t) * x * 1024 * 1024)
 
-typedef enum crashtype { crash_abrt, crash_segv1, crash_segv2 } crashtype_t;
+typedef enum _crashtype { crash_abrt, crash_segv1, crash_segv2 } crashtype;
 
 static uint8_t *allocate_buffer(size_t sz, bool rdz)
 {
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     size_t size = 0;
     uint8_t *test_buffer = NULL;
     bool randomize = false;
-    crashtype_t type = crash_abrt;
+    crashtype type = crash_abrt;
 
     struct option longopts[] = {{"type", required_argument, NULL, 't'},
                                 {"size", required_argument, NULL, 's'},
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     while ((c = getopt_long(argc, argv, "t:s:r::h", longopts, &long_index)) != -1)
         switch (c) {
         case 't':
-            type = (crashtype_t)strtol(optarg, NULL, 10);
+            type = (crashtype)strtol(optarg, NULL, 10);
             break;
         case 's':
             size = (size_t)strtol(optarg, NULL, 10);

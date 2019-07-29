@@ -52,21 +52,21 @@ using NSMErrorState = NSMTypes::NsmErrorStatus_e;
 namespace NSM = v1::org::genivi::nodestatemanager;
 
 /**
- * @struct LifecycleData
- * @brief Lifecycle related internal data
+ * @struct LCData
+ * @brief LC related internal data
  */
-typedef struct _LifecycleData {
+typedef struct _LCData {
     std::shared_ptr<NSM::ConsumerProxyDefault> consumer_proxy; /**< Consumer proxy object */
     CommonAPI::ProxyStatusEvent::Subscription subscription;    /**< Proxy subscription object */
 
-    LifecycleSessionState session_state;           /**< Current session state */
-    LifecycleRegistrationState registration_state; /**< Current registration state */
-    LifecycleProxyState proxy_state;               /**< Current proxy availability state */
+    LCSessionState session_state;           /**< Current session state */
+    LCRegistrationState registration_state; /**< Current registration state */
+    LCProxyState proxy_state;               /**< Current proxy availability state */
 
     std::string session_name;                     /**< Session identifier */
     std::string session_owner;                    /**< Owner identifier */
     const NSMSeat seat = NSMSeat::NsmSeat_Driver; /**< Seat identifier */
-} LifecycleData;
+} LCData;
 
 /**
  * @brief Initialize lifecycle data object
@@ -75,9 +75,9 @@ typedef struct _LifecycleData {
  * @param session_name The consumer NSM session name
  * @param session_owner The consumer NSM session owner
  *
- * @return CDM_OK on success and CDM_ERROR on failure
+ * @return CD_STATUS_OK on success and CD_STATUS_ERROR on failure
  */
-static CdmStatus init_lifecycle_data(LifecycleData *l, const char *session_name,
+static CDStatus init_lifecycle_data(LCData *l, const char *session_name,
                                         const char *session_owner);
 
 /**
@@ -85,9 +85,9 @@ static CdmStatus init_lifecycle_data(LifecycleData *l, const char *session_name,
  *
  * @param l A pointer to the lifecycle object
  *
- * @return CDM_OK on success and CDM_ERROR on failure
+ * @return CD_STATUS_OK on success and CD_STATUS_ERROR on failure
  */
-static CdmStatus deinit_lifecycle_data(LifecycleData *l);
+static CDStatus deinit_lifecycle_data(LCData *l);
 
 /**
  * @brief Async callback to be used for set session state call
@@ -133,18 +133,18 @@ NSMConsumer *nsm_consumer_new(const char *session_name, const char *session_owne
         return nullptr;
     }
 
-    /* The LifecycleData is a C++ private object to this module
+    /* The LCData is a C++ private object to this module
      * so we will use new/delete operators for this object
      */
-    n->private_data = new LifecycleData;
+    n->private_data = new LCData;
     if (n->private_data == nullptr) {
         free(n);
         return nullptr;
     }
 
-    if (init_LifecycleData(static_cast<LifecycleData *>(n->private_data), session_name,
-                            session_owner) != CDM_OK) {
-        delete static_cast<LifecycleData *>(n->private_data);
+    if (init_LCData(static_cast<LCData *>(n->private_data), session_name,
+                            session_owner) != CD_STATUS_OK) {
+        delete static_cast<LCData *>(n->private_data);
         free(n);
 
         return nullptr;
@@ -158,9 +158,9 @@ void nsm_consumer_free(NSMConsumer *n)
     assert(n);
     assert(n->private_data);
 
-    (void)deinit_LifecycleData(static_cast<LifecycleData *>(n->private_data));
+    (void)deinit_LCData(static_cast<LCData *>(n->private_data));
 
-    delete static_cast<LifecycleData *>(n->private_data);
+    delete static_cast<LCData *>(n->private_data);
     free(n);
 }
 
@@ -172,8 +172,8 @@ void nsm_consumer_set_client(NSMConsumer *n, void *client)
 
 void nsm_consumer_set_proxy_cb(NSMConsumer *n,
                                void (*proxy_availability_cb)(void *client,
-                                                             LifecycleProxyState state,
-                                                             CdmStatus error))
+                                                             LCProxyState state,
+                                                             CDStatus error))
 {
     assert(n);
     n->proxy_availability_cb = proxy_availability_cb;
@@ -181,8 +181,8 @@ void nsm_consumer_set_proxy_cb(NSMConsumer *n,
 
 void nsm_consumer_set_registration_cb(
     NSMConsumer *n,
-    void (*registration_state_cb)(void *client, LifecycleRegistrationState state,
-                                  CdmStatus error))
+    void (*registration_state_cb)(void *client, LCRegistrationState state,
+                                  CDStatus error))
 {
     assert(n);
     n->registration_state_cb = registration_state_cb;
@@ -190,104 +190,104 @@ void nsm_consumer_set_registration_cb(
 
 void nsm_consumer_set_session_cb(NSMConsumer *n,
                                  void (*session_state_cb)(void *client,
-                                                          LifecycleSessionState state,
-                                                          CdmStatus error))
+                                                          LCSessionState state,
+                                                          CDStatus error))
 {
     assert(n);
     n->session_state_cb = session_state_cb;
 }
 
-LifecycleProxyState nsm_consumer_get_proxy_state(NSMConsumer *n)
+LCProxyState nsm_consumer_get_proxy_state(NSMConsumer *n)
 {
-    LifecycleData *d = nullptr;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     return d->proxy_state;
 }
 
-LifecycleSessionState nsm_consumer_get_session_state(NSMConsumer *n)
+LCSessionState nsm_consumer_get_session_state(NSMConsumer *n)
 {
-    LifecycleData *d = nullptr;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     return d->session_state;
 }
 
-LifecycleRegistrationState nsm_consumer_get_registration_state(NSMConsumer *n)
+LCRegistrationState nsm_consumer_get_registration_state(NSMConsumer *n)
 {
-    LifecycleData *d = nullptr;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     return d->registration_state;
 }
 
-void nsm_consumer_set_proxy_state(NSMConsumer *n, LifecycleProxyState state)
+void nsm_consumer_set_proxy_state(NSMConsumer *n, LCProxyState state)
 {
-    LifecycleData *d = nullptr;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     d->proxy_state = state;
 }
 
-void nsm_consumer_set_session_state(NSMConsumer *n, LifecycleSessionState state)
+void nsm_consumer_set_session_state(NSMConsumer *n, LCSessionState state)
 {
-    LifecycleData *d = nullptr;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     d->session_state = state;
 }
 
-void nsm_consumer_set_registration_state(NSMConsumer *n, LifecycleRegistrationState state)
+void nsm_consumer_set_registration_state(NSMConsumer *n, LCRegistrationState state)
 {
-    LifecycleData *d = nullptr;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     d->registration_state = state;
 }
 
-CdmStatus nsm_consumer_build_proxy(NSMConsumer *n)
+CDStatus nsm_consumer_build_proxy(NSMConsumer *n)
 {
-    CdmStatus status = CDM_OK;
-    LifecycleData *d = nullptr;
+    CDStatus status = CD_STATUS_OK;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     std::shared_ptr<CommonAPI::Runtime> runtime = CommonAPI::Runtime::get();
 
     if (runtime == nullptr) {
-        status = CDM_ERROR;
+        status = CD_STATUS_ERROR;
     } else {
         d->consumer_proxy =
             runtime->buildProxy<NSM::ConsumerProxy>("local", NSM::Consumer_NSMConsumer, "Consumer");
         if (d->consumer_proxy == nullptr) {
-            status = CDM_ERROR;
+            status = CD_STATUS_ERROR;
         } else {
             using namespace std::placeholders;
             d->subscription = d->consumer_proxy->getProxyStatusEvent().subscribe(
@@ -298,15 +298,15 @@ CdmStatus nsm_consumer_build_proxy(NSMConsumer *n)
     return status;
 }
 
-CdmStatus nsm_consumer_register(NSMConsumer *n)
+CDStatus nsm_consumer_register(NSMConsumer *n)
 {
-    CdmStatus status = CDM_OK;
-    LifecycleData *d = nullptr;
+    CDStatus status = CD_STATUS_OK;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     if ((d->registration_state == LC_UNREGISTERED) && (d->proxy_state == LC_PROXY_AVAILABLE)) {
         CommonAPI::CallInfo info;
@@ -319,21 +319,21 @@ CdmStatus nsm_consumer_register(NSMConsumer *n)
                                                    : NSMSessionState::NsmSessionState_Inactive),
             std::bind(&register_session_listener, n, _1, _2), &info);
     } else {
-        status = CDM_ERROR;
+        status = CD_STATUS_ERROR;
     }
 
     return status;
 }
 
-CdmStatus nsm_consumer_request_state(NSMConsumer *n, LifecycleSessionState state)
+CDStatus nsm_consumer_request_state(NSMConsumer *n, LCSessionState state)
 {
-    CdmStatus status = CDM_OK;
-    LifecycleData *d = nullptr;
+    CDStatus status = CD_STATUS_OK;
+    LCData *d = nullptr;
 
     assert(n);
     assert(n->private_data);
 
-    d = static_cast<LifecycleData *>(n->private_data);
+    d = static_cast<LCData *>(n->private_data);
 
     /* The proxy should be available and registration complete */
     if ((d->proxy_state == LC_PROXY_AVAILABLE) && (d->registration_state == LC_REGISTERED)) {
@@ -355,16 +355,16 @@ CdmStatus nsm_consumer_request_state(NSMConsumer *n, LifecycleSessionState state
                 &info);
         }
     } else {
-        status = CDM_ERROR;
+        status = CD_STATUS_ERROR;
     }
 
     return status;
 }
 
-static CdmStatus init_lifecycle_data(LifecycleData *d, const char *session_name,
+static CDStatus init_lifecycle_data(LCData *d, const char *session_name,
                                         const char *session_owner)
 {
-    CdmStatus status = CDM_OK;
+    CDStatus status = CD_STATUS_OK;
 
     assert(d);
 
@@ -377,9 +377,9 @@ static CdmStatus init_lifecycle_data(LifecycleData *d, const char *session_name,
     return status;
 }
 
-static CdmStatus deinit_lifecycled_data(LifecycleData *d)
+static CDStatus deinit_lifecycled_data(LCData *d)
 {
-    CdmStatus status = CDM_OK;
+    CDStatus status = CD_STATUS_OK;
 
     assert(d);
 
@@ -396,16 +396,16 @@ static CdmStatus deinit_lifecycled_data(LifecycleData *d)
 
             if (call_status == CommonAPI::CallStatus::SUCCESS) {
                 if (error_status != NSMTypes::NsmErrorStatus_e::NsmErrorStatus_Ok) {
-                    status = CDM_ERROR;
+                    status = CD_STATUS_ERROR;
                 }
             } else {
-                status = CDM_ERROR;
+                status = CD_STATUS_ERROR;
             }
         }
 
         d->consumer_proxy->getProxyStatusEvent().unsubscribe(d->subscription);
     } else {
-        status = CDM_ERROR;
+        status = CD_STATUS_ERROR;
     }
 
     return status;
@@ -414,21 +414,21 @@ static CdmStatus deinit_lifecycled_data(LifecycleData *d)
 static void session_state_listener(NSMConsumer *n, const CommonAPI::CallStatus &call_status,
                                    const NSMErrorState error_status, NSMSessionState session_state)
 {
-    LifecycleSessionState state = LC_SESSION_INACTIVE;
-    CdmStatus error = CDM_OK;
+    LCSessionState state = LC_SESSION_INACTIVE;
+    CDStatus error = CD_STATUS_OK;
 
     assert(n);
 
     if (call_status == CommonAPI::CallStatus::SUCCESS) {
         if (error_status != NSMTypes::NsmErrorStatus_e::NsmErrorStatus_Ok) {
-            error = CDM_ERROR;
+            error = CD_STATUS_ERROR;
         } else {
             state =
                 (session_state == NSMSessionState::NsmSessionState_Active ? LC_SESSION_ACTIVE
                                                                           : LC_SESSION_INACTIVE);
         }
     } else {
-        error = CDM_ERROR;
+        error = CD_STATUS_ERROR;
     }
 
     if (n->session_state_cb != NULL) {
@@ -439,8 +439,8 @@ static void session_state_listener(NSMConsumer *n, const CommonAPI::CallStatus &
 static void register_session_listener(NSMConsumer *n, const CommonAPI::CallStatus &call_status,
                                       const NSMErrorState error_status)
 {
-    LifecycleRegistrationState state = LC_UNREGISTERED;
-    CdmStatus error = CDM_OK;
+    LCRegistrationState state = LC_UNREGISTERED;
+    CDStatus error = CD_STATUS_OK;
 
     assert(n);
 
@@ -451,7 +451,7 @@ static void register_session_listener(NSMConsumer *n, const CommonAPI::CallStatu
             state = LC_REGISTERED;
         }
     } else {
-        error = CDM_ERROR;
+        error = CD_STATUS_ERROR;
     }
 
     if (n->registration_state_cb != NULL) {
@@ -461,7 +461,7 @@ static void register_session_listener(NSMConsumer *n, const CommonAPI::CallStatu
 
 static void proxy_availability_listener(NSMConsumer *n, CommonAPI::AvailabilityStatus status)
 {
-    LifecycleProxyState state = LC_PROXY_UNAVAILABLE;
+    LCProxyState state = LC_PROXY_UNAVAILABLE;
 
     assert(n);
 
@@ -477,6 +477,6 @@ static void proxy_availability_listener(NSMConsumer *n, CommonAPI::AvailabilityS
     }
 
     if (n->proxy_availability_cb != NULL) {
-        n->proxy_availability_cb(n->client, state, CDM_OK);
+        n->proxy_availability_cb(n->client, state, CD_STATUS_OK);
     }
 }

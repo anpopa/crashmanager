@@ -1,4 +1,4 @@
-/* chdl_main.c
+/* cdh_main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *

@@ -50,7 +50,7 @@ extern "C" {
 #define CDM_MSG_PACKED __attribute__((aligned(1), packed))
 #endif
 
-typedef enum _CdmMsgType {
+typedef enum _CDMessageType {
     CDM_CORE_UNKNOWN,
     CDM_CORE_NEW,
     CDM_CORE_UPDATE,
@@ -60,42 +60,42 @@ typedef enum _CdmMsgType {
     CDM_MSG_RAW
 } cdm_msgtype;
 
-typedef struct _CdmCoreNew {
+typedef struct _CDInfoNew {
     int pid;
     int coresig;
     uint64 tstamp;
     char pname[CDM_MSG_PROCNAME_LEN];
     char tname[CDM_MSG_PROCNAME_LEN];
-} CdmCoreNew;
+} CDInfoNew;
 
-typedef struct _CdmCoreUpdate {
+typedef struct _CDInfoUpdate {
     char crashid[CDM_CRASHID_LEN];
     char vectorid[CDM_CRASHID_LEN];
     char contextid[CDM_CRASHCONTEXT_LEN];
-} CdmCoreUpdate;
+} CDInfoUpdate;
 
-typedef struct _CdmCoreComplete {
+typedef struct _CDInfoComplete {
     char core_file[CDM_MSG_FILENAME_LEN];
-} CdmCoreComplete;
+} CDInfoComplete;
 
-typedef union _CdmMsgData {
-    CdmCoreNew regnew;
-    CdmCoreUpdate update;
-    CdmCoreComplete complete;
-} CdmMsgData;
+typedef union _CDMessageData {
+    CDInfoNew regnew;
+    CDInfoUpdate update;
+    CDInfoComplete complete;
+} CDMessageData;
 
-typedef struct _CdmMsgHdr {
+typedef struct _CDMessageHdr {
     uint16 hsh;
     uint16 session;
     uint8 version[CDM_VERSION_STRING_LEN];
-    CdmMsgType type;
+    CDMessageType type;
     uint32 data_size;
-} CDM_MSG_PACKED CdmMsgHdr;
+} CDM_MSG_PACKED CDMessageHdr;
 
-typedef struct _CdmMsg {
-    CdmMsgHdr hdr;
+typedef struct _CDMessage {
+    CDMessageHdr hdr;
     void *data;
-} CDM_MSG_PACKED CdmMsg;
+} CDM_MSG_PACKED CDMessage;
 
 #ifdef __cplusplus
 }
