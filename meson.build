@@ -39,14 +39,14 @@ cdm_c_compiler_args = [
 cdm_defaults_data = configuration_data()
 cdm_defaults_data.set('version', meson.project_version())
 cdm_defaults_data.set('config_dir', get_option('CONFDIR'))
-configure_file(input : 'common/cdm_defaults.h.in',
-  output : 'cdm_defaults.h',
+configure_file(input : 'common/cd_defaults.h.in',
+  output : 'cd_defaults.h',
   configuration : cdm_defaults_data)
 
 cdm_msgtype_data = configuration_data()
 cdm_msgtype_data.set('version', meson.project_version())
-configure_file(input : 'common/cdm_msgtyp.h.in',
-  output : 'cdm_msgtyp.h',
+configure_file(input : 'common/cd_message_type.h.in',
+  output : 'cd_message_type.h',
   configuration : cdm_msgtype_data)
 
 cdm_config_data = configuration_data()

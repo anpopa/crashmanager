@@ -27,8 +27,8 @@
  * authorization.
  */
 
-#ifndef CDM_MSGTYP_H
-#define CDM_MSGTYP_H
+#ifndef CD_MESSAGE_TYPE_H
+#define CD_MESSAGE_TYPE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,45 +37,45 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CDM_BUILDTIME_VERSION "@version@"
-#define CDM_MSG_START_HASH (0xECDE)
+#define CD_BUILDTIME_VERSION "@version@"
+#define CD_MESSAGE_START_HASH (0xECDE)
 
-#define CDM_MSG_PROCNAME_LEN (32)
-#define CDM_MSG_FILENAME_LEN (256)
-#define CDM_CRASHID_LEN (32)
-#define CDM_CRASHCONTEXT_LEN (32)
-#define CDM_VERSION_STRING_LEN (8)
+#define CD_MESSAGE_PROCNAME_LEN (32)
+#define CD_MESSAGE_FILENAME_LEN (256)
+#define CD_CRASHID_LEN (32)
+#define CD_CRASHCONTEXT_LEN (32)
+#define CD_VERSION_STRING_LEN (8)
 
-#ifndef CDM_MSG_PACKED
-#define CDM_MSG_PACKED __attribute__((aligned(1), packed))
+#ifndef CD_MESSAGE_PACKED
+#define CD_MESSAGE_PACKED __attribute__((aligned(1), packed))
 #endif
 
 typedef enum _CDMessageType {
-    CDM_CORE_UNKNOWN,
-    CDM_CORE_NEW,
-    CDM_CORE_UPDATE,
-    CDM_CORE_COMPLETE,
-    CDM_CORE_FAILED,
-    CDM_MSG_CHAR,
-    CDM_MSG_RAW
+    CD_CORE_UNKNOWN,
+    CD_CORE_NEW,
+    CD_CORE_UPDATE,
+    CD_CORE_COMPLETE,
+    CD_CORE_FAILED,
+    CD_MESSAGE_CHAR,
+    CD_MESSAGE_RAW
 } cdm_msgtype;
 
 typedef struct _CDInfoNew {
     int pid;
     int coresig;
     uint64 tstamp;
-    char pname[CDM_MSG_PROCNAME_LEN];
-    char tname[CDM_MSG_PROCNAME_LEN];
+    char pname[CD_MESSAGE_PROCNAME_LEN];
+    char tname[CD_MESSAGE_PROCNAME_LEN];
 } CDInfoNew;
 
 typedef struct _CDInfoUpdate {
-    char crashid[CDM_CRASHID_LEN];
-    char vectorid[CDM_CRASHID_LEN];
-    char contextid[CDM_CRASHCONTEXT_LEN];
+    char crashid[CD_CRASHID_LEN];
+    char vectorid[CD_CRASHID_LEN];
+    char contextid[CD_CRASHCONTEXT_LEN];
 } CDInfoUpdate;
 
 typedef struct _CDInfoComplete {
-    char core_file[CDM_MSG_FILENAME_LEN];
+    char core_file[CD_MESSAGE_FILENAME_LEN];
 } CDInfoComplete;
 
 typedef union _CDMessageData {
@@ -87,18 +87,18 @@ typedef union _CDMessageData {
 typedef struct _CDMessageHdr {
     uint16 hsh;
     uint16 session;
-    uint8 version[CDM_VERSION_STRING_LEN];
+    uint8 version[CD_VERSION_STRING_LEN];
     CDMessageType type;
     uint32 data_size;
-} CDM_MSG_PACKED CDMessageHdr;
+} CD_MESSAGE_PACKED CDMessageHdr;
 
 typedef struct _CDMessage {
     CDMessageHdr hdr;
     void *data;
-} CDM_MSG_PACKED CDMessage;
+} CD_MESSAGE_PACKED CDMessage;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CDM_MSGTYP_H */
+#endif /* CD_MESSAGE_TYPE_H */

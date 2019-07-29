@@ -1,4 +1,4 @@
-/* cdm_defaults.h
+/* cdmypes.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,62 +27,65 @@
  * authorization.
  */
 
-#ifndef CDM_DEFAULTS_H
-#define CDM_DEFAULTS_H
+#ifndef CD_TYPES_H
+#define CD_TYPES_H
 
-#define CDM_VERSION "@version@"
-#define CDM_CONFIG_DIRECTORY "@config_dir@"
-
-#ifndef CDM_CONFIG_FILE_NAME
-#define CDM_CONFIG_FILE_NAME "crashmanager.conf"
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#ifndef CDM_USER_NAME
-#define CDM_USER_NAME "root"
+#include "cd_message_type.h"
+#include <elf.h>
+
+#ifndef CD_UNUSED
+#define CD_UNUSED(x) (void)(x)
 #endif
 
-#ifndef CDM_GROUP_NAME
-#define CDM_GROUP_NAME "root"
+#ifndef CD_PATH_MAX
+#define CD_PATH_MAX (1024)
 #endif
 
-#ifndef CDM_CRASHDUMP_DIR
-#define CDM_CRASHDUMP_DIR "var/cache/crashmanager/crashdumps"
+#ifndef CORE_MAX_FILENAME_LENGTH
+#define CORE_MAX_FILENAME_LENGTH CD_MESSAGE_FILENAME_LEN
 #endif
 
-#ifndef CDM_ELEVATED_NICE_VALUE
-#define CDM_ELEVATED_NICE_VALUE (-19)
+#ifndef MAX_PROC_NAME_LENGTH
+#define MAX_PROC_NAME_LENGTH CD_MESSAGE_PROCNAME_LEN
 #endif
 
-#ifndef CDM_DATABASE_FILE
-#define CDM_DATABASE_FILE "/var/coredumper/coredumps.info"
+#ifndef CRASH_ID_LEN
+#define CRASH_ID_LEN CD_CRASHID_LEN
 #endif
 
-#ifndef CDM_RUN_DIR
-#define CDM_RUN_DIR "/run/crashmanager"
+#ifndef CRASH_CONTEXT_LEN
+#define CRASH_CONTEXT_LEN CD_CRASHCONTEXT_LEN
 #endif
 
-#ifndef CDM_KDUMPSOURCE_DIR
-#define CDM_KDUMPSOURCE_DIR "/var/dumps"
+#ifndef ARCHIVE_NAME_PATTERN
+#define ARCHIVE_NAME_PATTERN "%s/core_%s_%d_%lu.cdh.tar.gz"
 #endif
 
-#ifndef CDM_CRASHDUMP_DIR_MIN_SIZE
-#define CDM_CRASHDUMP_DIR_MIN_SIZE (100)
+enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
+
+typedef enum _CDStatus {
+  CD_STATUS_ERROR = -1,
+  CD_STATUS_OK
+} CDStatus;
+
+typedef struct _CDRegisters {
+#ifdef __aarch64__
+    uint64 pc;
+    uint64 lr;
+#elif __x86_64__
+    uint64 rip;
+    uint64 rbp;
+#else
+    static_assert(false, "Don't know whow to handle this arhitecture");
+#endif
+} CDRegisters;
+
+#ifdef __cplusplus
+}
 #endif
 
-#ifndef CDM_CRASHDUMP_DIR_MAX_SIZE
-#define CDM_CRASHDUMP_MAX_SIZE (512)
-#endif
-
-#ifndef CDM_CRASHFILES_MAX_COUNT
-#define CDM_CRASHFILES_MAX_COUNT (10)
-#endif
-
-#ifndef CDM_IPC_SOCK_ADDR
-#define CDM_IPC_SOCK_ADDR ".cdmipc.sock"
-#endif
-
-#ifndef CDM_IPC_TIMEOUT_SEC
-#define CDM_IPC_TIMEOUT_SEC (15)
-#endif
-
-#endif /* CDM_DEFAULTS_H */
+#endif /* CD_TYPES_H */
