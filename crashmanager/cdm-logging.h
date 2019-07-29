@@ -1,4 +1,4 @@
-/* cdm-main.c
+/* cdm-logging.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,32 +27,36 @@
  * authorization.
  */
 
-#include "cdm-defaults.h"
+#ifndef CDM_LOGGING_H
+#define CDM_LOGGING_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <glib.h>
-#include <stdlib.h>
+#include <syslog.h>
 
-gint main(gint argc, gchar *argv[])
-{
-    g_autoptr(GOptionContext) context = NULL;
-    g_autoptr(GError) error = NULL;
-    gboolean version = FALSE;
-    GOptionEntry main_entries[] = {
-        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL}
-    };
+/**
+ * @brief Open logging subsystem
+ *
+ * @param app_name Application identifier
+ * @param app_desc Application description
+ * @param ctx_name Context identifier
+ * @param ctx_desc Context description
+ */
+void cdm_logging_open(const gchar *app_name,
+                 const gchar *app_desc,
+                 const gchar *ctx_name,
+                 const gchar *ctx_desc);
 
-    context = g_option_context_new("- my command line tool");
-    g_option_context_add_main_entries(context, main_entries, NULL);
+/**
+ * @brief Close logging system
+ */
+void cdm_logging_close(void);
 
-    if (!g_option_context_parse(context, &argc, &argv, &error)) {
-        g_printerr("%s\n", error->message);
-        return EXIT_FAILURE;
-    }
-
-    if (version) {
-        g_printerr("%s\n", CDM_VERSION);
-        return EXIT_SUCCESS;
-    }
-
-    return EXIT_SUCCESS;
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* CDM_LOGGING_H */

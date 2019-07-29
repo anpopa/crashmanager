@@ -1,4 +1,4 @@
-/* cdh-crashid.h
+/* cdh-info.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,27 +27,61 @@
  * authorization.
  */
 
-#ifndef CDH_CRASHID_H
-#define CDH_CRASHID_H
+#ifndef CDH_INFO_H
+#define CDH_INFO_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "cdh-data.h"
-#include <glib.h>
+#include "cdm-types.h"
 
-/* @brief Generate crashid file
- *
- * @param d Global cdh data
- * @param tmpdir Temp directory to store the context file into
- *
- * @return CDM_STATUS_OK on success
+#include <glib.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/queue.h>
+#include <sys/types.h>
+
+#ifndef CDH_INFO_ENTRY_FILENAME_LEN
+#define CDH_INFO_ENTRY_FILENAME_LEN 192
+#endif
+
+#ifndef CDH_INFO_PROC_NAME_LEN
+#define CDH_INFO_PROC_NAME_LEN 64
+#endif
+
+/**
+ * @struct cdh_info
+ * @brief The info object
  */
-CdmStatus cdh_crashid_process(CdhData *d);
+typedef struct cdh_info {
+    gchar name[CDH_INFO_PROC_NAME_LEN];  /**< process name */
+    gchar tname[CDH_INFO_PROC_NAME_LEN]; /**< thread name  */
+    guint64 tstamp;                    /**< crash timestamp */
+    gint32 sig;                        /**< signal id */
+    gint32 pid;                        /**< process id as seen on host */
+    gint32 cpid;                       /**< process id as seen on namespace */
+
+    gchar contextid[CRASH_CONTEXT_LEN]; /**< namespace context for the crashed pid */
+    gchar crashid[CRASH_ID_LEN];        /**< crash id value */
+    gchar vectorid[CRASH_ID_LEN];       /**< crash course id value */
+    guint8 onhost;                    /**< true if the crash is in host context */
+} CdhInfo;
+
+/**
+ * @brief Create a new cdh_info object
+ * @return A pointer to the new cdh_info object or NULL on error
+ */
+CdhInfo *cdh_info_new(void);
+
+/**
+ * @brief Release a cdh_info object
+ * @param i Pointer to the cdh_info object
+ */
+void cdh_info_free(CdhInfo *i);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CDH_CRASHID_H */
+#endif /* CDH_INFO_H */

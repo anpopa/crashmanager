@@ -1,4 +1,4 @@
-/* cdm-data.c
+/* cdh-manager.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -28,16 +28,15 @@
  */
 
 #include "cdm-defaults.h"
-#include "cdm-log.h"
 #include "cdm-manager.h"
 
 #include <errno.h>
 #include <stdio.h>
 
-CdmStatus cdh_manager_init(CdhManager *c, cdh_options_t *opts)
+CdmStatus cdh_manager_init(CdhManager *c, CdhOptions *opts)
 {
-    assert(c);
-    assert(opts);
+    g_assert(c);
+    g_assert(opts);
 
     memset(c, 0, sizeof(CdhManager));
 
@@ -48,22 +47,22 @@ CdmStatus cdh_manager_init(CdhManager *c, cdh_options_t *opts)
     return CDM_STATUS_OK;
 }
 
-void cdh_manager_set_coredir(CdhManager *c, const char *coredir)
+void cdh_manager_set_coredir(CdhManager *c, const gchar *coredir)
 {
-    assert(c);
-    assert(coredir);
+    g_assert(c);
+    g_assert(coredir);
 
     c->coredir = coredir;
 }
 
 CdmStatus cdh_manager_connect(CdhManager *c)
 {
-    const char *opt_sock_addr, *opt_run_dir;
-    long opt_timeout;
+    const gchar *opt_sock_addr, *opt_run_dir;
+    glong opt_timeout;
     CdmStatus opt_status;
     struct timeval tout;
 
-    assert(c);
+    g_assert(c);
 
     if (c->connected) {
         return CDM_STATUS_ERROR;
@@ -75,13 +74,13 @@ CdmStatus cdh_manager_connect(CdhManager *c)
         return CDM_STATUS_ERROR;
     }
 
-    opt_run_dir = cdh_opts_string_for(c->opts, KEY_RUN_DIR, &opt_status);
+    opt_run_dir = cdm_options_string_for(c->opts, KEY_RUN_DIR, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_sock_addr = cdh_opts_string_for(c->opts, KEY_CRASHMANAGER_IPC_SOCK_ADDR, &opt_status);
+    opt_sock_addr = cdm_options_string_for(c->opts, KEY_IPC_SOCK_ADDR, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_timeout = cdh_opts_long_for(c->opts, KEY_CRASHMANAGER_IPC_TIMEOUT_SEC, &opt_status);
+    opt_timeout = cdm_options_long_for(c->opts, KEY_IPC_TIMEOUT_SEC, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
     memset(&c->saddr, 0, sizeof(struct sockaddr_un));
@@ -99,11 +98,11 @@ CdmStatus cdh_manager_connect(CdhManager *c)
     tout.tv_sec = opt_timeout;
     tout.tv_usec = 0;
 
-    if (setsockopt(c->sfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, sizeof(tout)) == -1) {
+    if (setsockopt(c->sfd, SOL_SOCKET, SO_RCVTIMEO, (gchar *)&tout, sizeof(tout)) == -1) {
         cdhlog(LOG_WARNING, "Failed to set the socket receiving timeout: %s", strerror(errno));
     }
 
-    if (setsockopt(c->sfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tout, sizeof(tout)) == -1) {
+    if (setsockopt(c->sfd, SOL_SOCKET, SO_SNDTIMEO, (gchar *)&tout, sizeof(tout)) == -1) {
         cdhlog(LOG_WARNING, "Failed to set the socket sending timeout: %s", strerror(errno));
     }
 
@@ -128,9 +127,9 @@ CdmStatus cdh_manager_disconnect(CdhManager *c)
     return CDM_STATUS_OK;
 }
 
-bool cdh_manager_connected(CdhManager *c)
+gboolean cdh_manager_connected(CdhManager *c)
 {
-    assert(c);
+    g_assert(c);
     return c->connected;
 }
 
@@ -140,8 +139,8 @@ CdmStatus cdh_manager_send(CdhManager *c, cdh_msg_t *m)
     struct timeval tv;
     CdmStatus status = CDM_STATUS_OK;
 
-    assert(c);
-    assert(m);
+    g_assert(c);
+    g_assert(m);
 
     if (c->sfd < 0 || !c->connected) {
         cdhlog(LOG_WARNING, "No connection to manager");
@@ -160,8 +159,6 @@ CdmStatus cdh_manager_send(CdhManager *c, cdh_msg_t *m)
     if (status == -1) {
         cdhlog(LOG_ERR, "Server socket select failed");
     } else if (status > 0) {
-#if defined(WITH_CRASHHANDLER)
-        status = send_crashhandler_msg(c, m);
 #elif defined(WITH_COREMANAGER)
         status = cdh_msg_write(c->sfd, m);
 #else

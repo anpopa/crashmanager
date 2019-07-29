@@ -1,4 +1,4 @@
-/* cdm-data.c
+/* cdm-data.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -36,19 +36,19 @@ extern "C" {
 
 #include "cdh-archive.h"
 #include "cdh-info.h"
-#include "cdh-log.h"
-#include "cdh-opts.h"
-#include "cdh-types.h"
+#include "cdm-logging.h"
+#include "cdm-options.h"
+#include "cdm-types.h"
+#if defined(WITH_CRASHMANAGER)
+#include "cdh-manager.h"
+#endif
 
-#include <assert.h>
+#include <glib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/procfs.h>
 #include <sys/user.h>
 #include <unistd.h>
-#if defined(WITH_CRASHMANAGER)
-#include "cdh_manager.h"
-#endif
 
 /**
  * @struct CdhData
@@ -56,7 +56,7 @@ extern "C" {
  */
 typedef struct _CdhData {
     CdhArchive archive; /**< coredump archive streamer */
-    CdhRegisters regs; /**< cpu registers for crash id calculation */
+    CdmRegisters regs; /**< cpu registers for crash id calculation */
     CdhInfo *info;     /**< Crash info data */
 #if defined(WITH_CRASHMANAGER)
     CdhManager crash_mgr; /**< manager ipc object */
@@ -64,16 +64,16 @@ typedef struct _CdhData {
 
     Elf64_Ehdr ehdr;   /**< coredump elf Ehdr structure */
     Elf64_Phdr *pphdr; /**< coredump elf pPhdr pointer to structure */
-    char *nhdr;        /**< buffer with all NOTE pages */
+    gchar *nhdr;        /**< buffer with all NOTE pages */
 
-    uint64_t ra;                     /**< return address for top frame */
-    uint64_t ip_file_offset;         /**< instruction pointer file offset for top frame */
-    uint64_t ra_file_offset;         /**< return address file offset for top frame */
-    const char *ip_module_name;      /**< module name pointed by instruction pointer */
-    const char *ra_module_name;      /**< module name pointed by return address */
-    unsigned long note_page_size;    /**< note section page size */
-    unsigned long elf_vma_page_size; /**< elf vma page size */
-    uint8_t crashid_info; /**< type of information available for crashid */
+    guint64  ra;                     /**< return address for top frame */
+    guint64  ip_file_offset;         /**< instruction pointer file offset for top frame */
+    guint64  ra_file_offset;         /**< return address file offset for top frame */
+    const gchar *ip_module_name;      /**< module name pointed by instruction pointer */
+    const gchar *ra_module_name;      /**< module name pointed by return address */
+    gulong note_page_size;    /**< note section page size */
+    gulong elf_vma_page_size; /**< elf vma page size */
+    guint8  crashid_info; /**< type of information available for crashid */
 } CdhData;
 
 /**
@@ -81,7 +81,7 @@ typedef struct _CdhData {
  * @param d The cdh object to initialize
  * @param conf_path Full path to the cdh configuration fole
  */
-void cdh_data_init(CdhData *d, const char *config_path);
+void cdh_data_init(CdhData *d, const gchar *config_path);
 
 /**
  * @brief Deinitialize pre-allocated cdm object
@@ -98,7 +98,7 @@ void cdh_data_deinit(CdhData *d);
  *
  * @return If run was succesful CDH_OK is returned
  */
-CdmStatus cdh_main_enter(CdhData *d, int argc, char *argv[]);
+CdmStatus cdh_main_enter(CdhData *d, gint argc, gchar *argv[]);
 
 #ifdef __cplusplus
 }

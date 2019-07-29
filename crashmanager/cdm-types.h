@@ -1,4 +1,4 @@
-/* cdmypes.h
+/* cdm-types.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *

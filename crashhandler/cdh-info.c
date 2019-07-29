@@ -1,4 +1,4 @@
-/* cdm-main.c
+/* cdh-info.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,32 +27,30 @@
  * authorization.
  */
 
-#include "cdm-defaults.h"
+#include "cdh-info.h"
 
-#include <glib.h>
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/queue.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-gint main(gint argc, gchar *argv[])
+CdhInfo *cdh_info_new(void)
 {
-    g_autoptr(GOptionContext) context = NULL;
-    g_autoptr(GError) error = NULL;
-    gboolean version = FALSE;
-    GOptionEntry main_entries[] = {
-        {"version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL}
-    };
+    CdhInfo *i = calloc(1, sizeof(CdhInfo));
+	
+	g_assert(i);
+    i->onhost = (guint8) true;
 
-    context = g_option_context_new("- my command line tool");
-    g_option_context_add_main_entries(context, main_entries, NULL);
+    return i;
+}
 
-    if (!g_option_context_parse(context, &argc, &argv, &error)) {
-        g_printerr("%s\n", error->message);
-        return EXIT_FAILURE;
-    }
-
-    if (version) {
-        g_printerr("%s\n", CDM_VERSION);
-        return EXIT_SUCCESS;
-    }
-
-    return EXIT_SUCCESS;
+void cdh_info_free(CdhInfo *i)
+{
+    g_assert(i);
+	free(i);
 }

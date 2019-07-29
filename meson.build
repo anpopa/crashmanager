@@ -39,13 +39,13 @@ cdm_c_compiler_args = [
 cdm_defaults_data = configuration_data()
 cdm_defaults_data.set('version', meson.project_version())
 cdm_defaults_data.set('config_dir', get_option('CONFDIR'))
-configure_file(input : 'common/cd_defaults.h.in',
-  output : 'cd_defaults.h',
+configure_file(input : 'crashmanager/cdm-defaults.h.in',
+  output : 'cdm_defaults.h',
   configuration : cdm_defaults_data)
 
 cdm_msgtype_data = configuration_data()
 cdm_msgtype_data.set('version', meson.project_version())
-configure_file(input : 'common/cd_message_type.h.in',
+configure_file(input : 'crashmanager/cdm-message-type.h.in',
   output : 'cd_message_type.h',
   configuration : cdm_msgtype_data)
 
@@ -133,7 +133,7 @@ dep_glib = dependency('glib-2.0')
 
 if get_option('CRASHMANAGER')
   crashmanager_sources = [
-	'crashmanager/cdm_main.c',
+	'crashmanager/cdm-main.c',
 	]
 
   crashmanager_deps = [
@@ -160,7 +160,7 @@ if get_option('CRASHHANDLER')
 	install_dir : '/etc/sysctl.d')
 
   crashhandler_sources = [
-	'crashhandler/cdh_main.c',
+	'crashhandler/cdh-main.c',
 	]
 
   crashhandler_deps = [dep_glib]
@@ -174,7 +174,7 @@ endif
 
 if get_option('CRASHDECODER')
   crashdecoder_sources = [
-	'crashdecoder/cdd_main.c',
+	'crashdecoder/cdd-main.c',
 	]
 
   crashdecoder_deps = [dep_glib]

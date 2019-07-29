@@ -1,4 +1,4 @@
-/* cdm_archive.c
+/* cdh-context.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -35,6 +35,7 @@ extern "C" {
 #endif
 
 #include "cdh-data.h"
+#include <glib.h>
 
 /**
  * @brief Get process name for pid
@@ -46,7 +47,7 @@ extern "C" {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_context_get_procname(pid_t pid, char *exec_name, size_t exec_name_maxsize);
+CdmStatus cdh_context_get_procname(pid_t pid, gchar *exec_name, gsize exec_name_maxsize);
 
 /**
  * @brief Generate context data available pre coredump stream

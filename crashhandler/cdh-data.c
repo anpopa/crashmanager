@@ -32,7 +32,7 @@
 #include "cdh-data.h"
 #include "cdh-context.h"
 #include "cdh-coredump.h"
-#include "cdh-message.h"
+#include "cdm-message.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -48,29 +48,29 @@
 #include <time.h>
 #include <unistd.h>
 
-static void remove_invalid_chars(char *str);
+static void remove_invalid_chars(gchar *str);
 
-static CdmStatus read_args(CdhData *d, int argc, char **argv);
+static CdmStatus read_args(CdhData *d, gint argc, gchar **argv);
 
-static CdmStatus check_disk_space(const char *path, size_t min);
+static CdmStatus check_disk_space(const gchar *path, gsize min);
 
-static CdmStatus check_and_create_directory(CdhData *d, const char *dirname);
+static CdmStatus check_and_create_directory(CdhData *d, const gchar *dirname);
 
-static CdmStatus wait_filesystem(const char *path, unsigned check_interval, size_t max_time);
+static CdmStatus wait_filesystem(const gchar *path, gulong check_interval, gsize max_time);
 
-static CdmStatus init_coredump_archive(CdhData *d, const char *dirname);
+static CdmStatus init_coredump_archive(CdhData *d, const gchar *dirname);
 
-void cdh_data_init(CdhData *d, const char *config_path)
+void cdh_data_init(CdhData *d, const gchar *config_path)
 {
-    assert(d);
+    g_assert(d);
 
     memset(d, 0, sizeof(CdhData));
 
-    d->opts = cdh_opts_new(config_path);
-    assert(d->opts);
+    d->opts = cdm_options_new(config_path);
+    g_assert(d->opts);
 
     d->info = cdh_info_new();
-    assert(d->info);
+    g_assert(d->info);
 }
 
 void cdh_data_deinit(CdhData *d)
@@ -80,36 +80,36 @@ void cdh_data_deinit(CdhData *d)
     }
 
     if (d->opts) {
-        cdh_opts_free(d->opts);
+        cdm_options_free(d->opts);
     }
 }
 
-static CdmStatus read_args(CdhData *d, int argc, char **argv)
+static CdmStatus read_args(CdhData *d, gint argc, gchar **argv)
 {
-    assert(d);
+    g_assert(d);
 
     if (argc < 6) {
-        cdhlog(LOG_ERR, "Usage: coredumper tstamp pid cpid sig procname");
+        g_warning("Usage: coredumper tstamp pid cpid sig procname");
         return CDM_STATUS_ERROR;
     }
 
     if (sscanf(argv[1], "%lu", &d->info->tstamp) != 1) {
-        cdhlog(LOG_ERR, "Unable to read tstamp argument <%s>. Closing", argv[1]);
+        g_warning("Unable to read tstamp argument <%s>. Closing", argv[1]);
         return CDM_STATUS_ERROR;
     }
 
     if (sscanf(argv[2], "%d", &d->info->pid) != 1) {
-        cdhlog(LOG_ERR, "Unable to read pid argument <%s>. Closing", argv[2]);
+        g_warning("Unable to read pid argument <%s>. Closing", argv[2]);
         return CDM_STATUS_ERROR;
     }
 
     if (sscanf(argv[3], "%d", &d->info->cpid) != 1) {
-        cdhlog(LOG_ERR, "Unable to read context pid argument <%s>. Closing", argv[3]);
+        g_warning("Unable to read context pid argument <%s>. Closing", argv[3]);
         return CDM_STATUS_ERROR;
     }
 
     if (sscanf(argv[4], "%d", &d->info->sig) != 1) {
-        cdhlog(LOG_ERR, "Unable to read sig argument <%s>. Closing", argv[4]);
+        g_warning("Unable to read sig argument <%s>. Closing", argv[4]);
         return CDM_STATUS_ERROR;
     }
 
@@ -119,15 +119,15 @@ static CdmStatus read_args(CdhData *d, int argc, char **argv)
     return CDM_STATUS_OK;
 }
 
-static void remove_invalid_chars(char *str)
+static void remove_invalid_chars(gchar *str)
 {
-    const char *invlchr = ":/\\!*";
-    const char replchr = '_';
+    const gchar *invlchr = ":/\\!*";
+    const gchar replchr = '_';
 
-    assert(str);
+    g_assert(str);
 
-    for (size_t i = 0; i < strlen(invlchr); i++) {
-        char *tmp = str;
+    for (gsize i = 0; i < strlen(invlchr); i++) {
+        gchar *tmp = str;
 
         do {
             tmp = strchr(tmp, invlchr[i]);
@@ -139,15 +139,15 @@ static void remove_invalid_chars(char *str)
     }
 }
 
-static CdmStatus check_disk_space(const char *path, size_t min)
+static CdmStatus check_disk_space(const gchar *path, gsize min)
 {
     struct statvfs stat;
-    size_t free_sz = 0;
+    gsize free_sz = 0;
 
-    assert(path);
+    g_assert(path);
 
     if (statvfs(path, &stat) < 0) {
-        cdhlog(LOG_ERR, "Cannot stat disk space on %s: %s", path, strerror(errno));
+        g_warning("Cannot stat disk space on %s: %s", path, strerror(errno));
         return CDM_STATUS_ERROR;
     }
 
@@ -155,27 +155,27 @@ static CdmStatus check_disk_space(const char *path, size_t min)
     free_sz = (stat.f_bsize * stat.f_bavail) >> 20;
 
     if (free_sz < min) {
-        cdhlog(LOG_WARNING, "Insufficient disk space for coredump: %ld MB.", free_sz);
+        g_warning("Insufficient disk space for coredump: %ld MB.", free_sz);
         return CDM_STATUS_ERROR;
     }
 
     return CDM_STATUS_OK;
 }
 
-static CdmStatus check_and_create_directory(CdhData *d, const char *dirname)
+static CdmStatus check_and_create_directory(CdhData *d, const gchar *dirname)
 {
     CdmStatus status;
 
-    assert(d);
-    assert(dirname);
+    g_assert(d);
+    g_assert(dirname);
 
     status = cdh_util_path_exist(dirname);
 
     if (status == CDM_ISFILE) {
-        cdhlog(LOG_WARNING, "Core directory '%s' invalid, removing", dirname);
+        g_warning("Core directory '%s' invalid, removing", dirname);
 
         if (unlink(dirname) == -1) {
-            cdhlog(LOG_ERR, "Core directory '%s' unlink error: %s", dirname, strerror(errno));
+            g_warning("Core directory '%s' unlink error: %s", dirname, strerror(errno));
         } else {
             /* after unlink we mark the status as NOENT */
             status = CDM_NOENT;
@@ -183,18 +183,18 @@ static CdmStatus check_and_create_directory(CdhData *d, const char *dirname)
     }
 
     if (status == CDM_NOENT) {
-        const char *opt_username, *opt_groupname;
+        const gchar *opt_username, *opt_groupname;
         CdmStatus opt_status = CDM_STATUS_OK;
 
         if (cdh_util_create_dir(dirname, 0755) == CDM_STATUS_OK) {
-            opt_username = cdh_opts_string_for(d->opts, KEY_USER_NAME, &opt_status);
+            opt_username = cdm_options_string_for(d->opts, KEY_USER_NAME, &opt_status);
             cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-            opt_groupname = cdh_opts_string_for(d->opts, KEY_GROUP_NAME, &opt_status);
+            opt_groupname = cdm_options_string_for(d->opts, KEY_GROUP_NAME, &opt_status);
             cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
             if (cdh_util_chown(dirname, opt_username, opt_groupname) != CDM_STATUS_OK) {
-                cdhlog(LOG_WARNING, "Fail to change ownership for %s", dirname);
+                g_warning("Fail to change ownership for %s", dirname);
             }
 
             status = CDM_ISDIR;
@@ -202,41 +202,41 @@ static CdmStatus check_and_create_directory(CdhData *d, const char *dirname)
     }
 
     if (status != CDM_ISDIR) {
-        cdhlog(LOG_ERR, "Fail to create directory %s", dirname);
+        g_warning("Fail to create directory %s", dirname);
         return CDM_STATUS_ERROR;
     }
 
     return CDM_STATUS_OK;
 }
 
-static CdmStatus wait_filesystem(const char *path, unsigned check_interval, size_t max_time)
+static CdmStatus wait_filesystem(const gchar *path, gulong check_interval, gsize max_time)
 {
-    size_t total_wait = 0;
+    gsize total_wait = 0;
 
-    assert(path);
+    g_assert(path);
 
     while (total_wait < max_time) {
         if (cdh_util_ismounted(path) == CDM_STATUS_OK) {
             return CDM_STATUS_OK;
         }
 
-        cdhlog(LOG_INFO, "%s not mounted, checking again after %u sec", path, check_interval);
+        g_info( "%s not mounted, checking again after %u sec", path, check_interval);
         sleep(check_interval);
         total_wait += check_interval;
     }
 
-    cdhlog(LOG_ERR, "%s not mounted, giving up after %u sec", path, max_time);
+    g_warning("%s not mounted, giving up after %u sec", path, max_time);
 
     return CDM_STATUS_ERROR;
 }
 
-static CdmStatus init_coredump_archive(CdhData *d, const char *dirname)
+static CdmStatus init_coredump_archive(CdhData *d, const gchar *dirname)
 {
-    char aname[CDM_PATH_MAX];
-    ssize_t sz;
+    gchar aname[CDM_PATH_MAX];
+    sgsize sz;
 
-    assert(d);
-    assert(dirname);
+    g_assert(d);
+    g_assert(dirname);
 
     sz = snprintf(aname, sizeof(aname), ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid,
                   d->info->tstamp);
@@ -249,22 +249,22 @@ static CdmStatus init_coredump_archive(CdhData *d, const char *dirname)
     return CDM_STATUS_OK;
 }
 
-CdmStatus cdh_main_enter(CdhData *d, int argc, char *argv[])
+CdmStatus cdh_main_enter(CdhData *d, gint argc, gchar *argv[])
 {
-    const char *opt_early_fspath, *opt_coredir, *opt_earlydir, *opt_fspath, *opt_early_flag;
-    size_t opt_fs_min_size, opt_fs_max_wait;
+    const gchar *opt_early_fspath, *opt_coredir, *opt_earlydir, *opt_fspath, *opt_early_flag;
+    gsize opt_fs_min_size, opt_fs_max_wait;
     CdmStatus status, opt_status;
-    int opt_nice_value;
+    gint opt_nice_value;
     time_t crash_time;
     struct tm *ctm;
-    char *coredir;
-    ssize_t sz;
+    gchar *coredir;
+    sgsize sz;
 
-    assert(d);
+    g_assert(d);
 
     status = opt_status = CDM_STATUS_OK;
 
-    coredir = calloc(1, sizeof(char) * CDM_PATH_MAX);
+    coredir = calloc(1, sizeof(gchar) * CDM_PATH_MAX);
     cdhbail(BAIL_ALLOC_NIL, (coredir != NULL), NULL);
 
     if (read_args(d, argc, argv) < 0) {
@@ -273,7 +273,7 @@ CdmStatus cdh_main_enter(CdhData *d, int argc, char *argv[])
     }
 
     if (cdh_context_get_procname(d->info->pid, d->info->name, sizeof(d->info->name)) != 0) {
-        cdhlog(LOG_ERR, "Failed to get executable name");
+        g_warning("Failed to get executable name");
     } else {
         remove_invalid_chars(d->info->name);
     }
@@ -282,21 +282,21 @@ CdmStatus cdh_main_enter(CdhData *d, int argc, char *argv[])
     ctm = localtime(&crash_time);
     cdhbail(BAIL_OPTS_NIL, (ctm != NULL), NULL);
 
-    cdhlog(LOG_INFO, "New process crash: name=%s pid=%d signal=%d timestamp=%s coresz=%lu",
+    g_info( "New process crash: name=%s pid=%d signal=%d timestamp=%s coresz=%lu",
            d->info->name, d->info->pid, d->info->sig, asctime(ctm));
 
 #if defined(WITH_COREMANAGER) || defined(WITH_CRASHHANDLER)
     if (cdh_manager_init(&d->crash_mgr, d->opts) != CDM_STATUS_OK) {
-        cdhlog(LOG_WARNING, "Crashhandler object init failed");
+        g_warning("Crashhandler object init failed");
     }
 
     if (cdh_manager_connect(&d->crash_mgr) != CDM_STATUS_OK) {
-        cdhlog(LOG_WARNING, "Fail to connect to manager socket");
+        g_warning("Fail to connect to manager socket");
     } else {
-        CDMessage msg;
-        cdh_corenew_t data;
+        CdmMessage msg;
+        CdmMessageDataNew data;
 
-        cd_message_init(&msg, CDM_CORE_NEW, (uint16_t)((unsigned)d->info->pid | d->info->tstamp));
+        cdm_message_init(&msg, CDM_CORE_NEW, (guint16)((gulong)d->info->pid | d->info->tstamp));
 
         data.pid = d->info->pid;
         data.coresig = d->info->sig;
@@ -304,67 +304,67 @@ CdmStatus cdh_main_enter(CdhData *d, int argc, char *argv[])
         memcpy(data.tname, d->info->tname, strlen(d->info->tname) + 1);
         memcpy(data.pname, d->info->name, strlen(d->info->name) + 1);
 
-        cd_message_set_data(&msg, &data, sizeof(data));
+        cdm_message_set_data(&msg, &data, sizeof(data));
 
-        if (cd_manager_send(&d->crash_mgr, &msg) == CDM_STATUS_ERROR) {
-            cdhlog(LOG_ERR, "Failed to send new message to manager");
+        if (cdm_manager_send(&d->crash_mgr, &msg) == CDM_STATUS_ERROR) {
+            g_warning("Failed to send new message to manager");
         }
     }
 #endif
 
     /* get optionals */
-    opt_fspath = cdh_opts_string_for(d->opts, KEY_FILESYSTEM_MOUNT_DIR, &opt_status);
+    opt_fspath = cdm_options_string_for(d->opts, KEY_FILESYSTEM_MOUNT_DIR, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_early_fspath = cdh_opts_string_for(d->opts, KEY_EARLY_FILESYSTEM_MOUNT_DIR, &opt_status);
+    opt_early_fspath = cdm_options_string_for(d->opts, KEY_EARLY_FILESYSTEM_MOUNT_DIR, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_coredir = cdh_opts_string_for(d->opts, KEY_COREDUMP_DIR, &opt_status);
+    opt_coredir = cdm_options_string_for(d->opts, KEY_COREDUMP_DIR, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_earlydir = cdh_opts_string_for(d->opts, KEY_EARLY_COREDUMP_DIR, &opt_status);
+    opt_earlydir = cdm_options_string_for(d->opts, KEY_EARLY_COREDUMP_DIR, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_early_flag = cdh_opts_string_for(d->opts, KEY_EARLY_COREDUMP_FLAG_FILE, &opt_status);
+    opt_early_flag = cdm_options_string_for(d->opts, KEY_EARLY_COREDUMP_FLAG_FILE, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_fs_min_size = (size_t)cdh_opts_long_for(d->opts, KEY_FILESYSTEM_MIN_SIZE, &opt_status);
+    opt_fs_min_size = (gsize)cdm_options_long_for(d->opts, KEY_FILESYSTEM_MIN_SIZE, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_fs_max_wait = (size_t)cdh_opts_long_for(d->opts, KEY_FILESYSTEM_TIMEOUT_SEC, &opt_status);
+    opt_fs_max_wait = (gsize)cdm_options_long_for(d->opts, KEY_FILESYSTEM_TIMEOUT_SEC, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
-    opt_nice_value = (int)cdh_opts_long_for(d->opts, KEY_ELEVATED_NICE_VALUE, &opt_status);
+    opt_nice_value = (gint)cdm_options_long_for(d->opts, KEY_ELEVATED_NICE_VALUE, &opt_status);
     cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
     /* Check and wait for coredump file system to be mounted */
     if (wait_filesystem(opt_fspath, 1, opt_fs_max_wait) == CDM_STATUS_ERROR) {
-        cdhlog(LOG_ERR, "Core dump filesystem %s not available", opt_fspath);
+        g_warning("Core dump filesystem %s not available", opt_fspath);
 
         if (access(opt_early_flag, F_OK) == 0) {
-            cdhlog(LOG_INFO, "Very early core-dumps enabled");
+            g_info( "Very early core-dumps enabled");
 
             opt_fs_min_size =
-                (size_t)cdh_opts_long_for(d->opts, KEY_EARLY_FILESYSTEM_MIN_SIZE, &opt_status);
+                (gsize)cdm_options_long_for(d->opts, KEY_EARLY_FILESYSTEM_MIN_SIZE, &opt_status);
             cdhbail(BAIL_OPTS_NIL, (opt_status == CDM_STATUS_OK), NULL);
 
             sz = snprintf(coredir, CDM_PATH_MAX, "%s/%s", opt_early_fspath, opt_earlydir);
             cdhbail(BAIL_PATH_MAX, ((0 < sz) && (sz < CDM_PATH_MAX)), opt_earlydir);
         } else {
-            cdhlog(LOG_ERR, "Very early coredumps disabled. Coredumping failed!");
+            g_warning("Very early coredumps disabled. Coredumping failed!");
             status = CDM_STATUS_ERROR;
             goto enter_cleanup;
         }
     } else {
-        cdhlog(LOG_INFO, "Core dump filesystem mountpoint is available");
+        g_info( "Core dump filesystem mountpogint is available");
         sz = snprintf(coredir, CDM_PATH_MAX, "%s/%s", opt_fspath, opt_coredir);
         cdhbail(BAIL_PATH_MAX, ((0 < sz) && (sz < CDM_PATH_MAX)), opt_coredir);
     }
 
-    cdhlog(LOG_DEBUG, "Coredump database path %s", coredir);
+    g_debug("Coredump database path %s", coredir);
 
     if (nice(opt_nice_value) != opt_nice_value) {
-        cdhlog(LOG_WARNING, "Failed to change CDH priority");
+        g_warning("Failed to change crashhandler priority");
     }
 
     if (check_and_create_directory(d, coredir) != CDM_STATUS_OK) {
@@ -378,23 +378,23 @@ CdmStatus cdh_main_enter(CdhData *d, int argc, char *argv[])
     }
 
     if (init_coredump_archive(d, coredir) != CDM_STATUS_OK) {
-        cdhlog(LOG_ERR, "Fail to create coredump archive");
+        g_warning("Fail to create coredump archive");
         status = CDM_STATUS_ERROR;
         goto enter_cleanup;
     }
 
     if (cdh_context_generate_prestream(d) != CDM_STATUS_OK) {
-        cdhlog(LOG_ERR, "Failed to generate the context file, continue with coredump");
+        g_warning("Failed to generate the context file, continue with coredump");
     }
 
     if (cdh_coredump_generate(d) != CDM_STATUS_OK) {
-        cdhlog(LOG_ERR, "Coredump handling failed");
+        g_warning("Coredump handling failed");
         status = CDM_STATUS_ERROR;
         goto enter_cleanup;
     }
 
     if (cdh_util_sync_dir(coredir) != CDM_STATUS_OK) {
-        cdhlog(LOG_ERR, "Sync coredump directory has failed !");
+        g_warning("Sync coredump directory has failed !");
     }
 
 enter_cleanup:
@@ -402,19 +402,19 @@ enter_cleanup:
     cdh_manager_set_coredir(&d->crash_mgr, coredir);
 
     if (cdh_manager_connected(&d->crash_mgr)) {
-        CDMessage msg;
-        CDMessageType type;
+        CdmMessage msg;
+        CdmMessageType type;
 
         type = (status == CDM_STATUS_OK ? CDM_CORE_COMPLETE : CDM_CORE_FAILED);
 
-        cd_message_init(&msg, type, (uint16_t)((unsigned)d->info->pid | d->info->tstamp));
+        cdm_message_init(&msg, type, (guint16)((gulong)d->info->pid | d->info->tstamp));
 
-        if (cd_manager_send(&d->crash_mgr, &msg) == CDM_STATUS_ERROR) {
-            cdhlog(LOG_ERR, "Failed to send status message to manager");
+        if (cdm_manager_send(&d->crash_mgr, &msg) == CDM_STATUS_ERROR) {
+            g_warning("Failed to send status message to manager");
         }
 
-        if (cd_manager_disconnect(&d->crash_mgr) != CDM_STATUS_OK) {
-            cdhlog(LOG_WARNING, "Fail to disconnect to manager socket");
+        if (cdm_manager_disconnect(&d->crash_mgr) != CDM_STATUS_OK) {
+            g_warning("Fail to disconnect to manager socket");
         }
     }
 #endif

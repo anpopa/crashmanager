@@ -1,4 +1,4 @@
-/* cdm_message.h
+/* cdm-message.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -37,6 +37,7 @@ extern "C" {
 #include "cdm-message-type.h"
 #include "cdm-types.h"
 
+#include <glib.h>
 
 /*
  * @brief Initialize a pre-allocated mesage object
@@ -85,7 +86,7 @@ CdmMessageType cdm_message_getype(CdmMessage *m);
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CdmStatus cdm_message_set_version(CdmMessage *m, const char *version);
+CdmStatus cdm_message_set_version(CdmMessage *m, const gchar *version);
 
 /*
  * @brief Read data into message object
@@ -97,7 +98,7 @@ CdmStatus cdm_message_set_version(CdmMessage *m, const char *version);
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CdmStatus cdm_message_read(int fd, CdmMessage *m);
+CdmStatus cdm_message_read(gint fd, CdmMessage *m);
 
 /*
  * @brief Write data into message object
@@ -107,7 +108,7 @@ CdmStatus cdm_message_read(int fd, CdmMessage *m);
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CdmStatus cdm_message_write(int fd, CdmMessage *m);
+CdmStatus cdm_message_write(gint fd, CdmMessage *m);
 
 #ifdef __cplusplus
 }

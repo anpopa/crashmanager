@@ -1,4 +1,4 @@
-/* cdm_message.c
+/* cdm-message.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -29,7 +29,6 @@
 
 #include "cdm-message.h"
 
-#include <assert.h>
 #include <memory.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -38,7 +37,7 @@
 
 void cdm_message_init(CdmMessage *m, CdmMessageType type, uint16 session)
 {
-    assert(m);
+    g_assert(m);
 
     memset(m, 0, sizeof(CdmMessage));
     m->hdr.type = type;
@@ -48,8 +47,8 @@ void cdm_message_init(CdmMessage *m, CdmMessageType type, uint16 session)
 
 void cdm_message_set_data(CdmMessage *m, void *data, uint32 size)
 {
-    assert(m);
-    assert(data);
+    g_assert(m);
+    g_assert(data);
 
     m->hdr.data_size = size;
     m->data = data;
@@ -57,7 +56,7 @@ void cdm_message_set_data(CdmMessage *m, void *data, uint32 size)
 
 void cdm_message_free_data(CdmMessage *m)
 {
-    assert(m);
+    g_assert(m);
 
     if (m->data != NULL) {
         free(m->data);
@@ -79,24 +78,24 @@ bool cdm_message_is_valid(CdmMessage *m)
 
 CdmMessageType cdm_message_getype(CdmMessage *m)
 {
-    assert(m);
+    g_assert(m);
     return m->hdr.type;
 }
 
-CdmStatus cdm_message_set_version(CdmMessage *m, const char *version)
+CdmStatus cdm_message_set_version(CdmMessage *m, const gchar *version)
 {
-    assert(m);
+    g_assert(m);
 
-    snprintf((char *)m->hdr.version, CDM_VERSION_STRING_LEN, "%s", version);
+    snprintf((gchar *)m->hdr.version, CDM_VERSION_STRING_LEN, "%s", version);
 
     return CDM_STATUS_OK;
 }
 
-CdmStatus cdm_message_read(int fd, CdmMessage *m)
+CdmStatus cdm_message_read(gint fd, CdmMessage *m)
 {
-    ssize_t sz;
+    gssize sz;
 
-    assert(m);
+    g_assert(m);
 
     sz = read(fd, &m->hdr, sizeof(CdmMessageHdr));
 
@@ -114,11 +113,11 @@ CdmStatus cdm_message_read(int fd, CdmMessage *m)
     return sz == m->hdr.data_size ? CDM_STATUS_OK : CDM_STATUS_ERROR;
 }
 
-CdmStatus cdm_message_write(int fd, CdmMessage *m)
+CdmStatus cdm_message_write(gint fd, CdmMessage *m)
 {
-    ssize_t sz;
+    gssize sz;
 
-    assert(m);
+    g_assert(m);
 
     if (!cdm_message_is_valid(m)) {
         return CDM_STATUS_ERROR;

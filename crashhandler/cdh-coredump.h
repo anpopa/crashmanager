@@ -1,4 +1,4 @@
-/* cdm-coredump.h
+/* cdh-coredump.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -35,6 +35,7 @@ extern "C" {
 #endif
 
 #include "cdh-data.h"
+#include <glib.h>
 
 /* @brief Generate coredump file
  *
@@ -49,4 +50,4 @@ CdmStatus cdh_coredump_generate(CdhData *d);
 }
 #endif
 
-#endif /* COREDUMP_H */
+#endif /* CDH_COREDUMP_H */
