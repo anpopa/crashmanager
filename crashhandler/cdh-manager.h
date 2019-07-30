@@ -108,7 +108,7 @@ void cdh_manager_set_coredir (CdhManager *c, const gchar *coredir);
  *
  * @return True if connected
  */
-CdmStatus cdh_manager_send (CdhManager *c, CDMessage *m);
+CdmStatus cdh_manager_send (CdhManager *c, CdmMessage *m);
 
 #ifdef __cplusplus
 }

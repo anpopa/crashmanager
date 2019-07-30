@@ -34,6 +34,8 @@
 #include "cdh-coredump.h"
 #include "cdm-message.h"
 
+#include <glib.h>
+#include <glib/gstdio.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -41,18 +43,15 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <sys/statvfs.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-
-static void remove_invalid_chars (gchar *str);
 
 static CdmStatus read_args (CdhData *d, gint argc, gchar **argv);
 
 static CdmStatus check_disk_space (const gchar *path, gsize min);
-
-static CdmStatus check_and_create_directory (CdhData *d, const gchar *dirname);
-
-static CdmStatus wait_filesystem (const gchar *path, gulong check_interval, gsize max_time);
 
 static CdmStatus init_coredump_archive (CdhData *d, const gchar *dirname);
 
@@ -95,7 +94,7 @@ read_args (CdhData *d, gint argc, gchar **argv)
       return CDM_STATUS_ERROR;
     }
 
-  d->info->tstamp = g_ascii_strtoll (argv[1], NULL, 10);
+  d->info->tstamp = g_ascii_strtoull (argv[1], NULL, 10);
   if (d->info->tstamp == 0)
     {
       g_warning ("Unable to read tstamp argument %s", argv[1]);
@@ -148,7 +147,7 @@ check_disk_space (const gchar *path, gsize min)
 
   if (free_sz < min)
     {
-      g_warning ("Insufficient disk space for coredump: %ld MB.", free_sz);
+      g_warning ("Insufficient disk space for coredump: %lu MB.", free_sz);
       return CDM_STATUS_ERROR;
     }
 
@@ -163,7 +162,7 @@ init_coredump_archive (CdhData *d, const gchar *dirname)
   g_assert (d);
   g_assert (dirname);
 
-  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid);
+  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid, d->info->tstamp);
 
   if (cdh_archive_open (&d->archive, aname) != CDM_STATUS_OK)
     {
@@ -190,19 +189,19 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
       goto enter_cleanup;
     }
 
-  procname = cdh_context_procname (d->info->pid);
+  procname = cdh_context_get_procname (d->info->pid);
   if (procname != NULL)
     {
       g_free (d->info->name);
       d->info->name = procname;
     }
 
-  g_strdelim (d->info->name, ":/\\!*", '_');
+  g_strdelimit (d->info->name, ":/\\!*", '_');
 
-  g_info ("New process crash: name=%s pid=%d signal=%d timestamp=%ld",
+  g_info ("New process crash: name=%s pid=%ld signal=%ld timestamp=%lu",
           d->info->name, d->info->pid, d->info->sig, d->info->tstamp);
 
-#if defined(WITH_COREMANAGER)
+#if defined(WITH_CRASHMANAGER)
   if (cdh_manager_init (&d->crash_mgr, d->opts) != CDM_STATUS_OK)
     {
       g_warning ("Crashhandler object init failed");
@@ -235,9 +234,9 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
 #endif
 
   /* get optionals */
-  opt_coredir = cdm_options_string_for (d->opts, KEY_CRASHDUMP_DIR, &opt_status);
-  opt_fs_min_size = (gsize)cdm_options_long_for (d->opts, KEY_FILESYSTEM_MIN_SIZE, &opt_status);
-  opt_nice_value = (gint)cdm_options_long_for (d->opts, KEY_ELEVATED_NICE_VALUE, &opt_status);
+  opt_coredir = cdm_options_string_for (d->opts, KEY_CRASHDUMP_DIR);
+  opt_fs_min_size = (gsize)cdm_options_long_for (d->opts, KEY_FILESYSTEM_MIN_SIZE);
+  opt_nice_value = (gint)cdm_options_long_for (d->opts, KEY_ELEVATED_NICE_VALUE);
 
   g_debug ("Coredump database path %s", opt_coredir);
 

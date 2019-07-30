@@ -33,6 +33,8 @@
 #include <glib.h>
 #include <stdlib.h>
 
+static gint64 get_long_option (CdmOptions *opts, const gchar *section_name, const gchar *property_name GError **error);
+
 CdmOptions *
 cdm_options_new (const gchar *conf_path)
 {
@@ -69,7 +71,7 @@ cdm_options_free (CdmOptions *opts)
 
   if (opts->conf)
     {
-      cdm_conf_free (opts->conf);
+      g_key_file_free (opts->conf);
     }
 
   free (opts);
@@ -78,15 +80,12 @@ cdm_options_free (CdmOptions *opts)
 gchar *
 cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
 {
-  if (error != NULL)
-    *error = CDM_STATUS_OK;
-
   switch (key)
     {
     case KEY_USER_NAME:
       if (opts->has_conf)
         {
-          const gchar *tmp = g_key_file_get_string (opts->conf, "common", "UserName", NULL);
+          char *tmp = g_key_file_get_string (opts->conf, "common", "UserName", NULL);
 
           if (tmp != NULL)
             {
@@ -98,7 +97,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_GROUP_NAME:
       if (opts->has_conf)
         {
-          const gchar *tmp = g_key_file_get_string (opts->conf, "common", "GroupName", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "common", "GroupName", NULL);
 
           if (tmp != NULL)
             {
@@ -110,8 +109,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_CRASHDUMP_DIR:
       if (opts->has_conf)
         {
-          const gchar *tmp =
-            g_key_file_get_string (opts->conf, "common", "CoredumpDirectory", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "common", "CoredumpDirectory", NULL);
 
           if (tmp != NULL)
             {
@@ -123,7 +121,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_RUN_DIR:
       if (opts->has_conf)
         {
-          const gchar *tmp = g_key_file_get_string (opts->conf, "common", "RunDirectory", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "common", "RunDirectory", NULL);
 
           if (tmp != NULL)
             {
@@ -135,8 +133,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_KDUMPSOURCE_DIR:
       if (opts->has_conf)
         {
-          const gchar *tmp =
-            g_key_file_get_string (opts->conf, "coremanager", "KDumpSourceDir", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "coremanager", "KDumpSourceDir", NULL);
 
           if (tmp != NULL)
             {
@@ -148,8 +145,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_IPC_SOCK_ADDR:
       if (opts->has_conf)
         {
-          const gchar *tmp =
-            g_key_file_get_string (opts->conf, "common", "IpcSocketFile", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "common", "IpcSocketFile", NULL);
 
           if (tmp != NULL)
             {
@@ -207,11 +203,6 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
   GError *error = NULL;
   gint64 value = 0;
 
-  if (error != NULL)
-    {
-      *error = CDM_STATUS_OK;
-    }
-
   switch (key)
     {
     case KEY_FILESYSTEM_MIN_SIZE:
@@ -236,34 +227,34 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
       value = get_long_option (opts, "common", "IpcSocketTimeout", &error);
       if (error != NULL)
         {
-          value = CDM_CRASHMANAGER_IPC_TIMEOUT_SEC;
+          value = CDM_IPC_TIMEOUT_SEC;
           g_error_free (error);
         }
       break;
 
-    case KEY_CRASHDIR_MIN_SIZE:
+    case KEY_CRASHDUMP_DIR_MIN_SIZE:
       value = get_long_option (opts, "crashmanager", "MinCoredumpDirSize", &error);
       if (error != NULL)
         {
-          value = CDM_CRASHDIR_MIN_SIZE;
+          value = CDM_CRASHDUMP_DIR_MIN_SIZE;
           g_error_free (error);
         }
       break;
 
-    case KEY_CRASHDIR_MAX_SIZE:
+    case KEY_CRASHDUMP_DIR_MAX_SIZE:
       value = get_long_option (opts, "crashmanager", "MaxCoredumpDirSize", &error);
       if (error != NULL)
         {
-          value = CDM_CRASHDIR_MAX_SIZE;
+          value = CDM_CRASHDUMP_DIR_MAX_SIZE;
           g_error_free (error);
         }
       break;
 
-    case KEY_CRASHDIR_MAX_COUNT:
+    case KEY_CRASHFILES_MAX_COUNT:
       value = get_long_option (opts, "crashmanager", "MaxCoredumpArchives", &error);
       if (error != NULL)
         {
-          value = CDM_CRASHDIR_MAX_COUNT;
+          value = CDM_CRASHFILES_MAX_COUNT;
           g_error_free (error);
         }
       break;

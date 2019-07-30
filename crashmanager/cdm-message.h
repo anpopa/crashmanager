@@ -46,7 +46,7 @@ extern "C" {
  * @param type The message type
  * @param session Unique session identifier
  */
-void cdm_message_init (CdmMessage *m, CdmMessageType type, uint16 session);
+void cdm_message_init (CdmMessage *m, CdmMessageType type, uint16_t session);
 
 /*
  * @brief Message data setter
@@ -55,7 +55,7 @@ void cdm_message_init (CdmMessage *m, CdmMessageType type, uint16 session);
  * @param data The message data to set
  * @param size The message data size
  */
-void cdm_message_set_data (CdmMessage *m, void *data, uint32 size);
+void cdm_message_set_data (CdmMessage *m, void *data, uint32_t size);
 
 /*
  * @brief Message data free

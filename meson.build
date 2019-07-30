@@ -7,6 +7,10 @@ add_project_arguments([
   '-I' + meson.build_root(),
   ], language: 'c')
 
+cdm_c_include_dir = [
+   'crashmanager'
+   ]
+
 cdm_c_compiler_args = [
   '-Wall',
   '-Wextra',
@@ -40,13 +44,13 @@ cdm_defaults_data = configuration_data()
 cdm_defaults_data.set('version', meson.project_version())
 cdm_defaults_data.set('config_dir', get_option('CONFDIR'))
 configure_file(input : 'crashmanager/cdm-defaults.h.in',
-  output : 'cdm_defaults.h',
+  output : 'cdm-defaults.h',
   configuration : cdm_defaults_data)
 
 cdm_msgtype_data = configuration_data()
 cdm_msgtype_data.set('version', meson.project_version())
 configure_file(input : 'crashmanager/cdm-message-type.h.in',
-  output : 'cd_message_type.h',
+  output : 'cdm-message-type.h',
   configuration : cdm_msgtype_data)
 
 cdm_config_data = configuration_data()
@@ -114,7 +118,7 @@ endif
 
 if get_option('CRASHTEST')
   crashtest_sources = [
-	'testing/crashtest/crashtest.c',
+	'ctests/crashtest/crashtest.c',
 	]
 
   crashtest_deps = []
@@ -176,6 +180,7 @@ if get_option('CRASHHANDLER')
 
   executable('crashhandler', crashhandler_sources,
 	dependencies: crashhandler_deps,
+	include_directories : cdm_c_include_dir,
 	c_args: cdm_c_compiler_args,
 	install: true,
 	)

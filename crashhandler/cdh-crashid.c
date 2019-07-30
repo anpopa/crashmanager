@@ -40,78 +40,96 @@
 #include <sys/procfs.h>
 #include <sys/user.h>
 
-#define TMP_STRBUF_LEN (2048)
 #define CRASH_ID_HIGH (6)
 #define CRASH_ID_LOW (2)
 #define CRASH_ID_QUALITY(x) ((x) > CRASH_ID_HIGH ? "high" : (x) < CRASH_ID_LOW ? "low" : "medium")
 
+uint64_t jenkins_hash (const char *key);
+
 static CdmStatus create_crashid (CdhData *d);
+
+guint64
+jenkins_hash (const gchar *key)
+{
+  guint64 hash, i;
+
+  for (hash = i = 0; i < strlen (key); ++i)
+    {
+      hash += (guint64)key[i];
+      hash += (hash << 10);
+      hash ^= (hash >> 6);
+    }
+
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
+
+  return hash;
+}
 
 static CdmStatus
 create_crashid (CdhData *d)
 {
   const gchar *locstr[] = { "host", "container" };
-  const gchar *loc;
-  gchar tmpstr[TMP_STRBUF_LEN] = "";
+  const gchar *loc = NULL;
+  g_autofree gchar *cid_str = NULL;
+  g_autofree gchar *vid_str = NULL;
 
   g_assert (d);
-
-  memset (d->info.crashid, 0, sizeof(d->info.crashid));
-  memset (d->info.vectorid, 0, sizeof(d->info.vectorid));
 
   if (d->crashid_info & CID_IP_FILE_OFFSET)
     {
       if (d->crashid_info & CID_RA_FILE_OFFSET)
         {
-          snprintf (tmpstr, sizeof(tmpstr), "%s%lx%s%s", d->info.name, d->ip_file_offset,
-                    d->ip_module_name, d->ra_module_name);
+          cid_str = g_strdup_printf ("%s%lx%s%s", d->info->name, d->ip_file_offset, d->ip_module_name, d->ra_module_name);
         }
       else
         {
-          snprintf (tmpstr, sizeof(tmpstr), "%s%lx%s", d->info.name, d->ip_file_offset,
-                    d->ip_module_name);
+          cid_str = g_strdup_printf ("%s%lx%s", d->info->name, d->ip_file_offset, d->ip_module_name);
         }
     }
   else
     {
 #ifdef __x86_64__
-      snprintf (tmpstr, sizeof(tmpstr), "%s%lx", d->info.name, d->regs.rip);
+      cid_str = g_strdup_printf ("%s%lx", d->info->name, d->regs.rip);
 #elif __aarch64__
-      snprintf (tmpstr, sizeof(tmpstr), "%s%lx", d->info.name, d->regs.lr);
+      cid_str = g_strdup_printf ("%s%lx", d->info->name, d->regs.lr);
 #endif
     }
 
   /* hash and write crashid */
-  snprintf (d->info.crashid, sizeof(d->info.crashid), "%016lX", cdh_util_jenkins_hash (tmpstr));
+  d->info->crashid = g_strdup_printf ("%016lX", jenkins_hash (cid_str));
 
   if (d->crashid_info & CID_RA_FILE_OFFSET)
     {
-      snprintf (tmpstr, sizeof(tmpstr), "%s%lx%s", d->info.name, d->ip_file_offset,
-                d->ra_module_name);
+      vid_str = g_strdup_printf ("%s%lx%s", d->info->name, d->ip_file_offset, d->ra_module_name);
+
+      d->info->vectorid = g_strdup_printf ("%016lX", jenkins_hash (vid_str));
+    }
+  else
+    {
+      d->info->vectorid = g_strdup_printf ("%016lX", jenkins_hash (cid_str));
     }
 
-  /* hash and write vectorid */
-  snprintf (d->info.vectorid, sizeof(d->info.vectorid), "%016lX", cdh_util_jenkins_hash (tmpstr));
-
   /* crash context location string */
-  loc = d->info.onhost == true ? locstr[0] : locstr[1];
+  loc = d->info->onhost == TRUE ? locstr[0] : locstr[1];
 #ifdef __x86_64__
   g_info (
-    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%d cpid=%d crashID=%s "
+    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s "
     "vectorID=%s confidence=\"%s\" signal=\"%s\" rip=0x%lx rbp=0x%lx retaddr=0x%lx "
     "IPFileOffset=0x%lx RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
-    loc, d->info.contextid, d->info.name, d->info.tname, d->info.pid, d->info.cpid,
-    d->info.crashid, d->info.vectorid, CRASH_ID_QUALITY (d->crashid_info),
-    strsignal (d->info.sig), d->regs.rip, d->regs.rbp, d->ra, d->ip_file_offset,
+    loc, d->info->contextid, d->info->name, d->info->tname, d->info->pid, d->info->cpid,
+    d->info->crashid, d->info->vectorid, CRASH_ID_QUALITY (d->crashid_info),
+    strsignal ((gint)d->info->sig), d->regs.rip, d->regs.rbp, d->ra, d->ip_file_offset,
     d->ra_file_offset, d->ip_module_name, d->ra_module_name);
 #elif __aarch64__
   g_info (
-    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%d cpid=%d crashID=%s "
+    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s "
     "vectorID=%s confidence=\"%s\" signal=\"%s\" pc=0x%lx lr=0x%lx retaddr=0x%lx "
     "IPFileOffset=0x%lx RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
-    loc, d->info.contextid, d->info.name, d->info.tname, d->info.pid, d->info.cpid,
-    d->info.crashid, d->info.vectorid, CRASH_ID_QUALITY (d->crashid_info),
-    strsignal (d->info.sig), d->regs.pc, d->regs.lr, d->ra, d->ip_file_offset,
+    loc, d->info->contextid, d->info->name, d->info->tname, d->info->pid, d->info->cpid,
+    d->info->crashid, d->info->vectorid, CRASH_ID_QUALITY (d->crashid_info),
+    strsignal (d->info->sig), d->regs.pc, d->regs.lr, d->ra, d->ip_file_offset,
     d->ra_file_offset, d->ip_module_name, d->ra_module_name);
 #endif
 

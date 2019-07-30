@@ -28,6 +28,9 @@
  */
 
 #include "cdm-defaults.h"
+#include "cdm-types.h"
+#include "cdm-logging.h"
+#include "cdh-data.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -40,13 +43,13 @@ main (gint argc, gchar *argv[])
 
   cdm_logging_open ("CDH", "Coredumper instance", "CDH", "Default context");
 
-  conf_path = g_build_filename (CDH_CONFIG_DIRECTORY, CDH_CONFIG_FILE_NAME, NULL);
+  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
   if (g_access (conf_path, R_OK) == 0)
     {
-      g_autofree data = g_malloc0 (sizeof(CdhData));
+      g_autofree CdhData *data = g_malloc0 (sizeof(CdhData));
 
       cdh_data_init (data, conf_path);
-      status = cdh_enter (data, argc, argv);
+      status = cdh_main_enter (data, argc, argv);
       cdh_data_deinit (data);
     }
   else

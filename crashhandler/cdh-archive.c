@@ -126,7 +126,7 @@ cdh_archive_create_file (CdhArchive *ar, const gchar *dst)
 CdmStatus
 cdh_archive_write_file (CdhArchive *ar, const void *buf, gsize size)
 {
-  sgsize sz;
+  gssize sz;
 
   g_assert (ar);
   g_assert (buf);
@@ -204,7 +204,7 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
 
       if ((fd = g_open (src, O_RDONLY)) != -1)
         {
-          gsize readsz = read (fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
+          gssize readsz = read (fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
 
           while (readsz > 0)
             {
@@ -277,7 +277,7 @@ cdh_archive_stream_read (CdhArchive *ar, void *buf, gsize size)
 
   if ((readsz = fread (buf, 1, size, ar->in_stream)) != size)
     {
-      g_warning ("Cannot read %d bytes from archive input stream %s", size,
+      g_warning ("Cannot read %lu bytes from archive input stream %s", size,
                  strerror (errno));
       return CDM_STATUS_ERROR;
     }
@@ -348,7 +348,7 @@ cdh_archive_stream_move_ahead (CdhArchive *ar, gulong nbbytes)
 
       if (readsz != chunksz)
         {
-          g_warning ("Cannot move ahead by %d bytes from src. Read %lu bytes", nbbytes,
+          g_warning ("Cannot move ahead by %lu bytes from src. Read %lu bytes", nbbytes,
                      readsz);
           return CDM_STATUS_ERROR;
         }

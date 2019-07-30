@@ -55,9 +55,10 @@ extern "C" {
  * @brief The global cdh data object referencing main submodules and states
  */
 typedef struct _CdhData {
+  CdmOptions *opts;    /**< Global options */
+  CdhInfo *info;       /**< Crash info data */
   CdhArchive archive;  /**< coredump archive streamer */
   CdmRegisters regs;   /**< cpu registers for crash id calculation */
-  CdhInfo info;       /**< Crash info data */
 #if defined(WITH_CRASHMANAGER)
   CdhManager crash_mgr;   /**< manager ipc object */
 #endif

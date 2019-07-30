@@ -47,7 +47,7 @@ extern "C" {
  *
  * @return CDM_STATUS_OK on success
  */
-gchar *cdh_context_get_procname (pid_t pid);
+gchar *cdh_context_get_procname (gint64 pid);
 
 /**
  * @brief Generate context data available pre coredump stream

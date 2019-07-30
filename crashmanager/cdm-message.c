@@ -36,7 +36,7 @@
 #include <unistd.h>
 
 void
-cdm_message_init (CdmMessage *m, CdmMessageType type, uint16 session)
+cdm_message_init (CdmMessage *m, CdmMessageType type, uint16_t session)
 {
   g_assert (m);
 
@@ -47,7 +47,7 @@ cdm_message_init (CdmMessage *m, CdmMessageType type, uint16 session)
 }
 
 void
-cdm_message_set_data (CdmMessage *m, void *data, uint32 size)
+cdm_message_set_data (CdmMessage *m, void *data, uint32_t size)
 {
   g_assert (m);
   g_assert (data);

@@ -37,6 +37,10 @@ extern "C" {
 #include "cdm-types.h"
 
 #include <glib.h>
+#include <glib/gstdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <archive.h>
 #include <archive_entry.h>
 

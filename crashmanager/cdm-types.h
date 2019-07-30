@@ -62,7 +62,7 @@ extern "C" {
 #endif
 
 #ifndef ARCHIVE_NAME_PATTERN
-#define ARCHIVE_NAME_PATTERN "%s/core_%s_%d_%lu.cdh.tar.gz"
+#define ARCHIVE_NAME_PATTERN "%s/core_%s_%ld_%lu.cdh.tar.gz"
 #endif
 
 enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
@@ -74,11 +74,11 @@ typedef enum _CdmStatus {
 
 typedef struct _CdmRegisters {
 #ifdef __aarch64__
-  uint64 pc;
-  uint64 lr;
+  uint64_t pc;
+  uint64_t lr;
 #elif __x86_64__
-  uint64 rip;
-  uint64 rbp;
+  uint64_t rip;
+  uint64_t rbp;
 #else
   static_assert (false, "Don't know whow to handle this arhitecture");
 #endif

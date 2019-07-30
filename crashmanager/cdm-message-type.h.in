@@ -61,9 +61,9 @@ typedef enum _CdmMessageType {
 } CdmMessageType;
 
 typedef struct _CdmMessageDataNew {
-  int pid;
-  int coresig;
-  uint64 tstamp;
+  int64_t pid;
+  int64_t coresig;
+  uint64_t tstamp;
   char pname[CDM_MESSAGE_PROCNAME_LEN];
   char tname[CDM_MESSAGE_PROCNAME_LEN];
 } CdmMessageDataNew;
@@ -85,11 +85,11 @@ typedef union _CdmMessageData {
 } CdmMessageData;
 
 typedef struct _CdmMessageHdr {
-  uint16 hsh;
-  uint16 session;
-  uint8 version[CDM_VERSION_STRING_LEN];
+  uint16_t hsh;
+  uint16_t session;
+  uint8_t version[CDM_VERSION_STRING_LEN];
   CdmMessageType type;
-  uint32 data_size;
+  uint32_t data_size;
 } CDM_MESSAGE_PACKED CdmMessageHdr;
 
 typedef struct _CdmMessage {

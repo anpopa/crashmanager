@@ -43,14 +43,14 @@
 #define ALIGN(x, a) (((x) + (a) - 1UL) & ~((a) - 1UL))
 #define NOTE_SIZE(_hdr) (sizeof(_hdr) + ALIGN ((_hdr).n_namesz, 4) + (_hdr).n_descsz)
 
-static gint get_virtual_memory_phdr_nr (CdhData *d, ELF_Addr address);
+static gint get_virtual_memory_phdr_nr (CdhData *d, Elf64_Addr address);
 
 static const gchar *get_nt_file_region_name (gchar *string_tab_start, gulong nr);
 
-static gint get_nt_file_region (CdhData *d, ELF_Addr address, ELF_Addr *region_start,
-                                ELF_Addr *region_end, ELF_Off *file_start, const gchar **region_name);
+static gint get_nt_file_region (CdhData *d, Elf64_Addr address, Elf64_Addr *region_start,
+                                Elf64_Addr *region_end, Elf64_Off *file_start, const gchar **region_name);
 
-static ELF_Addr read_virtual_memory (CdhData *d, ELF_Addr address, gint phdr_nr);
+static Elf64_Addr read_virtual_memory (CdhData *d, Elf64_Addr address, gint phdr_nr);
 
 static gint get_note_page_index (CdhData *d);
 
@@ -87,7 +87,7 @@ read_elf_headers (CdhData *d)
     }
 
   /* Read and store all program headers */
-  d->pphdr = (ELF_Phdr*)malloc (sizeof(ELF_Phdr) * d->ehdr.e_phnum);
+  d->pphdr = (Elf64_Phdr*)malloc (sizeof(Elf64_Phdr) * d->ehdr.e_phnum);
   if (d->pphdr == NULL)
     {
       g_warning ("Cannot allocate Phdr memory (%d headers)", d->ehdr.e_phnum);
@@ -96,12 +96,12 @@ read_elf_headers (CdhData *d)
 
   for (phnum = 0; phnum < d->ehdr.e_phnum; phnum++)
     {
-      ELF_Phdr *const pSegHeader = d->pphdr + phnum;
+      Elf64_Phdr *const pSegHeader = d->pphdr + phnum;
 
       /* Read Programm header */
-      if (cdh_archive_stream_read (&d->archive, pSegHeader, sizeof(ELF_Phdr)) != CDM_STATUS_OK)
+      if (cdh_archive_stream_read (&d->archive, pSegHeader, sizeof(Elf64_Phdr)) != CDM_STATUS_OK)
         {
-          g_warning ("We have failed to read segment header %Xh !", phnum);
+          g_warning ("We have failed to read segment header %d !", phnum);
           return CDM_STATUS_ERROR;
         }
     }
@@ -119,14 +119,14 @@ get_coredump_registers (CdhData *d)
 
   while (found != CDM_STATUS_OK && offset < d->note_page_size)
     {
-      ELF_Nhdr *pnote = (ELF_Nhdr*)(d->nhdr + offset);
+      Elf64_Nhdr *pnote = (Elf64_Nhdr*)(d->nhdr + offset);
 
       if (pnote->n_type == NT_PRSTATUS)
         {
           struct user_regs_struct *ptr_reg;
           prstatus_t *prstatus;
 
-          prstatus = (prstatus_t*)((gchar*)pnote + sizeof(ELF_Nhdr) + ALIGN (pnote->n_namesz, 4));
+          prstatus = (prstatus_t*)((gchar*)pnote + sizeof(Elf64_Nhdr) + ALIGN (pnote->n_namesz, 4));
           ptr_reg = (struct user_regs_struct *)prstatus->pr_reg;
 
 #ifdef __x86_64__
@@ -147,7 +147,7 @@ get_coredump_registers (CdhData *d)
 }
 
 static gint
-get_virtual_memory_phdr_nr (CdhData *d, ELF_Addr address)
+get_virtual_memory_phdr_nr (CdhData *d, Elf64_Addr address)
 {
   g_assert (d);
 
@@ -177,8 +177,8 @@ get_nt_file_region_name (gchar *string_tab_start, gulong nr)
 }
 
 static CdmStatus
-get_nt_file_region (CdhData *d, ELF_Addr address, ELF_Addr *region_start,
-                    ELF_Addr *region_end, ELF_Off *file_start,
+get_nt_file_region (CdhData *d, Elf64_Addr address, Elf64_Addr *region_start,
+                    Elf64_Addr *region_end, Elf64_Off *file_start,
                     const gchar **region_name)
 {
   gsize offset = 0;
@@ -192,35 +192,35 @@ get_nt_file_region (CdhData *d, ELF_Addr address, ELF_Addr *region_start,
 
   while (offset < d->note_page_size)
     {
-      ELF_Nhdr *pnote = (ELF_Nhdr*)(d->nhdr + offset);
+      Elf64_Nhdr *pnote = (Elf64_Nhdr*)(d->nhdr + offset);
 
       if (pnote->n_type == NT_FILE)
         {
-          gulong gint region_nr = 0;
+          guint region_nr = 0;
           gchar *ntpos, *note_end;
-          ELF_Off num_regions, page_size;
+          Elf64_Off num_regions, page_size;
 
-          ntpos = ((gchar*)pnote + sizeof(ELF_Nhdr) + ALIGN (pnote->n_namesz, 4));
+          ntpos = ((gchar*)pnote + sizeof(Elf64_Nhdr) + ALIGN (pnote->n_namesz, 4));
           note_end = (gchar*)pnote + NOTE_SIZE (*pnote);
 
-          num_regions = *((ELF_Off*)ntpos);
-          ntpos += sizeof(ELF_Off);
-          page_size = *((ELF_Off*)ntpos);
+          num_regions = *((Elf64_Off*)ntpos);
+          ntpos += sizeof(Elf64_Off);
+          page_size = *((Elf64_Off*)ntpos);
           d->elf_vma_page_size = page_size;
-          ntpos += sizeof(ELF_Off);
-          regions = ntpos + num_regions * (sizeof(ELF_Addr) + sizeof(ELF_Addr) + sizeof(ELF_Off));
+          ntpos += sizeof(Elf64_Off);
+          regions = ntpos + num_regions * (sizeof(Elf64_Addr) + sizeof(Elf64_Addr) + sizeof(Elf64_Off));
 
           while ((ntpos < note_end) && (region_nr < num_regions))
             {
-              ELF_Addr reg_start, reg_end;
-              ELF_Off reg_fileoff;
+              Elf64_Addr reg_start, reg_end;
+              Elf64_Off reg_fileoff;
 
-              reg_start = *((ELF_Addr*)ntpos);
-              ntpos += sizeof(ELF_Addr);
-              reg_end = *((ELF_Addr*)ntpos);
-              ntpos += sizeof(ELF_Addr);
-              reg_fileoff = *((ELF_Off*)ntpos);
-              ntpos += sizeof(ELF_Off);
+              reg_start = *((Elf64_Addr*)ntpos);
+              ntpos += sizeof(Elf64_Addr);
+              reg_end = *((Elf64_Addr*)ntpos);
+              ntpos += sizeof(Elf64_Addr);
+              reg_fileoff = *((Elf64_Off*)ntpos);
+              ntpos += sizeof(Elf64_Off);
 
               if ((address >= reg_start) && (address < reg_end))
                 {
@@ -229,7 +229,7 @@ get_nt_file_region (CdhData *d, ELF_Addr address, ELF_Addr *region_start,
                   *file_start = reg_fileoff;
                   *region_name = get_nt_file_region_name (regions, region_nr);
 
-                  return CDH_FOUND;
+                  return CDM_STATUS_OK;
                 }
 
               region_nr++;
@@ -239,14 +239,14 @@ get_nt_file_region (CdhData *d, ELF_Addr address, ELF_Addr *region_start,
       offset += NOTE_SIZE (*pnote);
     }
 
-  return CDH_NOTFOUND;
+  return CDM_STATUS_ERROR;
 }
 
-static ELF_Addr
-read_virtual_memory (CdhData *d, ELF_Addr address, gint phdr_nr)
+static Elf64_Addr
+read_virtual_memory (CdhData *d, Elf64_Addr address, gint phdr_nr)
 {
-  ELF_Addr read_data;
-  ELF_Off pos;
+  Elf64_Addr read_data;
+  Elf64_Off pos;
 
   g_assert (d);
 
@@ -257,9 +257,9 @@ read_virtual_memory (CdhData *d, ELF_Addr address, gint phdr_nr)
       g_warning ("cdh_archive_stream_move_to_offset has failed to seek");
     }
 
-  if (cdh_archive_stream_read (&d->archive, &read_data, sizeof(ELF_Addr)) != CDM_STATUS_OK)
+  if (cdh_archive_stream_read (&d->archive, &read_data, sizeof(Elf64_Addr)) != CDM_STATUS_OK)
     {
-      g_warning ("cdh_archive_stream_read has failed to read %d bytes!", sizeof(ELF_Addr));
+      g_warning ("cdh_archive_stream_read has failed to read %lu bytes!", sizeof(Elf64_Addr));
     }
 
   return read_data;
@@ -275,7 +275,7 @@ get_note_page_index (CdhData *d)
   /* Search PT_NOTE section */
   for (i = 0; i < d->ehdr.e_phnum; i++)
     {
-      g_debug ("Note section prog_note:%d type:0x%X offset:0x%zX size:0x%zX (%zdbytes)",
+      g_debug ("Note section prog_note:%d type:0x%X offset:0x%zX size:0x%zX (%lu bytes)",
                i, d->pphdr[i].p_type, d->pphdr[i].p_offset, d->pphdr[i].p_filesz,
                d->pphdr[i].p_filesz);
 
@@ -314,7 +314,7 @@ read_notes (CdhData *d)
 
   if ((d->nhdr = (gchar*)malloc (d->pphdr[prog_note].p_filesz)) == NULL)
     {
-      g_warning ("Cannot allocate Nhdr memory (note size %zd bytes)",
+      g_warning ("Cannot allocate Nhdr memory (note size %lu bytes)",
                  d->pphdr[prog_note].p_filesz);
       return CDM_STATUS_ERROR;
     }
@@ -337,11 +337,11 @@ init_coredump (CdhData *d)
 
   g_assert (d);
 
-  dst = g_strdup_printf ("%s.%lu.coredump", d->info.name, d->info.pid);
+  dst = g_strdup_printf ("%s.%ld.coredump", d->info->name, d->info->pid);
 
   if (cdh_archive_stream_open (&d->archive, 0, (dst != NULL ? dst : "coredump")) == CDM_STATUS_OK)
     {
-      g_info ("Coredump compression started for %s with pid %u", d->info.name, d->info.pid);
+      g_info ("Coredump compression started for %s with pid %ld", d->info->name, d->info->pid);
     }
   else
     {
@@ -369,9 +369,9 @@ close_coredump (CdhData *d)
 CdmStatus
 cdh_coredump_generate (CdhData *d)
 {
-  ELF_Addr region_start;
-  ELF_Addr region_end;
-  ELF_Off region_file_offset;
+  Elf64_Addr region_start;
+  Elf64_Addr region_end;
+  Elf64_Off region_file_offset;
   CdmStatus ret = CDM_STATUS_OK;
   CdmStatus region_found;
   const gchar *region_name;
@@ -389,7 +389,7 @@ cdh_coredump_generate (CdhData *d)
 
   if (read_elf_headers (d) == CDM_STATUS_OK)
     {
-      ELF_Addr return_addr_add = 0x8;
+      Elf64_Addr return_addr_add = 0x8;
 
       if (read_notes (d) != CDM_STATUS_OK)
         {
@@ -412,7 +412,7 @@ cdh_coredump_generate (CdhData *d)
 #endif
       if (phdr == -1)
         {
-          g_warning ("Return address + %zd memory location not found in program header",
+          g_warning ("Return address + %lu memory location not found in program header",
                      return_addr_add);
         }
       else
@@ -428,7 +428,7 @@ cdh_coredump_generate (CdhData *d)
           region_found = get_nt_file_region (d, d->ra, &region_start, &region_end,
                                              &region_file_offset, &region_name);
 
-          if (region_found == CDH_NOTFOUND)
+          if (region_found == CDM_STATUS_ERROR)
             {
               g_info ("Could not get NT_FILE region of the return address");
             }
@@ -450,7 +450,7 @@ cdh_coredump_generate (CdhData *d)
                                          &region_file_offset, &region_name);
 #endif
 
-      if (region_found == CDH_NOTFOUND)
+      if (region_found == CDM_STATUS_ERROR)
         {
           g_info ("Could not get the NT_FILE region of the instruction pointer");
         }
@@ -475,17 +475,17 @@ cdh_coredump_generate (CdhData *d)
           goto finished;
         }
 
-#if defined(WITH_COREMANAGER)
+#if defined(WITH_CRASHMANAGER)
       if (cdh_manager_connected (&d->crash_mgr))
         {
           CdmMessage msg;
           CdmMessageDataUpdate data;
 
-          cdm_message_init (&msg, CDM_CORE_UPDATE, (guint16)((gulong)d->info.pid | d->info.tstamp));
+          cdm_message_init (&msg, CDM_CORE_UPDATE, (guint16)((gulong)d->info->pid | d->info->tstamp));
 
-          memcpy (data.crashid, d->info.crashid, strlen (d->info.crashid) + 1);
-          memcpy (data.vectorid, d->info.vectorid, strlen (d->info.vectorid) + 1);
-          memcpy (data.contextid, d->info.contextid, strlen (d->info.contextid) + 1);
+          memcpy (data.crashid, d->info->crashid, strlen (d->info->crashid) + 1);
+          memcpy (data.vectorid, d->info->vectorid, strlen (d->info->vectorid) + 1);
+          memcpy (data.contextid, d->info->contextid, strlen (d->info->contextid) + 1);
 
           cdm_message_set_data (&msg, &data, sizeof(data));
 
@@ -517,10 +517,7 @@ finished:
     }
   else
     {
-      if (d->coredump_ready)
-        {
-          g_info ("Coredump compression finished for %s with pid %u", d->info.name, d->info.pid);
-        }
+      g_info ("Coredump compression finished for %s with pid %ld", d->info->name, d->info->pid);
     }
 
   /* In all cases, let's close the files */
