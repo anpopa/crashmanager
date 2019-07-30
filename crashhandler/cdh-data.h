@@ -55,25 +55,25 @@ extern "C" {
  * @brief The global cdh data object referencing main submodules and states
  */
 typedef struct _CdhData {
-    CdhArchive archive; /**< coredump archive streamer */
-    CdmRegisters regs; /**< cpu registers for crash id calculation */
-    CdhInfo *info;     /**< Crash info data */
+  CdhArchive archive;   /**< coredump archive streamer */
+  CdmRegisters regs;   /**< cpu registers for crash id calculation */
+  CdhInfo *info;       /**< Crash info data */
 #if defined(WITH_CRASHMANAGER)
-    CdhManager crash_mgr; /**< manager ipc object */
+  CdhManager crash_mgr;   /**< manager ipc object */
 #endif
 
-    Elf64_Ehdr ehdr;   /**< coredump elf Ehdr structure */
-    Elf64_Phdr *pphdr; /**< coredump elf pPhdr pointer to structure */
-    gchar *nhdr;        /**< buffer with all NOTE pages */
+  Elf64_Ehdr ehdr;     /**< coredump elf Ehdr structure */
+  Elf64_Phdr *pphdr;   /**< coredump elf pPhdr pointer to structure */
+  gchar *nhdr;          /**< buffer with all NOTE pages */
 
-    guint64  ra;                     /**< return address for top frame */
-    guint64  ip_file_offset;         /**< instruction pointer file offset for top frame */
-    guint64  ra_file_offset;         /**< return address file offset for top frame */
-    const gchar *ip_module_name;      /**< module name pointed by instruction pointer */
-    const gchar *ra_module_name;      /**< module name pointed by return address */
-    gulong note_page_size;    /**< note section page size */
-    gulong elf_vma_page_size; /**< elf vma page size */
-    guint8  crashid_info; /**< type of information available for crashid */
+  guint64 ra;                        /**< return address for top frame */
+  guint64 ip_file_offset;            /**< instruction pointer file offset for top frame */
+  guint64 ra_file_offset;            /**< return address file offset for top frame */
+  const gchar *ip_module_name;        /**< module name pointed by instruction pointer */
+  const gchar *ra_module_name;        /**< module name pointed by return address */
+  gulong note_page_size;      /**< note section page size */
+  gulong elf_vma_page_size;   /**< elf vma page size */
+  guint8 crashid_info;    /**< type of information available for crashid */
 } CdhData;
 
 /**

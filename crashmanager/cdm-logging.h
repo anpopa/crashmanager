@@ -46,9 +46,9 @@ extern "C" {
  * @param ctx_desc Context description
  */
 void cdm_logging_open(const gchar *app_name,
-                 const gchar *app_desc,
-                 const gchar *ctx_name,
-                 const gchar *ctx_desc);
+                      const gchar *app_desc,
+                      const gchar *ctx_name,
+                      const gchar *ctx_desc);
 
 /**
  * @brief Close logging system

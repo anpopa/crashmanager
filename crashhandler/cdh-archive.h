@@ -49,14 +49,14 @@ extern "C" {
  * @brief The archive object
  */
 typedef struct _CdhArchive {
-	struct archive *archive;			 /**< Archive object  */
-	struct archive_entry *archive_entry; /**< Current archive entry */
+  struct archive *archive;                               /**< Archive object  */
+  struct archive_entry *archive_entry;       /**< Current archive entry */
 
-	gboolean is_open; /**< Archive open for write */
+  gboolean is_open;       /**< Archive open for write */
 
-	FILE *in_stream;		 /**< The input file stream */
-	gsize in_stream_offset; /**< Current offset */
-	guint8 in_read_buffer[ARCHIVE_READ_BUFFER_SZ] /**< Read buffer */;
+  FILE *in_stream;                       /**< The input file stream */
+  gsize in_stream_offset;       /**< Current offset */
+  guint8 in_read_buffer[ARCHIVE_READ_BUFFER_SZ] /**< Read buffer */;
 } CdhArchive;
 
 /**

@@ -40,305 +40,351 @@
 
 CdmStatus cdh_archive_init(CdhArchive *ar, const gchar *dst)
 {
-	CdmStatus status = CDM_STATUS_OK;
+  CdmStatus status = CDM_STATUS_OK;
 
-	g_assert(ar);
-	g_assert(dst);
+  g_assert(ar);
+  g_assert(dst);
 
-	memset(ar, 0, sizeof(CdhArchive));
+  memset(ar, 0, sizeof(CdhArchive));
 
-	ar->is_open = false;
-	ar->archive = archive_write_new();
+  ar->is_open = false;
+  ar->archive = archive_write_new();
 
-	if (archive_write_set_format_filter_by_ext(ar->archive, dst) != ARCHIVE_OK) {
-		archive_write_add_filter_gzip(ar->archive);
-		archive_write_set_format_ustar(ar->archive);
-	}
+  if (archive_write_set_format_filter_by_ext(ar->archive, dst) != ARCHIVE_OK)
+    {
+      archive_write_add_filter_gzip(ar->archive);
+      archive_write_set_format_ustar(ar->archive);
+    }
 
-	archive_write_set_format_pax_restricted(ar->archive);
+  archive_write_set_format_pax_restricted(ar->archive);
 
-	if (archive_write_open_filename(ar->archive, dst) != ARCHIVE_OK) {
-		archive_write_free(ar->archive);
-		ar->archive = NULL;
-		status = CDM_STATUS_ERROR;
-	} else {
-		ar->archive_entry = archive_entry_new();
-	}
+  if (archive_write_open_filename(ar->archive, dst) != ARCHIVE_OK)
+    {
+      archive_write_free(ar->archive);
+      ar->archive = NULL;
+      status = CDM_STATUS_ERROR;
+    }
+  else
+    {
+      ar->archive_entry = archive_entry_new();
+    }
 
-	return status;
+  return status;
 }
 
 CdmStatus cdh_archive_close(CdhArchive *ar)
 {
-	CdmStatus status = CDM_STATUS_OK;
+  CdmStatus status = CDM_STATUS_OK;
 
-	g_assert(ar);
+  g_assert(ar);
 
-	if (ar->archive_entry) {
-		archive_entry_free(ar->archive_entry);
-	}
+  if (ar->archive_entry)
+    {
+      archive_entry_free(ar->archive_entry);
+    }
 
-	if (ar->archive) {
-		if (archive_write_close(ar->archive) != ARCHIVE_OK) {
-			status = CDM_STATUS_ERROR;
-		}
-		archive_write_free(ar->archive);
-	}
+  if (ar->archive)
+    {
+      if (archive_write_close(ar->archive) != ARCHIVE_OK)
+        {
+          status = CDM_STATUS_ERROR;
+        }
+      archive_write_free(ar->archive);
+    }
 
-	return status;
+  return status;
 }
 
 CdmStatus cdh_archive_create_file(CdhArchive *ar, const gchar *dst)
 {
-	CdmStatus status = CDM_STATUS_OK;
+  CdmStatus status = CDM_STATUS_OK;
 
-	g_assert(ar);
-	g_assert(dst);
+  g_assert(ar);
+  g_assert(dst);
 
-	if (ar->is_open) {
-		return CDM_STATUS_ERROR;
-	} else {
-		ar->is_open = true;
-	}
+  if (ar->is_open)
+    {
+      return CDM_STATUS_ERROR;
+    }
+  else
+    {
+      ar->is_open = true;
+    }
 
-	archive_entry_clear(ar->archive_entry);
-	archive_entry_set_pathname(ar->archive_entry, dst);
-	archive_entry_set_filetype(ar->archive_entry, AE_IFREG);
-	archive_entry_set_perm(ar->archive_entry, 0644);
-	archive_write_header(ar->archive, ar->archive_entry);
+  archive_entry_clear(ar->archive_entry);
+  archive_entry_set_pathname(ar->archive_entry, dst);
+  archive_entry_set_filetype(ar->archive_entry, AE_IFREG);
+  archive_entry_set_perm(ar->archive_entry, 0644);
+  archive_write_header(ar->archive, ar->archive_entry);
 
-	return status;
+  return status;
 }
 
 CdmStatus cdh_archive_write_file(CdhArchive *ar, const void *buf, gsize size)
 {
-	sgsize sz;
+  sgsize sz;
 
-	g_assert(ar);
-	g_assert(buf);
+  g_assert(ar);
+  g_assert(buf);
 
-	if (!ar->is_open) {
-		return CDM_STATUS_ERROR;
-	}
+  if (!ar->is_open)
+    {
+      return CDM_STATUS_ERROR;
+    }
 
-	sz = archive_write_data(ar->archive, buf, size);
-	if (sz < 0) {
-		g_warning("Fail to write archive");
-		return CDM_STATUS_ERROR;
-	}
+  sz = archive_write_data(ar->archive, buf, size);
+  if (sz < 0)
+    {
+      g_warning("Fail to write archive");
+      return CDM_STATUS_ERROR;
+    }
 
-	return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }
 
 CdmStatus cdh_archive_finish_file(CdhArchive *ar)
 {
-	g_assert(ar);
+  g_assert(ar);
 
-	if (!ar->is_open) {
-		return CDM_STATUS_ERROR;
-	} else {
-		ar->is_open = false;
-	}
+  if (!ar->is_open)
+    {
+      return CDM_STATUS_ERROR;
+    }
+  else
+    {
+      ar->is_open = false;
+    }
 
-	return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }
 
 CdmStatus cdh_archive_add_system_file(CdhArchive *ar, const gchar *src, const gchar *dst)
 {
-	CdmStatus status = CDM_STATUS_OK;
+  CdmStatus status = CDM_STATUS_OK;
 
-	g_assert(ar);
-	g_assert(src);
+  g_assert(ar);
+  g_assert(src);
 
-	if (ar->is_open) {
-		return CDM_STATUS_ERROR;
-	} else {
-		ar->is_open = true;
-	}
+  if (ar->is_open)
+    {
+      return CDM_STATUS_ERROR;
+    }
+  else
+    {
+      ar->is_open = true;
+    }
 
-	if (cdh_util_path_exist(src) != CDH_ISFILE) {
-		sgsize readsz;
-		gint fd;
+  if (cdh_util_path_exist(src) != CDH_ISFILE)
+    {
+      sgsize readsz;
+      gint fd;
 
-		archive_entry_clear(ar->archive_entry);
-		archive_entry_set_filetype(ar->archive_entry, AE_IFREG);
-		archive_entry_set_perm(ar->archive_entry, 0644);
+      archive_entry_clear(ar->archive_entry);
+      archive_entry_set_filetype(ar->archive_entry, AE_IFREG);
+      archive_entry_set_perm(ar->archive_entry, 0644);
 
-		if (dst == NULL) {
-			gchar *dpath = malloc(sizeof(gchar) * CDH_PATH_MAX);
+      if (dst == NULL)
+        {
+          gchar *dpath = malloc(sizeof(gchar) * CDH_PATH_MAX);
 
-			g_assert(dpath);
+          g_assert(dpath);
 
-			cdh_util_domain_path(src, dpath, sizeof(gchar) * CDH_PATH_MAX, "fsf");
-			archive_entry_set_pathname(ar->archive_entry, dpath);
+          cdh_util_domain_path(src, dpath, sizeof(gchar) * CDH_PATH_MAX, "fsf");
+          archive_entry_set_pathname(ar->archive_entry, dpath);
 
-			free(dpath);
-		} else {
-			archive_entry_set_pathname(ar->archive_entry, dst);
-		}
+          free(dpath);
+        }
+      else
+        {
+          archive_entry_set_pathname(ar->archive_entry, dst);
+        }
 
-		archive_write_header(ar->archive, ar->archive_entry);
+      archive_write_header(ar->archive, ar->archive_entry);
 
-		if ((fd = open(src, O_RDONLY)) != -1) {
-			readsz = read(fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
+      if ((fd = open(src, O_RDONLY)) != -1)
+        {
+          readsz = read(fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
 
-			while (readsz > 0) {
-				if (archive_write_data(ar->archive, ar->in_read_buffer, (gsize)readsz) < 0) {
-					g_warning("Fail to write archive");
-				}
-				readsz = read(fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
-			}
+          while (readsz > 0)
+            {
+              if (archive_write_data(ar->archive, ar->in_read_buffer, (gsize)readsz) < 0)
+                {
+                  g_warning("Fail to write archive");
+                }
+              readsz = read(fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
+            }
 
-			close(fd);
-		} else {
-			status = CDM_STATUS_ERROR;
-		}
-	} else {
-		status = CDM_STATUS_ERROR;
-	}
+          close(fd);
+        }
+      else
+        {
+          status = CDM_STATUS_ERROR;
+        }
+    }
+  else
+    {
+      status = CDM_STATUS_ERROR;
+    }
 
-	ar->is_open = false;
+  ar->is_open = false;
 
-	return status;
+  return status;
 }
 
 CdmStatus cdh_archive_stream_open(CdhArchive *ar, const gchar *src, const gchar *dst)
 {
-	g_assert(ar);
+  g_assert(ar);
 
-	if (ar->is_open) {
-		return CDM_STATUS_ERROR;
-	}
+  if (ar->is_open)
+    {
+      return CDM_STATUS_ERROR;
+    }
 
-	if (src == NULL) {
-		ar->in_stream = stdin;
-	} else if ((ar->in_stream = fopen(src, "rb")) == NULL) {
-		g_warning("Cannot open filename archive input stream %s. %s", src, strerror(errno));
-		return CDM_STATUS_ERROR;
-	}
+  if (src == NULL)
+    {
+      ar->in_stream = stdin;
+    }
+  else if ((ar->in_stream = fopen(src, "rb")) == NULL)
+    {
+      g_warning("Cannot open filename archive input stream %s. %s", src, strerror(errno));
+      return CDM_STATUS_ERROR;
+    }
 
-	/* If no output is set we allow stream processing via stream read api anyway */
-	if (dst) {
-		ar->is_open = true;
-		archive_entry_clear(ar->archive_entry);
-		archive_entry_set_pathname(ar->archive_entry, dst);
-		archive_entry_set_filetype(ar->archive_entry, AE_IFREG);
-		archive_entry_set_perm(ar->archive_entry, 0644);
-		archive_write_header(ar->archive, ar->archive_entry);
-	}
+  /* If no output is set we allow stream processing via stream read api anyway */
+  if (dst)
+    {
+      ar->is_open = true;
+      archive_entry_clear(ar->archive_entry);
+      archive_entry_set_pathname(ar->archive_entry, dst);
+      archive_entry_set_filetype(ar->archive_entry, AE_IFREG);
+      archive_entry_set_perm(ar->archive_entry, 0644);
+      archive_write_header(ar->archive, ar->archive_entry);
+    }
 
-	return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }
 
 CdmStatus cdh_archive_stream_read(CdhArchive *ar, void *buf, gsize size)
 {
-	gsize readsz;
+  gsize readsz;
 
-	g_assert(ar);
-	g_assert(ar->in_stream);
-	g_assert(buf);
+  g_assert(ar);
+  g_assert(ar->in_stream);
+  g_assert(buf);
 
-	if ((readsz = fread(buf, 1, size, ar->in_stream)) != size) {
-		g_warning("Cannot read %d bytes from archive input stream %s", size,
-			   strerror(errno));
-		return CDM_STATUS_ERROR;
-	}
+  if ((readsz = fread(buf, 1, size, ar->in_stream)) != size)
+    {
+      g_warning("Cannot read %d bytes from archive input stream %s", size,
+                strerror(errno));
+      return CDM_STATUS_ERROR;
+    }
 
-	ar->in_stream_offset += readsz;
+  ar->in_stream_offset += readsz;
 
-	if (ar->is_open) {
-		if (archive_write_data(ar->archive, buf, size) < 0) {
-			g_warning("Fail to write archive");
-		}
-	}
+  if (ar->is_open)
+    {
+      if (archive_write_data(ar->archive, buf, size) < 0)
+        {
+          g_warning("Fail to write archive");
+        }
+    }
 
-	return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }
 
 CdmStatus cdh_archive_stream_read_all(CdhArchive *ar)
 {
-	g_assert(ar);
-	g_assert(ar->in_stream);
+  g_assert(ar);
+  g_assert(ar->in_stream);
 
-	while (!feof(ar->in_stream)) {
-		gsize readsz = fread(ar->in_read_buffer, 1, sizeof(ar->in_read_buffer), ar->in_stream);
+  while (!feof(ar->in_stream))
+    {
+      gsize readsz = fread(ar->in_read_buffer, 1, sizeof(ar->in_read_buffer), ar->in_stream);
 
-		if (ar->is_open) {
-			if (archive_write_data(ar->archive, ar->in_read_buffer, readsz) < 0) {
-				g_warning("Fail to write archive");
-			}
-		}
+      if (ar->is_open)
+        {
+          if (archive_write_data(ar->archive, ar->in_read_buffer, readsz) < 0)
+            {
+              g_warning("Fail to write archive");
+            }
+        }
 
-		ar->in_stream_offset += readsz;
+      ar->in_stream_offset += readsz;
 
-		if (ferror(ar->in_stream)) {
-			g_warning("Error reading from the archive input stream: %s", strerror(errno));
-			return CDM_STATUS_ERROR;
-		}
-	}
+      if (ferror(ar->in_stream))
+        {
+          g_warning("Error reading from the archive input stream: %s", strerror(errno));
+          return CDM_STATUS_ERROR;
+        }
+    }
 
-	return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }
 
 CdmStatus cdh_archive_stream_move_to_offset(CdhArchive *ar, gulong offset)
 {
-	g_assert(ar);
-	return cdh_archive_stream_move_ahead(ar, (offset - ar->in_stream_offset));
+  g_assert(ar);
+  return cdh_archive_stream_move_ahead(ar, (offset - ar->in_stream_offset));
 }
 
 CdmStatus cdh_archive_stream_move_ahead(CdhArchive *ar, gulong nbbytes)
 {
-	gsize toread = nbbytes;
+  gsize toread = nbbytes;
 
-	g_assert(ar);
-	g_assert(ar->in_stream);
+  g_assert(ar);
+  g_assert(ar->in_stream);
 
-	while (toread > 0) {
-		gsize chunksz =
-			toread > ARCHIVE_READ_BUFFER_SZ ? ARCHIVE_READ_BUFFER_SZ : toread;
-		gsize readsz = fread(ar->in_read_buffer, 1, chunksz, ar->in_stream);
+  while (toread > 0)
+    {
+      gsize chunksz =
+        toread > ARCHIVE_READ_BUFFER_SZ ? ARCHIVE_READ_BUFFER_SZ : toread;
+      gsize readsz = fread(ar->in_read_buffer, 1, chunksz, ar->in_stream);
 
-		if (readsz != chunksz) {
-			g_warning("Cannot move ahead by %d bytes from src. Read %lu bytes", nbbytes,
-				   readsz);
-			return CDM_STATUS_ERROR;
-		}
+      if (readsz != chunksz)
+        {
+          g_warning("Cannot move ahead by %d bytes from src. Read %lu bytes", nbbytes,
+                    readsz);
+          return CDM_STATUS_ERROR;
+        }
 
-		if (ar->is_open) {
-			if (archive_write_data(ar->archive, ar->in_read_buffer, readsz) < 0) {
-				g_warning("Fail to write archive");
-			}
-		}
+      if (ar->is_open)
+        {
+          if (archive_write_data(ar->archive, ar->in_read_buffer, readsz) < 0)
+            {
+              g_warning("Fail to write archive");
+            }
+        }
 
-		toread -= chunksz;
-	}
+      toread -= chunksz;
+    }
 
-	ar->in_stream_offset += nbbytes;
+  ar->in_stream_offset += nbbytes;
 
-	return CDM_STATUS_ERROR;
+  return CDM_STATUS_ERROR;
 }
 
 gsize cdh_archive_stream_get_offset(CdhArchive *ar)
 {
-	g_assert(ar);
-	return ar->in_stream_offset;
+  g_assert(ar);
+  return ar->in_stream_offset;
 }
 
 gboolean cdh_archive_stream_is_open(CdhArchive *ar)
 {
-	g_assert(ar);
-	return ar->is_open;
+  g_assert(ar);
+  return ar->is_open;
 }
 
 CdmStatus cdh_archive_stream_close(CdhArchive *ar)
 {
-	g_assert(ar);
+  g_assert(ar);
 
-	if (ar->is_open == false) {
-		return CDM_STATUS_ERROR;
-	}
+  if (ar->is_open == false)
+    {
+      return CDM_STATUS_ERROR;
+    }
 
-	ar->is_open = false;
+  ar->is_open = false;
 
-	return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }

@@ -38,29 +38,27 @@
  * @enum CdmOptionsKey
  * @brief The option keys
  */
-typedef enum _CdmOptionsKey
-{
-    KEY_USER_NAME,
-    KEY_GROUP_NAME,
-    KEY_CRASHDUMP_DIR,
-    KEY_ELEVATED_NICE_VALUE,
-    KEY_RUN_DIR,
-    KEY_KDUMPSOURCE_DIR,
-    KEY_CRASHDIR_MIN_SIZE,
-    KEY_CRASHDIR_MAX_SIZE,
-    KEY_CRASHDIR_MAX_COUNT,
-    KEY_IPC_SOCK_ADDR,
-    KEY_IPC_TIMEOUT_SEC
+typedef enum _CdmOptionsKey {
+  KEY_USER_NAME,
+  KEY_GROUP_NAME,
+  KEY_CRASHDUMP_DIR,
+  KEY_ELEVATED_NICE_VALUE,
+  KEY_RUN_DIR,
+  KEY_KDUMPSOURCE_DIR,
+  KEY_CRASHDIR_MIN_SIZE,
+  KEY_CRASHDIR_MAX_SIZE,
+  KEY_CRASHDIR_MAX_COUNT,
+  KEY_IPC_SOCK_ADDR,
+  KEY_IPC_TIMEOUT_SEC
 } CdmOptionsKey;
 
 /**
  * @struct CdmOptions
  * @brief The CdmOptions opaque data structure
  */
-typedef struct _CdmOptions
-{
-    GKeyFile *conf; /**< The GKeyFile object */
-    bool has_conf;    /**< Flag to check if a runtime option object is available */
+typedef struct _CdmOptions {
+  GKeyFile *conf;   /**< The GKeyFile object */
+  bool has_conf;      /**< Flag to check if a runtime option object is available */
 } CdmOptions;
 
 /*

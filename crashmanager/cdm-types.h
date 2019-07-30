@@ -74,13 +74,13 @@ typedef enum _CdmStatus {
 
 typedef struct _CdmRegisters {
 #ifdef __aarch64__
-    uint64 pc;
-    uint64 lr;
+  uint64 pc;
+  uint64 lr;
 #elif __x86_64__
-    uint64 rip;
-    uint64 rbp;
+  uint64 rip;
+  uint64 rbp;
 #else
-    static_assert(false, "Don't know whow to handle this arhitecture");
+  static_assert(false, "Don't know whow to handle this arhitecture");
 #endif
 } CdmRegisters;
 

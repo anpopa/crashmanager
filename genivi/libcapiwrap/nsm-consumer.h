@@ -47,25 +47,25 @@ extern "C" {
  * @brief Session state enum type
  */
 typedef enum _LCSessionState {
-    LC_SESSION_ACTIVE,
-    LC_SESSION_INACTIVE
+  LC_SESSION_ACTIVE,
+  LC_SESSION_INACTIVE
 } LCSessionState;
 
 /**
  * @enum lifecylce_registration
  */
 typedef enum _LCRegistrationState {
-    LC_REGISTERED,
-    LC_UNREGISTERED,
-    LC_PENDING
+  LC_REGISTERED,
+  LC_UNREGISTERED,
+  LC_PENDING
 } LCRegistrationState;
 
 /**
  * @enum lifecylce_proxy
  */
 typedef enum _LCProxyState {
-    LC_PROXY_AVAILABLE,
-    LC_PROXY_UNAVAILABLE,
+  LC_PROXY_AVAILABLE,
+  LC_PROXY_UNAVAILABLE,
 } LCProxyState;
 
 /**
@@ -73,9 +73,9 @@ typedef enum _LCProxyState {
  * @brief LC event enum type
  */
 typedef enum _LCEventType {
-    LC_EVENT_PROXY_UPDATE,
-    LC_EVENT_REGISTRATION_UPDATE,
-    LC_EVENT_SESSION_UPDATE
+  LC_EVENT_PROXY_UPDATE,
+  LC_EVENT_REGISTRATION_UPDATE,
+  LC_EVENT_SESSION_UPDATE
 } LCEventType;
 
 /**
@@ -83,16 +83,16 @@ typedef enum _LCEventType {
  * @brief The nsm consumer object
  */
 typedef struct _NsmConsumer {
-    void *client; /**< Reference to client object */
+  void *client;   /**< Reference to client object */
 
-    void *private_data; /**< Reference to private data object */
+  void *private_data;   /**< Reference to private data object */
 
-    void (*proxy_availability_cb)(void *client, LCProxyState state,
-                                  CdmStatus error); /**< Proxy availability callback */
-    void (*registration_state_cb)(void *client, LCRegistrationState state,
-                                  CdmStatus error); /**< Registration state callback */
-    void (*session_state_cb)(void *client, LCSessionState state,
-                             CdmStatus error); /**< Session state callback */
+  void (*proxy_availability_cb)(void *client, LCProxyState state,
+                                CdmStatus error);   /**< Proxy availability callback */
+  void (*registration_state_cb)(void *client, LCRegistrationState state,
+                                CdmStatus error);   /**< Registration state callback */
+  void (*session_state_cb)(void *client, LCSessionState state,
+                           CdmStatus error);   /**< Session state callback */
 } NsmConsumer;
 
 /**
@@ -133,9 +133,9 @@ void nsm_consumer_set_proxy_cb(NsmConsumer *n,
  * @param registration_state_cb Callback function
  */
 void nsm_consumer_set_registration_cb(
-    NsmConsumer *n,
-    void (*registration_state_cb)(void *client, LCRegistrationState state,
-                                  CdmStatus error));
+  NsmConsumer *n,
+  void (*registration_state_cb)(void *client, LCRegistrationState state,
+                                CdmStatus error));
 
 /**
  * @brief Callback setter for NSM session status
