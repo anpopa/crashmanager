@@ -56,11 +56,11 @@ cdh_info_free (CdhInfo *i)
 {
   g_assert (i);
 
-  g_free(i->name);
-  g_free(i->tname);
-  g_free(i->contextid);
-  g_free(i->crashid);
-  g_free(i->vectorid);
+  g_free (i->name);
+  g_free (i->tname);
+  g_free (i->contextid);
+  g_free (i->crashid);
+  g_free (i->vectorid);
 
   free (i);
 }

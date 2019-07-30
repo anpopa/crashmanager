@@ -337,7 +337,7 @@ init_coredump (CdhData *d)
 
   g_assert (d);
 
-  dst = g_strdup_printf("%s.%lu.coredump", d->info.name, d->info.pid);
+  dst = g_strdup_printf ("%s.%lu.coredump", d->info.name, d->info.pid);
 
   if (cdh_archive_stream_open (&d->archive, 0, (dst != NULL ? dst : "coredump")) == CDM_STATUS_OK)
     {
@@ -348,9 +348,8 @@ init_coredump (CdhData *d)
       g_warning ("init_coredump: cdh_stream_init has failed !");
       return CDM_STATUS_ERROR;
     }
-}
 
-return CDM_STATUS_OK;
+  return CDM_STATUS_OK;
 }
 
 static CdmStatus

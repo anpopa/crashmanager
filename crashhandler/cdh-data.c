@@ -95,37 +95,37 @@ read_args (CdhData *d, gint argc, gchar **argv)
       return CDM_STATUS_ERROR;
     }
 
-  d->info->tstamp = g_ascii_strtoll(argv[1], NULL, 10);
+  d->info->tstamp = g_ascii_strtoll (argv[1], NULL, 10);
   if (d->info->tstamp == 0)
     {
       g_warning ("Unable to read tstamp argument %s", argv[1]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->pid = g_ascii_strtoll(argv[2], NULL, 10);
+  d->info->pid = g_ascii_strtoll (argv[2], NULL, 10);
   if (d->info->pid == 0)
     {
       g_warning ("Unable to read pid argument %s", argv[2]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->cpid = g_ascii_strtoll(argv[3], NULL, 10);
+  d->info->cpid = g_ascii_strtoll (argv[3], NULL, 10);
   if (d->info->cpid == 0)
     {
       g_warning ("Unable to read context cpid argument %s", argv[3]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->sig = g_ascii_strtoll(argv[4], NULL, 10);
+  d->info->sig = g_ascii_strtoll (argv[4], NULL, 10);
   if (d->info->sig == 0)
     {
       g_warning ("Unable to read sig argument %s", argv[4]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->tname = g_strdup(argv[5]);
-  d->info->name = g_strdup(argv[5]);
-  
+  d->info->tname = g_strdup (argv[5]);
+  d->info->name = g_strdup (argv[5]);
+
   return CDM_STATUS_OK;
 }
 
@@ -164,7 +164,7 @@ init_coredump_archive (CdhData *d, const gchar *dirname)
   g_assert (dirname);
 
   aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid);
-  
+
   if (cdh_archive_open (&d->archive, aname) != CDM_STATUS_OK)
     {
       return CDM_STATUS_ERROR;
@@ -196,8 +196,8 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
       g_free (d->info->name);
       d->info->name = procname;
     }
-  
-  g_strdelim(d->info->name, ":/\\!*", '_');
+
+  g_strdelim (d->info->name, ":/\\!*", '_');
 
   g_info ("New process crash: name=%s pid=%d signal=%d timestamp=%ld",
           d->info->name, d->info->pid, d->info->sig, d->info->tstamp);

@@ -99,7 +99,7 @@ cdh_context_get_procname (pid_t pid)
 
           if (retval != NULL)
             {
-              g_strstrip(retval);
+              g_strstrip (retval);
             }
           found = TRUE;
         }

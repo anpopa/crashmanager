@@ -114,7 +114,7 @@ create_crashid (CdhData *d)
     strsignal (d->info.sig), d->regs.pc, d->regs.lr, d->ra, d->ip_file_offset,
     d->ra_file_offset, d->ip_module_name, d->ra_module_name);
 #endif
-  
+
   return CDM_STATUS_OK;
 }
 
