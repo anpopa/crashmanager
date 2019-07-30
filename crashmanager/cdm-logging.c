@@ -36,12 +36,13 @@
 #include <dlt.h>
 #endif
 
-static void cdm_logging_handler(const ggchar *log_domain, GLogLevelFlags log_level, const ggchar *message, gpointer user_data);
+static void cdm_logging_handler (const ggchar *log_domain, GLogLevelFlags log_level, const ggchar *message, gpointer user_data);
 
 #ifdef WITH_DLT
-DLT_DECLARE_CONTEXT(cdh_default_ctx);
+DLT_DECLARE_CONTEXT (cdh_default_ctx);
 
-static int priority_to_dlt(int priority)
+static int
+priority_to_dlt (int priority)
 {
   switch (priority)
     {
@@ -66,7 +67,8 @@ static int priority_to_dlt(int priority)
     }
 }
 #else
-static int priority_to_syslog(int priority)
+static int
+priority_to_syslog (int priority)
 {
   switch (priority)
     {
@@ -92,42 +94,45 @@ static int priority_to_syslog(int priority)
 }
 #endif
 
-void cdm_logging_open(const gchar *app_name,
-                      const gchar *app_desc,
-                      const gchar *ctx_name,
-                      const gchar *ctx_desc)
+void
+cdm_logging_open (const gchar *app_name,
+                  const gchar *app_desc,
+                  const gchar *ctx_name,
+                  const gchar *ctx_desc)
 {
 #ifdef WITH_DLT
-  DLT_REGISTER_APP(app_name, app_desc);
-  DLT_REGISTER_CONTEXT(cdh_default_ctx, ctx_name, ctx_desc);
+  DLT_REGISTER_APP (app_name, app_desc);
+  DLT_REGISTER_CONTEXT (cdh_default_ctx, ctx_name, ctx_desc);
 #else
-  CDH_UNUSED(app_name);
-  CDH_UNUSED(app_desc);
-  CDH_UNUSED(ctx_name);
-  CDH_UNUSED(ctx_desc);
+  CDH_UNUSED (app_name);
+  CDH_UNUSED (app_desc);
+  CDH_UNUSED (ctx_name);
+  CDH_UNUSED (ctx_desc);
 #endif
-  g_log_default_handle(cdm_logging_handle, NULL);
+  g_log_default_handle (cdm_logging_handle, NULL);
 }
 
-static void cdm_logging_handler(const ggchar *log_domain,
-                                GLogLevelFlags log_level,
-                                const ggchar *message,
-                                gpointer user_data)
+static void
+cdm_logging_handler (const ggchar *log_domain,
+                     GLogLevelFlags log_level,
+                     const ggchar *message,
+                     gpointer user_data)
 {
-  CDH_UNUSED(log_domain);
-  CDH_UNUSED(user_data);
+  CDH_UNUSED (log_domain);
+  CDH_UNUSED (user_data);
 
 #ifdef WITH_DLT
-  DLT_LOG(cdh_default_ctx, priority_to_dlt(log_level), DLT_STRING(message));
+  DLT_LOG (cdh_default_ctx, priority_to_dlt (log_level), DLT_STRING (message));
 #else
-  syslog(priority_to_syslog(log_level), message);
+  syslog (priority_to_syslog (log_level), message);
 #endif
 }
 
-void cdm_logging_close(void)
+void
+cdm_logging_close (void)
 {
 #ifdef WITH_DLT
-  DLT_UNREGISTER_CONTEXT(cdh_default_ctx);
-  DLT_UNREGISTER_APP();
+  DLT_UNREGISTER_CONTEXT (cdh_default_ctx);
+  DLT_UNREGISTER_APP ();
 #endif
 }

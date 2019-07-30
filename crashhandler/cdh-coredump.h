@@ -44,7 +44,7 @@ extern "C" {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_coredump_generate(CdhData *d);
+CdmStatus cdh_coredump_generate (CdhData *d);
 
 #ifdef __cplusplus
 }

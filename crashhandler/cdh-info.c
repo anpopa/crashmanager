@@ -39,18 +39,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-CdhInfo *cdh_info_new(void)
+CdhInfo *
+cdh_info_new (void)
 {
-  CdhInfo *i = calloc(1, sizeof(CdhInfo));
+  CdhInfo *i = calloc (1, sizeof(CdhInfo));
 
-  g_assert(i);
+  g_assert (i);
   i->onhost = (guint8)true;
 
   return i;
 }
 
-void cdh_info_free(CdhInfo *i)
+void
+cdh_info_free (CdhInfo *i)
 {
-  g_assert(i);
-  free(i);
+  g_assert (i);
+  free (i);
 }

@@ -44,7 +44,7 @@ extern "C" {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_crashid_process(CdhData *d);
+CdmStatus cdh_crashid_process (CdhData *d);
 
 #ifdef __cplusplus
 }

@@ -54,9 +54,9 @@ extern "C" {
  * @struct cdh_info
  * @brief The info object
  */
-typedef struct cdh_info {
-  gchar name[CDH_INFO_PROC_NAME_LEN];    /**< process name */
-  gchar tname[CDH_INFO_PROC_NAME_LEN];   /**< thread name  */
+typedef struct _CdhInfo {
+  gchar name[CDH_INFO_PROC_NAME_LEN];  /**< process name */
+  gchar tname[CDH_INFO_PROC_NAME_LEN]; /**< thread name  */
   guint64 tstamp;                      /**< crash timestamp */
   gint32 sig;                          /**< signal id */
   gint32 pid;                          /**< process id as seen on host */
@@ -65,20 +65,20 @@ typedef struct cdh_info {
   gchar contextid[CRASH_CONTEXT_LEN];   /**< namespace context for the crashed pid */
   gchar crashid[CRASH_ID_LEN];          /**< crash id value */
   gchar vectorid[CRASH_ID_LEN];         /**< crash course id value */
-  guint8 onhost;                      /**< true if the crash is in host context */
+  gboolean onhost;                      /**< true if the crash is in host context */
 } CdhInfo;
 
 /**
  * @brief Create a new cdh_info object
  * @return A pointer to the new cdh_info object or NULL on error
  */
-CdhInfo *cdh_info_new(void);
+CdhInfo *cdh_info_new (void);
 
 /**
  * @brief Release a cdh_info object
  * @param i Pointer to the cdh_info object
  */
-void cdh_info_free(CdhInfo *i);
+void cdh_info_free (CdhInfo *i);
 
 #ifdef __cplusplus
 }

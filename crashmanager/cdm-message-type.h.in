@@ -47,54 +47,54 @@ extern "C" {
 #define CDM_VERSION_STRING_LEN (8)
 
 #ifndef CDM_MESSAGE_PACKED
-#define CDM_MESSAGE_PACKED __attribute__((aligned(1), packed))
+#define CDM_MESSAGE_PACKED __attribute__((aligned (1), packed))
 #endif
 
 typedef enum _CdmMessageType {
-    CDM_CORE_UNKNOWN,
-    CDM_CORE_NEW,
-    CDM_CORE_UPDATE,
-    CDM_CORE_COMPLETE,
-    CDM_CORE_FAILED,
-    CDM_MESSAGE_CHAR,
-    CDM_MESSAGE_RAW
+  CDM_CORE_UNKNOWN,
+  CDM_CORE_NEW,
+  CDM_CORE_UPDATE,
+  CDM_CORE_COMPLETE,
+  CDM_CORE_FAILED,
+  CDM_MESSAGE_CHAR,
+  CDM_MESSAGE_RAW
 } CdmMessageType;
 
 typedef struct _CdmMessageDataNew {
-    int pid;
-    int coresig;
-    uint64 tstamp;
-    char pname[CDM_MESSAGE_PROCNAME_LEN];
-    char tname[CDM_MESSAGE_PROCNAME_LEN];
+  int pid;
+  int coresig;
+  uint64 tstamp;
+  char pname[CDM_MESSAGE_PROCNAME_LEN];
+  char tname[CDM_MESSAGE_PROCNAME_LEN];
 } CdmMessageDataNew;
 
 typedef struct _CdmMessageDataUpdate {
-    char crashid[CDM_CRASHID_LEN];
-    char vectorid[CDM_CRASHID_LEN];
-    char contextid[CDM_CRASHCONTEXT_LEN];
+  char crashid[CDM_CRASHID_LEN];
+  char vectorid[CDM_CRASHID_LEN];
+  char contextid[CDM_CRASHCONTEXT_LEN];
 } CdmMessageDataUpdate;
 
 typedef struct _CDInfoComplete {
-    char core_file[CDM_MESSAGE_FILENAME_LEN];
+  char core_file[CDM_MESSAGE_FILENAME_LEN];
 } CdmMessageDataComplete;
 
 typedef union _CdmMessageData {
-    CdmMessageDataNew msgnew;
-    CdmMessageDataUpdate update;
-    CdmMessageDataComplete complete;
+  CdmMessageDataNew msgnew;
+  CdmMessageDataUpdate update;
+  CdmMessageDataComplete complete;
 } CdmMessageData;
 
 typedef struct _CdmMessageHdr {
-    uint16 hsh;
-    uint16 session;
-    uint8 version[CDM_VERSION_STRING_LEN];
-    CdmMessageType type;
-    uint32 data_size;
+  uint16 hsh;
+  uint16 session;
+  uint8 version[CDM_VERSION_STRING_LEN];
+  CdmMessageType type;
+  uint32 data_size;
 } CDM_MESSAGE_PACKED CdmMessageHdr;
 
 typedef struct _CdmMessage {
-    CdmMessageHdr hdr;
-    void *data;
+  CdmMessageHdr hdr;
+  void *data;
 } CDM_MESSAGE_PACKED CdmMessage;
 
 #ifdef __cplusplus

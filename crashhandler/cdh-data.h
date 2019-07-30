@@ -55,7 +55,7 @@ extern "C" {
  * @brief The global cdh data object referencing main submodules and states
  */
 typedef struct _CdhData {
-  CdhArchive archive;   /**< coredump archive streamer */
+  CdhArchive archive;  /**< coredump archive streamer */
   CdmRegisters regs;   /**< cpu registers for crash id calculation */
   CdhInfo *info;       /**< Crash info data */
 #if defined(WITH_CRASHMANAGER)
@@ -64,16 +64,16 @@ typedef struct _CdhData {
 
   Elf64_Ehdr ehdr;     /**< coredump elf Ehdr structure */
   Elf64_Phdr *pphdr;   /**< coredump elf pPhdr pointer to structure */
-  gchar *nhdr;          /**< buffer with all NOTE pages */
+  gchar *nhdr;         /**< buffer with all NOTE pages */
 
   guint64 ra;                        /**< return address for top frame */
   guint64 ip_file_offset;            /**< instruction pointer file offset for top frame */
   guint64 ra_file_offset;            /**< return address file offset for top frame */
-  const gchar *ip_module_name;        /**< module name pointed by instruction pointer */
-  const gchar *ra_module_name;        /**< module name pointed by return address */
-  gulong note_page_size;      /**< note section page size */
-  gulong elf_vma_page_size;   /**< elf vma page size */
-  guint8 crashid_info;    /**< type of information available for crashid */
+  const gchar *ip_module_name;       /**< module name pointed by instruction pointer */
+  const gchar *ra_module_name;       /**< module name pointed by return address */
+  gulong note_page_size;             /**< note section page size */
+  gulong elf_vma_page_size;          /**< elf vma page size */
+  guint8 crashid_info;               /**< type of information available for crashid */
 } CdhData;
 
 /**
@@ -81,13 +81,13 @@ typedef struct _CdhData {
  * @param d The cdh object to initialize
  * @param conf_path Full path to the cdh configuration fole
  */
-void cdh_data_init(CdhData *d, const gchar *config_path);
+void cdh_data_init (CdhData *d, const gchar *config_path);
 
 /**
  * @brief Deinitialize pre-allocated cdm object
  * @param d The cdh object to deinitialize
  */
-void cdh_data_deinit(CdhData *d);
+void cdh_data_deinit (CdhData *d);
 
 /**
  * @brief Execute cdh logic
@@ -98,7 +98,7 @@ void cdh_data_deinit(CdhData *d);
  *
  * @return If run was succesful CDH_OK is returned
  */
-CdmStatus cdh_main_enter(CdhData *d, gint argc, gchar *argv[]);
+CdmStatus cdh_main_enter (CdhData *d, gint argc, gchar *argv[]);
 
 #ifdef __cplusplus
 }

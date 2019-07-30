@@ -45,15 +45,15 @@ extern "C" {
  * @param ctx_name Context identifier
  * @param ctx_desc Context description
  */
-void cdm_logging_open(const gchar *app_name,
-                      const gchar *app_desc,
-                      const gchar *ctx_name,
-                      const gchar *ctx_desc);
+void cdm_logging_open (const gchar *app_name,
+                       const gchar *app_desc,
+                       const gchar *ctx_name,
+                       const gchar *ctx_desc);
 
 /**
  * @brief Close logging system
  */
-void cdm_logging_close(void);
+void cdm_logging_close (void);
 
 #ifdef __cplusplus
 }

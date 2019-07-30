@@ -65,13 +65,13 @@ typedef struct _CdmOptions {
  * @brief Create a new options object
  * @return On success return a new CdmOptions object otherwise return NULL
  */
-CdmOptions *cdm_options_new(const gchar *conf_path);
+CdmOptions *cdm_options_new (const gchar *conf_path);
 
 /**
  * @brief Release an options object
  * @param opts Pointer to the options object
  */
-void cdm_options_free(CdmOptions *opts);
+void cdm_options_free (CdmOptions *opts);
 
 /*
  * @brief Get a configuration value string for key
@@ -82,7 +82,7 @@ void cdm_options_free(CdmOptions *opts);
  *
  * @return On success return a reference to the optional value otherwise return NULL
  */
-const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStatus *error);
+const gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error);
 
 /*
  * @brief Get a configuration gint64 value for key
@@ -93,6 +93,6 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
  *
  * @return On success return a reference to the optional value otherwise return NULL
  */
-gint64 cdm_options_long_for(CdmOptions *opts, CdmOptionsKey key, CdmStatus *error);
+gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error);
 
 #endif /* CDM_OPTIONS_H */

@@ -55,11 +55,11 @@ extern "C" {
  * @brief The coredump handler manager object
  */
 typedef struct _CdhManager {
-    gint sfd;                  /**< Server (manager) unix domain file descriptor */
-    gboolean connected;           /**< Server connection state */
-    struct sockaddr_un saddr; /**< Server socket addr struct */
-    const gchar *coredir;      /**< Path to coredump database */
-    CdmOptions *opts; /**< Reference to options object */
+  gint sfd;                    /**< Server (manager) unix domain file descriptor */
+  gboolean connected;          /**< Server connection state */
+  struct sockaddr_un saddr;    /**< Server socket addr struct */
+  const gchar *coredir;        /**< Path to coredump database */
+  CdmOptions *opts;            /**< Reference to options object */
 } CdhManager;
 
 /**
@@ -70,35 +70,35 @@ typedef struct _CdhManager {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_manager_init(CdhManager *c, CdmOptions *opts);
+CdmStatus cdh_manager_init (CdhManager *c, CdmOptions *opts);
 
 /**
  * @brief Connect to cdh manager
  * @param c Manager object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_manager_connect(CdhManager *c);
+CdmStatus cdh_manager_connect (CdhManager *c);
 
 /**
  * @brief Disconnect from cdh manager
  * @param c Manager object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_manager_disconnect(CdhManager *c);
+CdmStatus cdh_manager_disconnect (CdhManager *c);
 
 /**
  * @brief Get connection state
  * @param c Manager object
  * @return True if connected
  */
-gboolean cdh_manager_connected(CdhManager *c);
+gboolean cdh_manager_connected (CdhManager *c);
 
 /**
  * @brief Set coredump archive database path
  * @param c Manager object
  * @param coredir Coredumo database path
  */
-void cdh_manager_set_coredir(CdhManager *c, const gchar *coredir);
+void cdh_manager_set_coredir (CdhManager *c, const gchar *coredir);
 
 /**
  * @brief Send message to cdh manager
@@ -108,7 +108,7 @@ void cdh_manager_set_coredir(CdhManager *c, const gchar *coredir);
  *
  * @return True if connected
  */
-CdmStatus cdh_manager_send(CdhManager *c, CDMessage *m);
+CdmStatus cdh_manager_send (CdhManager *c, CDMessage *m);
 
 #ifdef __cplusplus
 }

@@ -49,14 +49,14 @@ extern "C" {
  * @brief The archive object
  */
 typedef struct _CdhArchive {
-  struct archive *archive;                               /**< Archive object  */
-  struct archive_entry *archive_entry;       /**< Current archive entry */
+  struct archive *archive;                       /**< Archive object  */
+  struct archive_entry *archive_entry;           /**< Current archive entry */
 
-  gboolean is_open;       /**< Archive open for write */
+  gboolean is_open;                              /**< Archive open for write */
 
-  FILE *in_stream;                       /**< The input file stream */
-  gsize in_stream_offset;       /**< Current offset */
-  guint8 in_read_buffer[ARCHIVE_READ_BUFFER_SZ] /**< Read buffer */;
+  FILE *in_stream;                               /**< The input file stream */
+  gsize in_stream_offset;                        /**< Current offset */
+  guint8 in_read_buffer[ARCHIVE_READ_BUFFER_SZ]; /**< Read buffer */
 } CdhArchive;
 
 /**
@@ -68,14 +68,14 @@ typedef struct _CdhArchive {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_init(CdhArchive *ar, const gchar *dst);
+CdmStatus cdh_archive_init (CdhArchive *ar, const gchar *dst);
 
 /**
  * @brief Close cdh archive
  * @param ar The CdhArchive object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_close(CdhArchive *ar);
+CdmStatus cdh_archive_close (CdhArchive *ar);
 
 /**
  * @brief Create and add a new file to archive
@@ -85,7 +85,7 @@ CdmStatus cdh_archive_close(CdhArchive *ar);
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_create_file(CdhArchive *ar, const gchar *dst);
+CdmStatus cdh_archive_create_file (CdhArchive *ar, const gchar *dst);
 
 /**
  * @brief Write file data for created file
@@ -95,14 +95,14 @@ CdmStatus cdh_archive_create_file(CdhArchive *ar, const gchar *dst);
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_write_file(CdhArchive *ar, const void *buf, gsize size);
+CdmStatus cdh_archive_write_file (CdhArchive *ar, const void *buf, gsize size);
 
 /**
  * @brief Finish archive file
  * @param ar The CdhArchive object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_finish_file(CdhArchive *ar);
+CdmStatus cdh_archive_finish_file (CdhArchive *ar);
 
 /**
  * @brief Add a file from filesystem
@@ -115,7 +115,7 @@ CdmStatus cdh_archive_finish_file(CdhArchive *ar);
  * @return CDM_STATUS_OK on success
  */
 
-CdmStatus cdh_archive_add_system_file(CdhArchive *ar, const gchar *src, const gchar *dst);
+CdmStatus cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst);
 
 /**
  * @brief Start archive input stream processing
@@ -127,7 +127,7 @@ CdmStatus cdh_archive_add_system_file(CdhArchive *ar, const gchar *src, const gc
  * @return CDM_STATUS_OK on success
  */
 
-CdmStatus cdh_archive_stream_open(CdhArchive *ar, const gchar *src, const gchar *dst);
+CdmStatus cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar *dst);
 
 /**
  * @brief Read into buffer and advence up to size
@@ -138,14 +138,14 @@ CdmStatus cdh_archive_stream_open(CdhArchive *ar, const gchar *src, const gchar 
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_stream_read(CdhArchive *ar, void *buf, gsize size);
+CdmStatus cdh_archive_stream_read (CdhArchive *ar, void *buf, gsize size);
 
 /**
  * @brief Read and save all input stream
  * @param ar The CdhArchive object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_stream_read_all(CdhArchive *ar);
+CdmStatus cdh_archive_stream_read_all (CdhArchive *ar);
 
 /**
  * @brief Advence to offset in input stream and dump everything to output up to the offset
@@ -155,7 +155,7 @@ CdmStatus cdh_archive_stream_read_all(CdhArchive *ar);
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_stream_move_to_offset(CdhArchive *ar, gulong offset);
+CdmStatus cdh_archive_stream_move_to_offset (CdhArchive *ar, gulong offset);
 
 /**
  * @brief Process next bytes from input stream
@@ -165,28 +165,28 @@ CdmStatus cdh_archive_stream_move_to_offset(CdhArchive *ar, gulong offset);
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_stream_move_ahead(CdhArchive *ar, gulong nbbytes);
+CdmStatus cdh_archive_stream_move_ahead (CdhArchive *ar, gulong nbbytes);
 
 /**
  * @brief Current offset getter
  * @param ar The CdhArchive object
  * @return The current offset value
  */
-gsize cdh_archive_stream_get_offset(CdhArchive *ar);
+gsize cdh_archive_stream_get_offset (CdhArchive *ar);
 
 /**
  * @brief Check if the a stream is open
  * @param ar The CdhArchive object
  * @return True if a file stream is open
  */
-gboolean cdh_archive_stream_is_open(CdhArchive *ar);
+gboolean cdh_archive_stream_is_open (CdhArchive *ar);
 
 /**
  * @brief Finish input stream processing
  * @param ar The CdhArchive object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_stream_close(CdhArchive *ar);
+CdmStatus cdh_archive_stream_close (CdhArchive *ar);
 
 #ifdef __cplusplus
 }

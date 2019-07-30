@@ -46,7 +46,7 @@ extern "C" {
  * @param type The message type
  * @param session Unique session identifier
  */
-void cdm_message_init(CdmMessage *m, CdmMessageType type, uint16 session);
+void cdm_message_init (CdmMessage *m, CdmMessageType type, uint16 session);
 
 /*
  * @brief Message data setter
@@ -55,7 +55,7 @@ void cdm_message_init(CdmMessage *m, CdmMessageType type, uint16 session);
  * @param data The message data to set
  * @param size The message data size
  */
-void cdm_message_set_data(CdmMessage *m, void *data, uint32 size);
+void cdm_message_set_data (CdmMessage *m, void *data, uint32 size);
 
 /*
  * @brief Message data free
@@ -64,19 +64,19 @@ void cdm_message_set_data(CdmMessage *m, void *data, uint32 size);
  *
  * @param m The message object
  */
-void cdm_message_free_data(CdmMessage *m);
+void cdm_message_free_data (CdmMessage *m);
 
 /*
  * @brief Validate if the message object is consistent
  * @param m The message object
  */
-bool cdm_message_is_valid(CdmMessage *m);
+bool cdm_message_is_valid (CdmMessage *m);
 
 /*
  * @brief Get message type
  * @param m The message object
  */
-CdmMessageType cdm_message_getype(CdmMessage *m);
+CdmMessageType cdm_message_getype (CdmMessage *m);
 
 /*
  * @brief Set message version
@@ -86,7 +86,7 @@ CdmMessageType cdm_message_getype(CdmMessage *m);
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CdmStatus cdm_message_set_version(CdmMessage *m, const gchar *version);
+CdmStatus cdm_message_set_version (CdmMessage *m, const gchar *version);
 
 /*
  * @brief Read data into message object
@@ -98,7 +98,7 @@ CdmStatus cdm_message_set_version(CdmMessage *m, const gchar *version);
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CdmStatus cdm_message_read(gint fd, CdmMessage *m);
+CdmStatus cdm_message_read (gint fd, CdmMessage *m);
 
 /*
  * @brief Write data into message object
@@ -108,7 +108,7 @@ CdmStatus cdm_message_read(gint fd, CdmMessage *m);
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-CdmStatus cdm_message_write(gint fd, CdmMessage *m);
+CdmStatus cdm_message_write (gint fd, CdmMessage *m);
 
 #ifdef __cplusplus
 }

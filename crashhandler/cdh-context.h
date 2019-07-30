@@ -47,21 +47,21 @@ extern "C" {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_context_get_procname(pid_t pid, gchar *exec_name, gsize exec_name_maxsize);
+CdmStatus cdh_context_get_procname (pid_t pid, gchar *exec_name, gsize exec_name_maxsize);
 
 /**
  * @brief Generate context data available pre coredump stream
  * @param d Global CDData
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_context_generate_prestream(CdhData *d);
+CdmStatus cdh_context_generate_prestream (CdhData *d);
 
 /**
  * @brief Generate context data available post coredump stream
  * @param d Global CDData
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_context_generate_poststream(CdhData *d);
+CdmStatus cdh_context_generate_poststream (CdhData *d);
 
 #ifdef __cplusplus
 }

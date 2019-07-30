@@ -80,7 +80,7 @@ typedef struct _CdmRegisters {
   uint64 rip;
   uint64 rbp;
 #else
-  static_assert(false, "Don't know whow to handle this arhitecture");
+  static_assert (false, "Don't know whow to handle this arhitecture");
 #endif
 } CdmRegisters;
 

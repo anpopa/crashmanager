@@ -33,9 +33,10 @@
 #include <glib.h>
 #include <stdlib.h>
 
-CdmOptions *cdm_options_new(const gchar *conf_path)
+CdmOptions *
+cdm_options_new (const gchar *conf_path)
 {
-  CdmOptions *opts = calloc(1, sizeof(CdmOptions));
+  CdmOptions *opts = calloc (1, sizeof(CdmOptions));
 
   opts->has_conf = false;
 
@@ -43,37 +44,39 @@ CdmOptions *cdm_options_new(const gchar *conf_path)
     {
       GError *error = NULL;
 
-      opts->conf = g_key_file_new();
+      opts->conf = g_key_file_new ();
 
-      g_assert(opts->conf);
+      g_assert (opts->conf);
 
-      if (g_key_file_load_from_file(opts->conf, conf_path, G_KEY_FILE_NONE, *error) == TRUE)
+      if (g_key_file_load_from_file (opts->conf, conf_path, G_KEY_FILE_NONE, *error) == TRUE)
         {
           opts->has_conf = true;
         }
       else
         {
-          g_debug("Cannot parse configuration file");
-          g_error_free(error);
+          g_debug ("Cannot parse configuration file");
+          g_error_free (error);
         }
     }
 
   return opts;
 }
 
-void cdm_options_free(CdmOptions *opts)
+void
+cdm_options_free (CdmOptions *opts)
 {
-  g_assert(opts);
+  g_assert (opts);
 
   if (opts->conf)
     {
-      cdm_conf_free(opts->conf);
+      cdm_conf_free (opts->conf);
     }
 
-  free(opts);
+  free (opts);
 }
 
-const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
+const gchar *
+cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
 {
   if (error != NULL)
     *error = CDM_STATUS_OK;
@@ -83,7 +86,7 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
     case KEY_USER_NAME:
       if (opts->has_conf)
         {
-          const gchar *tmp = g_key_file_get_string(opts->conf, "common", "UserName", NULL);
+          const gchar *tmp = g_key_file_get_string (opts->conf, "common", "UserName", NULL);
 
           if (tmp != NULL)
             {
@@ -95,7 +98,7 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
     case KEY_GROUP_NAME:
       if (opts->has_conf)
         {
-          const gchar *tmp = g_key_file_get_string(opts->conf, "common", "GroupName", NULL);
+          const gchar *tmp = g_key_file_get_string (opts->conf, "common", "GroupName", NULL);
 
           if (tmp != NULL)
             {
@@ -108,7 +111,7 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
       if (opts->has_conf)
         {
           const gchar *tmp =
-            g_key_file_get_string(opts->conf, "common", "CoredumpDirectory", NULL);
+            g_key_file_get_string (opts->conf, "common", "CoredumpDirectory", NULL);
 
           if (tmp != NULL)
             {
@@ -120,7 +123,7 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
     case KEY_RUN_DIR:
       if (opts->has_conf)
         {
-          const gchar *tmp = g_key_file_get_string(opts->conf, "common", "RunDirectory", NULL);
+          const gchar *tmp = g_key_file_get_string (opts->conf, "common", "RunDirectory", NULL);
 
           if (tmp != NULL)
             {
@@ -133,7 +136,7 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
       if (opts->has_conf)
         {
           const gchar *tmp =
-            g_key_file_get_string(opts->conf, "coremanager", "KDumpSourceDir", NULL);
+            g_key_file_get_string (opts->conf, "coremanager", "KDumpSourceDir", NULL);
 
           if (tmp != NULL)
             {
@@ -146,7 +149,7 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
       if (opts->has_conf)
         {
           const gchar *tmp =
-            g_key_file_get_string(opts->conf, "common", "IpcSocketFile", NULL);
+            g_key_file_get_string (opts->conf, "common", "IpcSocketFile", NULL);
 
           if (tmp != NULL)
             {
@@ -167,26 +170,27 @@ const gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key, CdmStat
   return NULL;
 }
 
-static CdmStatus get_long_option(CdmOptions *opts,
-                                 const gchar *section_name,
-                                 const gchar *property_name,
-                                 gint64 *value)
+static CdmStatus
+get_long_option (CdmOptions *opts,
+                 const gchar *section_name,
+                 const gchar *property_name,
+                 gint64 *value)
 {
-  g_assert(opts);
-  g_assert(section_name);
-  g_assert(property_name);
-  g_assert(value);
+  g_assert (opts);
+  g_assert (section_name);
+  g_assert (property_name);
+  g_assert (value);
 
   if (opts->has_conf)
     {
-      const gchar *tmp = g_key_file_get_string(opts->conf, section_name, -1, property_name);
+      const gchar *tmp = g_key_file_get_string (opts->conf, section_name, -1, property_name);
 
       if (tmp != NULL)
         {
           gchar *c = NULL;
           gint64 ret;
 
-          ret = strtol(tmp, &c, 10);
+          ret = strtol (tmp, &c, 10);
 
           if (*c != tmp[0])
             {
@@ -199,7 +203,8 @@ static CdmStatus get_long_option(CdmOptions *opts,
   return CDM_STATUS_ERROR;
 }
 
-gint64 cdm_options_long_for(CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
+gint64
+cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
 {
   gint64 value = -1;
 
@@ -211,27 +216,27 @@ gint64 cdm_options_long_for(CdmOptions *opts, CdmOptionsKey key, CdmStatus *erro
   switch (key)
     {
     case KEY_ELEVATED_NICE_VALUE:
-      return get_long_option(opts, "coredumper", "ElevatedNiceValue", &value) == CDM_STATUS_OK ?
+      return get_long_option (opts, "coredumper", "ElevatedNiceValue", &value) == CDM_STATUS_OK ?
              value :
              CDM_ELEVATED_NICE_VALUE;
 
     case KEY_IPC_TIMEOUT_SEC:
-      return get_long_option(opts, "common", "IpcSocketTimeout", &value) == CDM_STATUS_OK ?
+      return get_long_option (opts, "common", "IpcSocketTimeout", &value) == CDM_STATUS_OK ?
              value :
              CDM_CRASHMANAGER_IPC_TIMEOUT_SEC;
 
     case KEY_CRASHDIR_MIN_SIZE:
-      return get_long_option(opts, "crashmanager", "MinCoredumpDirSize", &value) == CDM_STATUS_OK ?
+      return get_long_option (opts, "crashmanager", "MinCoredumpDirSize", &value) == CDM_STATUS_OK ?
              value :
              CDM_CRASHDIR_MIN_SIZE;
 
     case KEY_CRASHDIR_MAX_SIZE:
-      return get_long_option(opts, "crashmanager", "MaxCoredumpDirSize", &value) == CDM_STATUS_OK ?
+      return get_long_option (opts, "crashmanager", "MaxCoredumpDirSize", &value) == CDM_STATUS_OK ?
              value :
              CDM_CRASHDIR_MAX_SIZE;
 
     case KEY_CRASHDIR_MAX_COUNT:
-      return get_long_option(opts, "crashmanager", "MaxCoredumpArchives", &value) == CDM_STATUS_OK ?
+      return get_long_option (opts, "crashmanager", "MaxCoredumpArchives", &value) == CDM_STATUS_OK ?
              value :
              CDM_CRASHDIR_MAX_COUNT;
 
