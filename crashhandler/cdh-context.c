@@ -71,47 +71,43 @@ static CdmStatus list_dircontent_to (gchar *dname, CdhArchive *ar);
 
 static CdmStatus update_context_info (CdhData *d);
 
-CdmStatus
-cdh_context_get_procname (pid_t pid, gchar *exec_name, gsize exec_name_maxsize)
+gchar *
+cdh_context_get_procname (pid_t pid)
 {
-  FILE *fstm;
-  gchar statfile[CORE_MAX_FILENAME_LENGTH];
+  g_autofree gchar *statfile = NULL;
   gboolean done = false;
+  gchar *retval = NULL;
+  FILE *fstm;
 
   g_assert (exec_name);
 
-  memset (statfile, 0, sizeof(statfile));
-  snprintf (statfile, sizeof(statfile), "/proc/%d/status", pid);
+  statfile = g_strdup_printf ("/proc/%d/status", pid);
 
-  if ((fstm = fopen (statfile, "r")) == NULL)
+  if ((fstm = g_fopen (statfile, "r")) == NULL)
     {
-      g_warning ("Open status file '%s' for dumping [%s]", statfile, strerror (errno));
-      return CDM_STATUS_ERROR;
+      g_warning ("Open status file '%s' for dumping %s", statfile, strerror (errno));
+      return NULL;
     }
 
   while (fgets (g_buffer, sizeof(g_buffer), fstm) && !done)
     {
-      if (strstr (g_buffer, "Name:") != NULL)
+      gchar *name = g_strstr (g_buffer, "Name:");
+
+      if (name != NULL)
         {
-          gssize sz;
+          retval = g_strdup (name);
 
-          memset (exec_name, 0, exec_name_maxsize);
-          sz = snprintf (exec_name, exec_name_maxsize, "%s", g_buffer + strlen ("Name:") + 1);
-          if ((0 < sz) && (sz < (gssize)exec_name_maxsize))
+          if (retval != NULL)
             {
-              if (exec_name[sz - 1] == '\n')
-                {
-                  exec_name[sz - 1] = '\0';
-                }
-
-              done = true;
+              g_strstrip(retval);
             }
+          found = TRUE;
         }
     }
 
-  fclose (fstm);
+  g_fclose (fstm);
 
-  return done == true ? CDM_STATUS_OK : CDM_STATUS_ERROR;
+  return retval;
 }
 
 static CdmStatus
@@ -207,7 +203,7 @@ update_context_info (CdhData *d)
   g_assert (d);
 
   memset (tmp_context, 0, sizeof(tmp_context));
-  d->info->onhost = true;
+  d->info.onhost = true;
 
   pid = getpid ();
 
@@ -224,7 +220,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/cgroup", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/cgroup", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/cgroup", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -232,7 +228,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/ipc", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/ipc", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/ipc", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -240,7 +236,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/mnt", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/mnt", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/mnt", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -248,7 +244,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/net", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/net", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/net", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -256,7 +252,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/pid", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/pid", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/pid", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -264,7 +260,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/user", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/user", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/user", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -272,7 +268,7 @@ update_context_info (CdhData *d)
           sz = snprintf (tmp_host_path, sizeof(tmp_host_path), "/proc/%d/ns/uts", pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_host_path))), NULL);
 
-          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/uts", d->info->pid);
+          sz = snprintf (tmp_proc_path, sizeof(tmp_proc_path), "/proc/%d/ns/uts", d->info.pid);
           cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(tmp_proc_path))), NULL);
           break;
 
@@ -294,16 +290,16 @@ update_context_info (CdhData *d)
 
       if (strncmp (host_ns_buf, proc_ns_buf, sizeof(host_ns_buf)) != 0)
         {
-          d->info->onhost = false;
+          d->info.onhost = false;
         }
 
       strncat (tmp_context, proc_ns_buf, sizeof(tmp_context) - (strlen (tmp_context) + 1));
     }
 
-  count = snprintf (d->info->contextid, sizeof(d->info->contextid), "%016lX",
+  count = snprintf (d->info.contextid, sizeof(d->info.contextid), "%016lX",
                     cd_util_jenkins_hash (tmp_context));
 
-  return((count > 0) && (count < (gint)sizeof(d->info->contextid)) ? CDM_STATUS_OK : CDM_STATUS_ERROR);
+  return((count > 0) && (count < (gint)sizeof(d->info.contextid)) ? CDM_STATUS_OK : CDM_STATUS_ERROR);
 }
 
 CdmStatus
@@ -320,7 +316,7 @@ cdh_context_generate_prestream (CdhData *d)
 
 #define PROC_FILENAME(x)                                                                           \
   do {                                                                                           \
-      snprintf (pfile, sizeof(pfile), "/proc/%d/" x, d->info->pid);                                \
+      snprintf (pfile, sizeof(pfile), "/proc/%d/" x, d->info.pid);                                \
     } while (0)
 
   if (dump_file_to ("/etc/os-release", &d->archive) != CDM_STATUS_OK)

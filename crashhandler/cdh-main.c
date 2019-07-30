@@ -1,4 +1,4 @@
-/* cdh_main.c
+/* cdh-main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,7 +27,7 @@
  * authorization.
  */
 
-#include "cdm_defaults.h"
+#include "cdm-defaults.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -35,27 +35,26 @@
 gint
 main (gint argc, gchar *argv[])
 {
-  g_autoptr (GOptionContext) context = NULL;
-  g_autoptr (GError) error = NULL;
-  gboolean version = FALSE;
-  GOptionEntry main_entries[] = {
-    { "version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL }
-  };
+  g_autofree gchar *conf_path = NULL;
+  CdmStatus status = CDM_STATUS_OK;
 
-  context = g_option_context_new ("- my command line tool");
-  g_option_context_add_main_entries (context, main_entries, NULL);
+  cdm_logging_open ("CDH", "Coredumper instance", "CDH", "Default context");
 
-  if (!g_option_context_parse (context, &argc, &argv, &error))
+  conf_path = g_build_filename (CDH_CONFIG_DIRECTORY, CDH_CONFIG_FILE_NAME, NULL);
+  if (g_access (conf_path, R_OK) == 0)
     {
-      g_printerr ("%s\n", error->message);
-      return EXIT_FAILURE;
+      g_autofree data = g_malloc0 (sizeof(CdhData));
+
+      cdh_data_init (data, conf_path);
+      status = cdh_enter (data, argc, argv);
+      cdh_data_deinit (data);
+    }
+  else
+    {
+      status = CDM_STATUS_ERROR;
     }
 
-  if (version)
-    {
-      g_printerr ("%s\n", CDM_VERSION);
-      return EXIT_SUCCESS;
-    }
+  cdm_logging_close ();
 
-  return EXIT_SUCCESS;
+  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 }

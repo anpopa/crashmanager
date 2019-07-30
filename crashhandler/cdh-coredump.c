@@ -333,37 +333,24 @@ read_notes (CdhData *d)
 static CdmStatus
 init_coredump (CdhData *d)
 {
-  sgsize sz;
+  g_autofree gchar *dst = NULL;
 
   g_assert (d);
 
-  if (d->coredump_ready)
+  dst = g_strdup_printf("%s.%lu.coredump", d->info.name, d->info.pid);
+
+  if (cdh_archive_stream_open (&d->archive, 0, (dst != NULL ? dst : "coredump")) == CDM_STATUS_OK)
     {
-      gchar dst[CDH_PATH_MAX];
-
-      sz = snprintf (dst, sizeof(dst), COREFILE_NAME_PATTERN, d->tstamp, d->name, d->pid);
-      cdhbail (BAIL_PATH_MAX, ((0 < sz) && (sz < (gssize)sizeof(dst))), NULL);
-
-      if (cdh_archive_stream_open (&d->archive, 0, dst) == CDM_STATUS_OK)
-        {
-          g_info ("Coredump compression started for %s with pid %u", d->name, d->pid);
-        }
-      else
-        {
-          g_warning ("init_coredump: cdh_stream_init has failed !");
-          return CDM_STATUS_ERROR;
-        }
+      g_info ("Coredump compression started for %s with pid %u", d->info.name, d->info.pid);
     }
   else
     {
-      if (cdh_archive_stream_open (&d->archive, 0, NULL) != CDM_STATUS_OK)
-        {
-          g_warning ("init_coredump: cdh_stream_init has failed !");
-          return CDM_STATUS_ERROR;
-        }
+      g_warning ("init_coredump: cdh_stream_init has failed !");
+      return CDM_STATUS_ERROR;
     }
+}
 
-  return CDM_STATUS_OK;
+return CDM_STATUS_OK;
 }
 
 static CdmStatus
@@ -495,11 +482,11 @@ cdh_coredump_generate (CdhData *d)
           CdmMessage msg;
           CdmMessageDataUpdate data;
 
-          cdm_message_init (&msg, CDM_CORE_UPDATE, (guint16)((gulong)d->pid | d->tstamp));
+          cdm_message_init (&msg, CDM_CORE_UPDATE, (guint16)((gulong)d->info.pid | d->info.tstamp));
 
-          memcpy (data.crashid, d->crashid, strlen (d->crashid) + 1);
-          memcpy (data.vectorid, d->vectorid, strlen (d->vectorid) + 1);
-          memcpy (data.contextid, d->contextid, strlen (d->contextid) + 1);
+          memcpy (data.crashid, d->info.crashid, strlen (d->info.crashid) + 1);
+          memcpy (data.vectorid, d->info.vectorid, strlen (d->info.vectorid) + 1);
+          memcpy (data.contextid, d->info.contextid, strlen (d->info.contextid) + 1);
 
           cdm_message_set_data (&msg, &data, sizeof(data));
 
@@ -533,7 +520,7 @@ finished:
     {
       if (d->coredump_ready)
         {
-          g_info ("Coredump compression finished for %s with pid %u", d->name, d->pid);
+          g_info ("Coredump compression finished for %s with pid %u", d->info.name, d->info.pid);
         }
     }
 

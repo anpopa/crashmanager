@@ -57,7 +57,7 @@ extern "C" {
 typedef struct _CdhData {
   CdhArchive archive;  /**< coredump archive streamer */
   CdmRegisters regs;   /**< cpu registers for crash id calculation */
-  CdhInfo *info;       /**< Crash info data */
+  CdhInfo info;       /**< Crash info data */
 #if defined(WITH_CRASHMANAGER)
   CdhManager crash_mgr;   /**< manager ipc object */
 #endif

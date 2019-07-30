@@ -51,7 +51,7 @@ cdm_options_new (const gchar *conf_path)
       if (g_key_file_load_from_file (opts->conf, conf_path, G_KEY_FILE_NONE, *error) == TRUE)
         {
           opts->has_conf = true;
-        }
+        } 
       else
         {
           g_debug ("Cannot parse configuration file");
@@ -75,8 +75,8 @@ cdm_options_free (CdmOptions *opts)
   free (opts);
 }
 
-const gchar *
-cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
+gchar *
+cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
 {
   if (error != NULL)
     *error = CDM_STATUS_OK;
@@ -93,7 +93,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
               return tmp;
             }
         }
-      return CDM_USER_NAME;
+      return g_strdup(CDM_USER_NAME);
 
     case KEY_GROUP_NAME:
       if (opts->has_conf)
@@ -105,7 +105,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
               return tmp;
             }
         }
-      return CDM_GROUP_NAME;
+      return g_strdup(CDM_GROUP_NAME);
 
     case KEY_CRASHDUMP_DIR:
       if (opts->has_conf)
@@ -118,7 +118,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
               return tmp;
             }
         }
-      return CDM_CRASHDUMP_DIR;
+      return g_strdup(CDM_CRASHDUMP_DIR);
 
     case KEY_RUN_DIR:
       if (opts->has_conf)
@@ -130,7 +130,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
               return tmp;
             }
         }
-      return CDM_RUN_DIR;
+      return g_strdup(CDM_RUN_DIR);
 
     case KEY_KDUMPSOURCE_DIR:
       if (opts->has_conf)
@@ -143,7 +143,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
               return tmp;
             }
         }
-      return CDM_KDUMPSOURCE_DIR;
+      return g_strdup(CDM_KDUMPSOURCE_DIR);
 
     case KEY_IPC_SOCK_ADDR:
       if (opts->has_conf)
@@ -156,25 +156,22 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
               return tmp;
             }
         }
-      return CDM_IPC_SOCK_ADDR;
+      return g_strdup(CDM_IPC_SOCK_ADDR);
 
     default:
       break;
     }
 
-  if (error != NULL)
-    {
-      *error = CDM_STATUS_ERROR;
-    }
+  g_error ("No default value provided for string key");
 
   return NULL;
 }
 
-static CdmStatus
+static gint64
 get_long_option (CdmOptions *opts,
                  const gchar *section_name,
-                 const gchar *property_name,
-                 gint64 *value)
+                 const gchar *property_name
+                 GError **error)
 {
   g_assert (opts);
   g_assert (section_name);
@@ -183,30 +180,32 @@ get_long_option (CdmOptions *opts,
 
   if (opts->has_conf)
     {
-      const gchar *tmp = g_key_file_get_string (opts->conf, section_name, -1, property_name);
+      g_autofree gchar *tmp = g_key_file_get_string (opts->conf, section_name, property_name, NULL);
 
       if (tmp != NULL)
         {
           gchar *c = NULL;
           gint64 ret;
 
-          ret = strtol (tmp, &c, 10);
+          ret = g_ascii_strtoll (tmp, &c, 10);
 
           if (*c != tmp[0])
             {
-              *value = ret;
-              return CDM_STATUS_OK;
+              return ret;
             }
         }
     }
 
-  return CDM_STATUS_ERROR;
+  g_set_error_literal (error, g_quark_from_string("cdm-options"), 0, "Cannot convert option to long");
+
+  return -1;
 }
 
 gint64
-cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
+cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
 {
-  gint64 value = -1;
+  GError *error = NULL;
+  gint64 value = 0;
 
   if (error != NULL)
     {
@@ -215,39 +214,64 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error)
 
   switch (key)
     {
+    case KEY_FILESYSTEM_MIN_SIZE:
+      value =  get_long_option (opts, "coredumper", "FileSystemMinSize", &error);
+      if (error != NULL)
+        {
+          value = CDM_FILESYSTEM_MIN_SIZE;
+          g_error_free (error);
+        }
+      break;
+
     case KEY_ELEVATED_NICE_VALUE:
-      return get_long_option (opts, "coredumper", "ElevatedNiceValue", &value) == CDM_STATUS_OK ?
-             value :
-             CDM_ELEVATED_NICE_VALUE;
+      value =  get_long_option (opts, "coredumper", "ElevatedNiceValue", &error);
+      if (error != NULL)
+        {
+          value = CDM_ELEVATED_NICE_VALUE;
+          g_error_free (error);
+        }
+      break;
 
     case KEY_IPC_TIMEOUT_SEC:
-      return get_long_option (opts, "common", "IpcSocketTimeout", &value) == CDM_STATUS_OK ?
-             value :
-             CDM_CRASHMANAGER_IPC_TIMEOUT_SEC;
+      value =  get_long_option (opts, "common", "IpcSocketTimeout", &error);
+      if (error != NULL)
+        {
+          value = CDM_CRASHMANAGER_IPC_TIMEOUT_SEC;
+          g_error_free (error);
+        }
+      break;
 
     case KEY_CRASHDIR_MIN_SIZE:
-      return get_long_option (opts, "crashmanager", "MinCoredumpDirSize", &value) == CDM_STATUS_OK ?
-             value :
-             CDM_CRASHDIR_MIN_SIZE;
+      value = get_long_option (opts, "crashmanager", "MinCoredumpDirSize", &error);
+      if (error != NULL)
+        {
+          value = CDM_CRASHDIR_MIN_SIZE;
+          g_error_free (error);
+        }
+      break;
 
     case KEY_CRASHDIR_MAX_SIZE:
-      return get_long_option (opts, "crashmanager", "MaxCoredumpDirSize", &value) == CDM_STATUS_OK ?
-             value :
-             CDM_CRASHDIR_MAX_SIZE;
-
+      value = get_long_option (opts, "crashmanager", "MaxCoredumpDirSize", &error);
+      if (error != NULL)
+        {
+          value = CDM_CRASHDIR_MAX_SIZE;
+          g_error_free (error);
+        }
+      break;
     case KEY_CRASHDIR_MAX_COUNT:
-      return get_long_option (opts, "crashmanager", "MaxCoredumpArchives", &value) == CDM_STATUS_OK ?
-             value :
-             CDM_CRASHDIR_MAX_COUNT;
+      value =  get_long_option (opts, "crashmanager", "MaxCoredumpArchives", &error);
+      if (error != NULL)
+        {
+          value = CDM_CRASHDIR_MAX_COUNT;
+          g_error_free (error);
+        }
+      break;
 
     default:
       break;
     }
 
-  if (error != NULL)
-    {
-      *error = CDM_STATUS_ERROR;
-    }
+  g_error ("No default value provided for long key");
 
   return -1;
 }

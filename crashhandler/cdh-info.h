@@ -55,17 +55,17 @@ extern "C" {
  * @brief The info object
  */
 typedef struct _CdhInfo {
-  gchar name[CDH_INFO_PROC_NAME_LEN];  /**< process name */
-  gchar tname[CDH_INFO_PROC_NAME_LEN]; /**< thread name  */
-  guint64 tstamp;                      /**< crash timestamp */
-  gint32 sig;                          /**< signal id */
-  gint32 pid;                          /**< process id as seen on host */
-  gint32 cpid;                         /**< process id as seen on namespace */
+  gchar *name;       /**< process name */
+  gchar *tname;      /**< thread name  */
+  guint64 tstamp;    /**< crash timestamp */
+  gint64 sig;        /**< signal id */
+  gint64 pid;        /**< process id as seen on host */
+  gint64 cpid;       /**< process id as seen on namespace */
 
-  gchar contextid[CRASH_CONTEXT_LEN];   /**< namespace context for the crashed pid */
-  gchar crashid[CRASH_ID_LEN];          /**< crash id value */
-  gchar vectorid[CRASH_ID_LEN];         /**< crash course id value */
-  gboolean onhost;                      /**< true if the crash is in host context */
+  gchar *contextid;  /**< namespace context for the crashed pid */
+  gchar *crashid;    /**< crash id value */
+  gchar *vectorid;   /**< crash course id value */
+  gboolean onhost;   /**< true if the crash is in host context */
 } CdhInfo;
 
 /**

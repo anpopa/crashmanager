@@ -45,7 +45,8 @@ cdh_info_new (void)
   CdhInfo *i = calloc (1, sizeof(CdhInfo));
 
   g_assert (i);
-  i->onhost = (guint8)true;
+
+  i->onhost = TRUE;
 
   return i;
 }
@@ -54,5 +55,12 @@ void
 cdh_info_free (CdhInfo *i)
 {
   g_assert (i);
+
+  g_free(i->name);
+  g_free(i->tname);
+  g_free(i->contextid);
+  g_free(i->crashid);
+  g_free(i->vectorid);
+
   free (i);
 }

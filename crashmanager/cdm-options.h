@@ -42,6 +42,7 @@ typedef enum _CdmOptionsKey {
   KEY_USER_NAME,
   KEY_GROUP_NAME,
   KEY_CRASHDUMP_DIR,
+  KEY_FILESYSTEM_MIN_SIZE,
   KEY_ELEVATED_NICE_VALUE,
   KEY_RUN_DIR,
   KEY_KDUMPSOURCE_DIR,
@@ -82,7 +83,7 @@ void cdm_options_free (CdmOptions *opts);
  *
  * @return On success return a reference to the optional value otherwise return NULL
  */
-const gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error);
+gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key);
 
 /*
  * @brief Get a configuration gint64 value for key
@@ -93,6 +94,6 @@ const gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key, CdmSta
  *
  * @return On success return a reference to the optional value otherwise return NULL
  */
-gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key, CdmStatus *error);
+gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key);
 
 #endif /* CDM_OPTIONS_H */

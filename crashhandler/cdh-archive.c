@@ -39,7 +39,7 @@
 #include <unistd.h>
 
 CdmStatus
-cdh_archive_init (CdhArchive *ar, const gchar *dst)
+cdh_archive_open (CdhArchive *ar, const gchar *dst)
 {
   CdmStatus status = CDM_STATUS_OK;
 
@@ -48,7 +48,7 @@ cdh_archive_init (CdhArchive *ar, const gchar *dst)
 
   memset (ar, 0, sizeof(CdhArchive));
 
-  ar->is_open = false;
+  ar->is_open = FALSE;
   ar->archive = archive_write_new ();
 
   if (archive_write_set_format_filter_by_ext (ar->archive, dst) != ARCHIVE_OK)
@@ -111,7 +111,7 @@ cdh_archive_create_file (CdhArchive *ar, const gchar *dst)
     }
   else
     {
-      ar->is_open = true;
+      ar->is_open = TRUE;
     }
 
   archive_entry_clear (ar->archive_entry);
@@ -157,7 +157,7 @@ cdh_archive_finish_file (CdhArchive *ar)
     }
   else
     {
-      ar->is_open = false;
+      ar->is_open = FALSE;
     }
 
   return CDM_STATUS_OK;
@@ -177,12 +177,11 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
     }
   else
     {
-      ar->is_open = true;
+      ar->is_open = TRUE;
     }
 
-  if (cdh_util_path_exist (src) != CDH_ISFILE)
+  if (g_access (src, R_OK) == 0)
     {
-      sgsize readsz;
       gint fd;
 
       archive_entry_clear (ar->archive_entry);
@@ -191,14 +190,10 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
 
       if (dst == NULL)
         {
-          gchar *dpath = malloc (sizeof(gchar) * CDH_PATH_MAX);
+          g_autofree gchar *dpath = g_strdup (src);
 
-          g_assert (dpath);
-
-          cdh_util_domain_path (src, dpath, sizeof(gchar) * CDH_PATH_MAX, "fsf");
+          g_strdelimit (dpath, "/ ", '.');
           archive_entry_set_pathname (ar->archive_entry, dpath);
-
-          free (dpath);
         }
       else
         {
@@ -207,9 +202,9 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
 
       archive_write_header (ar->archive, ar->archive_entry);
 
-      if ((fd = open (src, O_RDONLY)) != -1)
+      if ((fd = g_open (src, O_RDONLY)) != -1)
         {
-          readsz = read (fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
+          gsize readsz = read (fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
 
           while (readsz > 0)
             {
@@ -232,7 +227,7 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
       status = CDM_STATUS_ERROR;
     }
 
-  ar->is_open = false;
+  ar->is_open = FALSE;
 
   return status;
 }
@@ -260,7 +255,7 @@ cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar *dst)
   /* If no output is set we allow stream processing via stream read api anyway */
   if (dst)
     {
-      ar->is_open = true;
+      ar->is_open = TRUE;
       archive_entry_clear (ar->archive_entry);
       archive_entry_set_pathname (ar->archive_entry, dst);
       archive_entry_set_filetype (ar->archive_entry, AE_IFREG);
@@ -393,12 +388,12 @@ cdh_archive_stream_close (CdhArchive *ar)
 {
   g_assert (ar);
 
-  if (ar->is_open == false)
+  if (ar->is_open == FALSE)
     {
       return CDM_STATUS_ERROR;
     }
 
-  ar->is_open = false;
+  ar->is_open = FALSE;
 
   return CDM_STATUS_OK;
 }

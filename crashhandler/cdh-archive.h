@@ -68,7 +68,7 @@ typedef struct _CdhArchive {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_init (CdhArchive *ar, const gchar *dst);
+CdmStatus cdh_archive_open (CdhArchive *ar, const gchar *dst);
 
 /**
  * @brief Close cdh archive

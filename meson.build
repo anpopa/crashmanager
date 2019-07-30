@@ -161,6 +161,15 @@ if get_option('CRASHHANDLER')
 
   crashhandler_sources = [
 	'crashhandler/cdh-main.c',
+	'crashhandler/cdh-archive.c',
+	'crashhandler/cdh-context.c',
+	'crashhandler/cdh-coredump.c',
+	'crashhandler/cdh-crashid.c',
+	'crashhandler/cdh-data.c',
+	'crashhandler/cdh-manager.c',
+	'crashmanager/cdm-message.c',
+	'crashmanager/cdm-options.c',
+	'crashmanager/cdm-logging.c',
 	]
 
   crashhandler_deps = [dep_glib]
