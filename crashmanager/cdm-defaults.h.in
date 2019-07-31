@@ -49,6 +49,10 @@
 #define CDM_CRASHDUMP_DIR "/var/cache/crashmanager/crashdumps"
 #endif
 
+#ifndef CDM_CRASHDUMP_SPLIT_SIZE
+#define CDM_CRASHDUMP_SPLIT_SIZE (4194304)
+#endif
+
 #ifndef CDM_FILESYSTEM_MIN_SIZE
 #define CDM_FILESYSTEM_MIN_SIZE (40)
 #endif

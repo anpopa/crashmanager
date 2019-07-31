@@ -33,7 +33,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef WITH_DLT
+#ifdef WITH_GENIVI_DLT
 #include <dlt.h>
 #else
 #include <syslog.h>
@@ -41,7 +41,7 @@
 
 static void cdm_logging_handler (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data);
 
-#ifdef WITH_DLT
+#ifdef WITH_GENIVI_DLT
 DLT_DECLARE_CONTEXT (cdh_default_ctx);
 
 static int
@@ -103,7 +103,7 @@ cdm_logging_open (const gchar *app_name,
                   const gchar *ctx_name,
                   const gchar *ctx_desc)
 {
-#ifdef WITH_DLT
+#ifdef WITH_GENIVI_DLT
   DLT_REGISTER_APP (app_name, app_desc);
   DLT_REGISTER_CONTEXT (cdh_default_ctx, ctx_name, ctx_desc);
 #else
@@ -124,7 +124,7 @@ cdm_logging_handler (const gchar *log_domain,
   CDM_UNUSED (log_domain);
   CDM_UNUSED (user_data);
 
-#ifdef WITH_DLT
+#ifdef WITH_GENIVI_DLT
   DLT_LOG (cdh_default_ctx, priority_to_dlt (log_level), DLT_STRING (message));
 #else
   syslog (priority_to_syslog (log_level), "%s", message);
@@ -134,7 +134,7 @@ cdm_logging_handler (const gchar *log_domain,
 void
 cdm_logging_close (void)
 {
-#ifdef WITH_DLT
+#ifdef WITH_GENIVI_DLT
   DLT_UNREGISTER_CONTEXT (cdh_default_ctx);
   DLT_UNREGISTER_APP ();
 #endif

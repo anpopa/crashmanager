@@ -29,6 +29,7 @@
 
 #include "cdh-coredump.h"
 #include "cdh-crashid.h"
+#include "cdm-defaults.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -57,8 +58,6 @@ static gint get_note_page_index (CdhData *d);
 static CdmStatus read_notes (CdhData *d);
 
 static CdmStatus init_coredump (CdhData *d);
-
-static CdmStatus close_coredump (CdhData *d);
 
 static CdmStatus read_elf_headers (CdhData *d);
 
@@ -339,27 +338,13 @@ init_coredump (CdhData *d)
 
   dst = g_strdup_printf ("%s.%ld.coredump", d->info->name, d->info->pid);
 
-  if (cdh_archive_stream_open (&d->archive, 0, (dst != NULL ? dst : "coredump")) == CDM_STATUS_OK)
+  if (cdh_archive_stream_open (&d->archive, 0, (dst != NULL ? dst : "coredump"), CDM_CRASHDUMP_SPLIT_SIZE) == CDM_STATUS_OK)
     {
       g_info ("Coredump compression started for %s with pid %ld", d->info->name, d->info->pid);
     }
   else
     {
       g_warning ("init_coredump: cdh_stream_init has failed !");
-      return CDM_STATUS_ERROR;
-    }
-
-  return CDM_STATUS_OK;
-}
-
-static CdmStatus
-close_coredump (CdhData *d)
-{
-  g_assert (d);
-
-  if (cdh_archive_stream_close (&d->archive) != CDM_STATUS_OK)
-    {
-      g_warning ("Close_coredump: cdh_stream_close has failed !");
       return CDM_STATUS_ERROR;
     }
 
@@ -517,13 +502,14 @@ finished:
     }
   else
     {
+      d->info->cdsize = cdh_archive_stream_get_offset (&d->archive);
       g_info ("Coredump compression finished for %s with pid %ld", d->info->name, d->info->pid);
     }
 
   /* In all cases, let's close the files */
-  if (close_coredump (d) != CDM_STATUS_OK)
+  if (cdh_archive_stream_close (&d->archive) != CDM_STATUS_OK)
     {
-      g_warning ("Cannot close coredump system");
+      g_warning ("Close_coredump: cdh_stream_close has failed !");
       ret = CDM_STATUS_ERROR;
     }
 

@@ -53,7 +53,9 @@ static CdmStatus read_args (CdhData *d, gint argc, gchar **argv);
 
 static CdmStatus check_disk_space (const gchar *path, gsize min);
 
-static CdmStatus init_coredump_archive (CdhData *d, const gchar *dirname);
+static CdmStatus init_crashdump_archive (CdhData *d, const gchar *dirname);
+
+static CdmStatus close_crashdump_archive (CdhData *d);
 
 void
 cdh_data_init (CdhData *d, const gchar *config_path)
@@ -155,7 +157,7 @@ check_disk_space (const gchar *path, gsize min)
 }
 
 static CdmStatus
-init_coredump_archive (CdhData *d, const gchar *dirname)
+init_crashdump_archive (CdhData *d, const gchar *dirname)
 {
   g_autofree gchar *aname = NULL;
 
@@ -165,6 +167,19 @@ init_coredump_archive (CdhData *d, const gchar *dirname)
   aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid, d->info->tstamp);
 
   if (cdh_archive_open (&d->archive, aname) != CDM_STATUS_OK)
+    {
+      return CDM_STATUS_ERROR;
+    }
+
+  return CDM_STATUS_OK;
+}
+
+static CdmStatus
+close_crashdump_archive (CdhData *d)
+{
+  g_assert (d);
+
+  if (cdh_archive_close (&d->archive) != CDM_STATUS_OK)
     {
       return CDM_STATUS_ERROR;
     }
@@ -257,9 +272,9 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
       goto enter_cleanup;
     }
 
-  if (init_coredump_archive (d, opt_coredir) != CDM_STATUS_OK)
+  if (init_crashdump_archive (d, opt_coredir) != CDM_STATUS_OK)
     {
-      g_warning ("Fail to create coredump archive");
+      g_warning ("Fail to create crashdump archive");
       status = CDM_STATUS_ERROR;
       goto enter_cleanup;
     }
@@ -281,6 +296,10 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
       g_warning ("Failed to generate the context file, continue with coredump");
     }
 
+  if (close_crashdump_archive (d) != CDM_STATUS_OK)
+    {
+      g_warning ("Failed to close corectly the crashdump archive");
+    }
 enter_cleanup:
 #if defined(WITH_CRASHMANAGER)
   cdh_manager_set_coredir (&d->crash_mgr, opt_coredir);

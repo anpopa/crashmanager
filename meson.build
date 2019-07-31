@@ -7,7 +7,9 @@ add_project_arguments([
   '-I' + meson.build_root(),
   ], language: 'c')
 
-cdm_c_include_dirs = include_directories('crashmanager')
+cdm_c_include_dirs = [
+  'crashmanager'
+  ]
 
 cdm_c_compiler_args = [
   '-Wall',
@@ -80,7 +82,7 @@ endif
 dep_genivi_dlt = declare_dependency()
 if get_option('GENIVI_DLT')
   add_project_arguments('-DWITH_GENIVI_DLT', language : 'c')
-  dep_genivi_dlt = dependency('automotive-dlt')
+  dep_genivi_dlt = dependency('automotive-dlt', method : 'pkg-config')
 endif
 
 dep_genivi_nsm = declare_dependency()
@@ -177,11 +179,15 @@ if get_option('CRASHHANDLER')
 	'crashmanager/cdm-utils.c',
 	]
 
-  crashhandler_deps = [dep_glib, dep_libarchive]
+  crashhandler_deps = [
+    dep_glib, 
+    dep_libarchive, 
+    dep_genivi_dlt
+    ]
 
   executable('crashhandler', crashhandler_sources,
 	dependencies: crashhandler_deps,
-	include_directories : cdm_c_include_dirs, 
+	include_directories : include_directories(cdm_c_include_dirs), 
 	c_args: cdm_c_compiler_args,
 	install: true,
 	)

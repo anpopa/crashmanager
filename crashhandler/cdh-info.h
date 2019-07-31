@@ -62,6 +62,8 @@ typedef struct _CdhInfo {
   gint64 pid;        /**< process id as seen on host */
   gint64 cpid;       /**< process id as seen on namespace */
 
+  gsize cdsize;      /**< coredump size */
+
   gchar *contextid;  /**< namespace context for the crashed pid */
   gchar *crashid;    /**< crash id value */
   gchar *vectorid;   /**< crash course id value */

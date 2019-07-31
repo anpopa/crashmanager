@@ -34,12 +34,19 @@
 
 #include <glib.h>
 #include <stdlib.h>
+#ifdef WITH_DEBUG_ATTACH
+#include <signal.h>
+#endif
 
 gint
 main (gint argc, gchar *argv[])
 {
   g_autofree gchar *conf_path = NULL;
   CdmStatus status = CDM_STATUS_OK;
+
+#ifdef WITH_DEBUG_ATTACH
+  raise (SIGSTOP);
+#endif
 
   cdm_logging_open ("CDH", "Coredumper instance", "CDH", "Default context");
 

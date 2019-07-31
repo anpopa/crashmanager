@@ -49,14 +49,19 @@ extern "C" {
 #endif
 
 /**
- * @struct cdh_archive
+ * @struct CdhArchiverchive
  * @brief The archive object
  */
 typedef struct _CdhArchive {
   struct archive *archive;                       /**< Archive object  */
   struct archive_entry *archive_entry;           /**< Current archive entry */
 
-  gboolean is_open;                              /**< Archive open for write */
+  gboolean file_active;                          /**< Archive open for write */
+  gchar *file_name;                                 /**< Current output file size  */
+  gssize file_size;                                 /**< Current output file size  */
+  gssize file_chunk_sz;                           /**< Current output file chunk size  */
+  gssize file_chunk_cnt;                          /**< Current output file chunk count  */
+  gssize file_write_sz;                           /**< Current output writen size  */
 
   FILE *in_stream;                               /**< The input file stream */
   gsize in_stream_offset;                        /**< Current offset */
@@ -86,10 +91,11 @@ CdmStatus cdh_archive_close (CdhArchive *ar);
  *
  * @param ar The CdhArchive object
  * @param dst The filename
+ * @param size The size on bytes of the input data
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_create_file (CdhArchive *ar, const gchar *dst);
+CdmStatus cdh_archive_create_file (CdhArchive *ar, const gchar *dst, gsize size);
 
 /**
  * @brief Write file data for created file
@@ -131,7 +137,7 @@ CdmStatus cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const g
  * @return CDM_STATUS_OK on success
  */
 
-CdmStatus cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar *dst);
+CdmStatus cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar *dst, gsize split_size);
 
 /**
  * @brief Read into buffer and advence up to size
@@ -179,18 +185,18 @@ CdmStatus cdh_archive_stream_move_ahead (CdhArchive *ar, gulong nbbytes);
 gsize cdh_archive_stream_get_offset (CdhArchive *ar);
 
 /**
- * @brief Check if the a stream is open
- * @param ar The CdhArchive object
- * @return True if a file stream is open
- */
-gboolean cdh_archive_stream_is_open (CdhArchive *ar);
-
-/**
  * @brief Finish input stream processing
  * @param ar The CdhArchive object
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdh_archive_stream_close (CdhArchive *ar);
+
+/**
+ * @brief Check if the a stream is open
+ * @param ar The CdhArchive object
+ * @return True if a file stream is open
+ */
+gboolean cdh_archive_is_file_active (CdhArchive *ar);
 
 #ifdef __cplusplus
 }

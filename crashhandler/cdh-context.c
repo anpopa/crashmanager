@@ -75,7 +75,7 @@ cdh_context_get_procname (gint64 pid)
 
       if (name != NULL)
         {
-          retval = g_strdup (name);
+          retval = g_strdup (name + strlen ("Name:") + 1);
 
           if (retval != NULL)
             {
@@ -93,10 +93,7 @@ cdh_context_get_procname (gint64 pid)
 static CdmStatus
 dump_file_to (gchar *fname, CdhArchive *ar)
 {
-  g_assert (fname);
-  g_assert (ar);
-
-  return CDM_STATUS_OK;
+  return cdh_archive_add_system_file (ar, fname, NULL);
 }
 
 static CdmStatus
@@ -194,7 +191,7 @@ update_context_info (CdhData *d)
 CdmStatus
 cdh_context_generate_prestream (CdhData *d)
 {
-  gchar pfile[CDM_PATH_MAX];
+  g_autofree gchar *file = NULL;
 
   g_assert (d);
 
@@ -203,34 +200,28 @@ cdh_context_generate_prestream (CdhData *d)
       g_warning ("Fail to parse namespace information");
     }
 
-#define PROC_FILENAME(x)                                                                           \
-  do {                                                                                           \
-      snprintf (pfile, sizeof(pfile), "/proc/%ld/" x, d->info->pid);                                \
-    } while (0)
-
   if (dump_file_to ("/etc/os-release", &d->archive) != CDM_STATUS_OK)
     {
       g_debug ("Fail to dump /etc/os-release");
     }
 
-  PROC_FILENAME ("cmdline");
-  if (dump_file_to (pfile, &d->archive) != CDM_STATUS_OK)
+  file = g_strdup_printf ("/proc/%ld/cmdline", d->info->pid);
+  if (dump_file_to (file, &d->archive) != CDM_STATUS_OK)
     {
       g_debug ("Fail to dump cmdline");
     }
 
-  PROC_FILENAME ("fd");
-  if (list_dircontent_to (pfile, &d->archive) != CDM_STATUS_OK)
+  file = g_strdup_printf ("/proc/%ld/fd", d->info->pid);
+  if (list_dircontent_to (file, &d->archive) != CDM_STATUS_OK)
     {
       g_debug ("Fail to list fd");
     }
 
-  PROC_FILENAME ("ns");
-  if (list_dircontent_to (pfile, &d->archive) != CDM_STATUS_OK)
+  file = g_strdup_printf ("/proc/%ld/ns", d->info->pid);
+  if (list_dircontent_to (file, &d->archive) != CDM_STATUS_OK)
     {
       g_debug ("Fail to list ns");
     }
-#undef PROC_FILENAME
 
   return CDM_STATUS_OK;
 }
@@ -238,7 +229,33 @@ cdh_context_generate_prestream (CdhData *d)
 CdmStatus
 cdh_context_generate_poststream (CdhData *d)
 {
+  g_autofree gchar *file_data = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+
   g_assert (d);
 
-  return CDM_STATUS_OK;
+  file_data = g_strdup_printf (
+    "ProcessName = %s\nProcessThread = %s\nCrashTimestamp = %lu\n"
+    "ProcessHostID = %ld\nProcessContainerID = %ld\nCrashSignal = %ld\n"
+    "CrashID = %s\nVectorID = %s\nContextID = %s\n"
+    "CoredumpSize = %lu\n",
+    d->info->name, d->info->tname, d->info->tstamp, d->info->pid, d->info->cpid,
+    d->info->sig, d->info->crashid, d->info->vectorid, d->info->contextid, d->info->cdsize
+    );
+
+  if (cdh_archive_create_file (&d->archive, ".crashhandler.info", strlen (file_data) + 1) == CDM_STATUS_OK)
+    {
+      status = cdh_archive_write_file (&d->archive, (const void*)file_data, strlen (file_data) + 1);
+
+      if (cdh_archive_finish_file (&d->archive) != CDM_STATUS_OK)
+        {
+          status = CDM_STATUS_ERROR;
+        }
+    }
+  else
+    {
+      status = CDM_STATUS_ERROR;
+    }
+
+  return status;
 }
