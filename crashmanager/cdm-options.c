@@ -77,6 +77,13 @@ cdm_options_free (CdmOptions *opts)
   free (opts);
 }
 
+GKeyFile *
+cdm_options_get_key_file (CdmOptions *opts)
+{
+  g_assert (opts);
+  return opts->conf;
+}
+
 gchar *
 cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
 {
@@ -109,7 +116,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_CRASHDUMP_DIR:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "common", "CoredumpDirectory", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "common", "CrashdumpDirectory", NULL);
 
           if (tmp != NULL)
             {
@@ -133,7 +140,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
     case KEY_KDUMPSOURCE_DIR:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "coremanager", "KDumpSourceDir", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "KernelDumpSourceDir", NULL);
 
           if (tmp != NULL)
             {
@@ -205,7 +212,7 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
   switch (key)
     {
     case KEY_FILESYSTEM_MIN_SIZE:
-      value = get_long_option (opts, "coredumper", "FileSystemMinSize", &error);
+      value = get_long_option (opts, "crashhandler", "FileSystemMinSize", &error);
       if (error != NULL)
         {
           value = CDM_FILESYSTEM_MIN_SIZE;
@@ -214,7 +221,7 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
       break;
 
     case KEY_ELEVATED_NICE_VALUE:
-      value = get_long_option (opts, "coredumper", "ElevatedNiceValue", &error);
+      value = get_long_option (opts, "crashhandler", "ElevatedNiceValue", &error);
       if (error != NULL)
         {
           value = CDM_ELEVATED_NICE_VALUE;
@@ -232,7 +239,7 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
       break;
 
     case KEY_CRASHDUMP_DIR_MIN_SIZE:
-      value = get_long_option (opts, "crashmanager", "MinCoredumpDirSize", &error);
+      value = get_long_option (opts, "crashmanager", "MinCrashdumpDirSize", &error);
       if (error != NULL)
         {
           value = CDM_CRASHDUMP_DIR_MIN_SIZE;
@@ -241,7 +248,7 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
       break;
 
     case KEY_CRASHDUMP_DIR_MAX_SIZE:
-      value = get_long_option (opts, "crashmanager", "MaxCoredumpDirSize", &error);
+      value = get_long_option (opts, "crashmanager", "MaxCrashdumpDirSize", &error);
       if (error != NULL)
         {
           value = CDM_CRASHDUMP_DIR_MAX_SIZE;
@@ -250,7 +257,7 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
       break;
 
     case KEY_CRASHFILES_MAX_COUNT:
-      value = get_long_option (opts, "crashmanager", "MaxCoredumpArchives", &error);
+      value = get_long_option (opts, "crashmanager", "MaxCrashdumpArchives", &error);
       if (error != NULL)
         {
           value = CDM_CRASHFILES_MAX_COUNT;

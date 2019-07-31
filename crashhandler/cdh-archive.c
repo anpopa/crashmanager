@@ -217,7 +217,7 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
 
       if (dst == NULL)
         {
-          g_autofree gchar *dpath = g_strdup (src);
+          g_autofree gchar *dpath = g_strdup_printf ("root%s", src);
 
           g_strdelimit (dpath, "/ ", '.');
           archive_entry_set_pathname (ar->archive_entry, dpath);

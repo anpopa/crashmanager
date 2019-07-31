@@ -41,28 +41,8 @@ extern "C" {
 #define CDM_UNUSED(x) (void)(x)
 #endif
 
-#ifndef CDM_PATH_MAX
-#define CDM_PATH_MAX (1024)
-#endif
-
-#ifndef CORE_MAX_FILENAME_LENGTH
-#define CORE_MAX_FILENAME_LENGTH CDM_MESSAGE_FILENAME_LEN
-#endif
-
-#ifndef MAX_PROC_NAME_LENGTH
-#define MAX_PROC_NAME_LENGTH CDM_MESSAGE_PROCNAME_LEN
-#endif
-
-#ifndef CRASH_ID_LEN
-#define CRASH_ID_LEN CDM_CRASHID_LEN
-#endif
-
-#ifndef CRASH_CONTEXT_LEN
-#define CRASH_CONTEXT_LEN CDM_CRASHCONTEXT_LEN
-#endif
-
 #ifndef ARCHIVE_NAME_PATTERN
-#define ARCHIVE_NAME_PATTERN "%s/core_%s_%ld_%lu.cdh.tar.gz"
+#define ARCHIVE_NAME_PATTERN "%s/%s_%ld_%lu.cdh.tar.gz"
 #endif
 
 enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };

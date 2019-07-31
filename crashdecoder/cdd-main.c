@@ -27,7 +27,7 @@
  * authorization.
  */
 
-#include "cd_defaults.h"
+#include "cdm-defaults.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -53,7 +53,7 @@ main (gint argc, gchar *argv[])
 
   if (version)
     {
-      g_printerr ("%s\n", CD_VERSION);
+      g_printerr ("%s\n", CDM_VERSION);
       return EXIT_SUCCESS;
     }
 

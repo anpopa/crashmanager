@@ -336,7 +336,7 @@ init_coredump (CdhData *d)
 
   g_assert (d);
 
-  dst = g_strdup_printf ("%s.%ld.coredump", d->info->name, d->info->pid);
+  dst = g_strdup_printf ("core.%s.%ld", d->info->name, d->info->pid);
 
   if (cdh_archive_stream_open (&d->archive, 0, (dst != NULL ? dst : "coredump"), CDM_CRASHDUMP_SPLIT_SIZE) == CDM_STATUS_OK)
     {

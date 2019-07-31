@@ -74,6 +74,12 @@ CdmOptions *cdm_options_new (const gchar *conf_path);
  */
 void cdm_options_free (CdmOptions *opts);
 
+/**
+ * @brief Get the GKeyFile object
+ * @param opts Pointer to the options object
+ */
+GKeyFile *cdm_options_get_key_file (CdmOptions *opts);
+
 /*
  * @brief Get a configuration value string for key
  *

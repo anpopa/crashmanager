@@ -53,6 +53,8 @@ static CdmStatus list_dircontent_to (gchar *dname, CdhArchive *ar);
 
 static CdmStatus update_context_info (CdhData *d);
 
+static void crash_context_dump (CdhData *d, gboolean postcore);
+
 gchar *
 cdh_context_get_procname (gint64 pid)
 {
@@ -93,7 +95,17 @@ cdh_context_get_procname (gint64 pid)
 static CdmStatus
 dump_file_to (gchar *fname, CdhArchive *ar)
 {
-  return cdh_archive_add_system_file (ar, fname, NULL);
+  if (g_file_test (fname, G_FILE_TEST_IS_REGULAR) == TRUE)
+    {
+      return cdh_archive_add_system_file (ar, fname, NULL);
+    }
+
+  if (g_file_test (fname, G_FILE_TEST_IS_DIR) == TRUE)
+    {
+      return list_dircontent_to (fname, ar);
+    }
+
+  return CDM_STATUS_ERROR;
 }
 
 static CdmStatus
@@ -188,6 +200,72 @@ update_context_info (CdhData *d)
   return d->info->contextid != NULL ? CDM_STATUS_OK : CDM_STATUS_ERROR;
 }
 
+static void
+crash_context_dump (CdhData *d, gboolean postcore)
+{
+  GKeyFile *key_file = cdm_options_get_key_file (d->opts);
+  gchar **groups = g_key_file_get_groups (key_file, NULL);
+
+  for (gint i = 0; groups[i] != NULL; i++)
+    {
+      g_autofree gchar *key = NULL;
+      g_autofree gchar *data_path = NULL;
+      g_autofree gchar *str_pid = NULL;
+      gchar **path_tokens = NULL;
+      gchar *gname = groups[i];
+      GError *error = NULL;
+      gboolean key_postcore = TRUE;
+
+      if (g_regex_match_simple ("crashcontext-*", gname, 0, 0) == FALSE)
+        {
+          continue;
+        }
+
+      key = g_key_file_get_string (key_file, gname, "ProcName", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      if (g_regex_match_simple (key, d->info->name, 0, 0) == FALSE)
+        {
+          continue;
+        }
+
+      key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      if (key_postcore != postcore)
+        {
+          continue;
+        }
+
+      key = g_key_file_get_string (key_file, gname, "DataPath", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      path_tokens = g_strsplit (key, "$$", 3);
+      str_pid = g_strdup_printf ("%ld", d->info->pid);
+      data_path = g_strjoinv (str_pid, path_tokens);
+      g_strfreev (path_tokens);
+
+      if (dump_file_to (data_path, &d->archive) == CDM_STATUS_ERROR)
+        {
+          g_warning ("Fail to dump file %s", data_path);
+        }
+    }
+
+  g_strfreev (groups);
+}
+
 CdmStatus
 cdh_context_generate_prestream (CdhData *d)
 {
@@ -200,28 +278,7 @@ cdh_context_generate_prestream (CdhData *d)
       g_warning ("Fail to parse namespace information");
     }
 
-  if (dump_file_to ("/etc/os-release", &d->archive) != CDM_STATUS_OK)
-    {
-      g_debug ("Fail to dump /etc/os-release");
-    }
-
-  file = g_strdup_printf ("/proc/%ld/cmdline", d->info->pid);
-  if (dump_file_to (file, &d->archive) != CDM_STATUS_OK)
-    {
-      g_debug ("Fail to dump cmdline");
-    }
-
-  file = g_strdup_printf ("/proc/%ld/fd", d->info->pid);
-  if (list_dircontent_to (file, &d->archive) != CDM_STATUS_OK)
-    {
-      g_debug ("Fail to list fd");
-    }
-
-  file = g_strdup_printf ("/proc/%ld/ns", d->info->pid);
-  if (list_dircontent_to (file, &d->archive) != CDM_STATUS_OK)
-    {
-      g_debug ("Fail to list ns");
-    }
+  crash_context_dump (d, FALSE);
 
   return CDM_STATUS_OK;
 }
@@ -243,7 +300,7 @@ cdh_context_generate_poststream (CdhData *d)
     d->info->sig, d->info->crashid, d->info->vectorid, d->info->contextid, d->info->cdsize
     );
 
-  if (cdh_archive_create_file (&d->archive, ".crashhandler.info", strlen (file_data) + 1) == CDM_STATUS_OK)
+  if (cdh_archive_create_file (&d->archive, "info.crashdata", strlen (file_data) + 1) == CDM_STATUS_OK)
     {
       status = cdh_archive_write_file (&d->archive, (const void*)file_data, strlen (file_data) + 1);
 
@@ -256,6 +313,8 @@ cdh_context_generate_poststream (CdhData *d)
     {
       status = CDM_STATUS_ERROR;
     }
+
+  crash_context_dump (d, TRUE);
 
   return status;
 }

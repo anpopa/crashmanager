@@ -1,65 +1,100 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; CrashManager @version@ default configuration file
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+###############################################################################
+#
+# CrashManager @version@ default configuration file
+#
+###############################################################################
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Common configuration option
-;     This section contains options common to all components
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+###############################################################################
+#
+# Common configuration option
+#     This section contains options common to all components
+#
+###############################################################################
 [common]
-; UserName defines the user name string which the crashmanager is running
-;     In case a crash happens before crashmanager is able to create the database
-;     the crashmanager will do this first and needs to set the correct chown for
-;     the database
-UserName="root"
-; GroupName defines the group name string which the crashmanager is owned.
-;     See the reason above
-GroupName="root"
-; CoredumpDirectory defines the relative path to FileSystemMountDir where the
-;     coredump arhives will be stored.
-CoredumpDirectory="var/crashmanager/coredumps"
-; RunDirectory application runtime directory
-RunDirectory="/run/crashmanager"
-; IpcSocketFile defines the path to the ipc unix domain socket file
-;     The crashmanager is responsible to create and listen on this socket
-IpcSocketFile=".cdmipc.sock"
-; IpcSocketTimeout defines the number of seconds for an IO operation to block
-;     during IPC
-IpcSocketTimeout=15
+# UserName defines the user name string which the crashmanager is running
+#     In case a crash happens before crashmanager is able to create the database
+#     the crashmanager will do this first and needs to set the correct chown for
+#     the database
+UserName = root
+# GroupName defines the group name string which the crashmanager is owned.
+#     See the reason above
+GroupName = root
+# CoredumpDirectory defines the relative path to FileSystemMountDir where the
+#     coredump arhives will be stored.
+CrashdumpDirectory = /var/crashmanager/crashdumps
+# RunDirectory application runtime directory
+RunDirectory = /run/crashmanager
+# IpcSocketFile defines the path to the ipc unix domain socket file
+#     The crashmanager is responsible to create and listen on this socket
+IpcSocketFile = .cdmipc.sock
+# IpcSocketTimeout defines the number of seconds for an IO operation to block
+#     during IPC
+IpcSocketTimeout = 15
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; The crashmanager configuration option
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+###############################################################################
+#
+# The crashmanager configuration option
+#
+###############################################################################
 [crashhandler]
-FileSystemMinSize=40
-; EarlyFileSystemMinSize defines the minimum early filesystem size for coredump
-;     directory path. The cdh itself will cleanup archives if it finds itself under
-;     this limit. The value is in MB.
-ElevatedNiceValue=-19
+FileSystemMinSize = 40
+# EarlyFileSystemMinSize defines the minimum early filesystem size for coredump
+#     directory path. The cdh itself will cleanup archives if it finds itself under
+#     this limit. The value is in MB.
+ElevatedNiceValue = -19
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; The crashmanager configuration option
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+###############################################################################
+#
+# The crashmanager configuration option
+#
+###############################################################################
 [crashmanager]
-; StateDatabaseFile defines the path to coredump archives state database
+# StateDatabaseFile defines the path to coredump archives state database
 StateDatabaseFile=/var/crashmanager/coredumps.info
-; MaxFileSystemQuota defines the maximum size in MB the coredump directory
-;     should use to store old coredump archives
-MaxCoredumpDirSize=512
-; MinCoredumpDirQuota defines the minimum size in MB to be free from the quota
-;     so any cdh instance can have space available for coredump processing
-MinCoredumpDirSize=100
-; MaxCoredumpArchives defines the maximum number of archives to keep in
-;     coredump directory
-MaxCoredumpArchives=10
-; KDumpSourceDir defines the source directory to read at start for previous
-;     kernel crashes.
-KDumpSourceDir="/var/dumps"
+# MaxCrashDumpDirSize defines the maximum size in MB the crashdump directory
+#     should use to store old crashdump archives
+MaxCrashdumpDirSize=512
+# MinCrashdumpDirQuota defines the minimum size in MB to be free from the quota
+#     so any cdh instance can have space available for crashdump processing
+MinCrashdumpDirSize=100
+# MaxCrashdumpArchives defines the maximum number of archives to keep in
+#     coredump directory
+MaxCrashdumpArchives=10
+# KDumpSourceDir defines the source directory to read at start for previous
+#     kernel crashes.
+KernelDumpSourceDir = /var/dumps
+
+###############################################################################
+#
+# Crashcontext sections
+#   Each section should have unique name matching pattern crashcontext-<name>
+#
+###############################################################################
+[crashcontext-osversion]
+# ProcName defines the process name to match to apply this crashcontext rule
+#   This can be a process name or a regular expresion to match the process name
+ProcName = .*
+# DataPath defines the path to data file or directory to dump. 
+#   If the path is a directory only the directory content is listed
+#   The PID of the process can be used with formater $$.
+DataPath = /etc/os-release
+# PostCore defines when to process the data
+#   If data holds only until process is release (eg. proc) then set 
+#   this to false.
+PostCore = true
+
+[crashcontext-cmdline]
+ProcName = .*
+DataPath = /proc/$$/cmdline
+PostCore = false
+
+[crashcontext-procfd]
+ProcName = .*
+DataPath = /proc/$$/fd
+PostCore = false
+
+[crashcontext-procns]
+ProcName = .*
+DataPath = /proc/$$/ns
+PostCore = false
+
