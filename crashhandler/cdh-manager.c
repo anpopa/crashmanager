@@ -27,8 +27,8 @@
  * authorization.
  */
 
-#include "cdm-defaults.h"
 #include "cdh-manager.h"
+#include "cdm-defaults.h"
 
 #include <errno.h>
 #include <stdio.h>

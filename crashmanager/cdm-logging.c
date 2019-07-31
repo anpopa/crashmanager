@@ -28,15 +28,18 @@
  */
 
 #include "cdm-logging.h"
+#include "cdm-types.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef WITH_DLT
 #include <dlt.h>
+#else
+#include <syslog.h>
 #endif
 
-static void cdm_logging_handler (const ggchar *log_domain, GLogLevelFlags log_level, const ggchar *message, gpointer user_data);
+static void cdm_logging_handler (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data);
 
 #ifdef WITH_DLT
 DLT_DECLARE_CONTEXT (cdh_default_ctx);
@@ -46,7 +49,7 @@ priority_to_dlt (int priority)
 {
   switch (priority)
     {
-    case G_LOG_LEVEL_RECURSION:
+    case G_LOG_FLAG_RECURSION:
     case G_LOG_FLAG_FATAL:
       return DLT_LOG_FATAL;
 
@@ -72,13 +75,13 @@ priority_to_syslog (int priority)
 {
   switch (priority)
     {
-    case G_LOG_LEVEL_RECURSION:
+    case G_LOG_FLAG_RECURSION:
     case G_LOG_FLAG_FATAL:
-      return LOG_FATAL;
+      return LOG_CRIT;
 
     case G_LOG_LEVEL_ERROR:
     case G_LOG_LEVEL_CRITICAL:
-      return LOG_ERROR;
+      return LOG_ERR;
 
     case G_LOG_LEVEL_WARNING:
       return LOG_WARNING;
@@ -104,27 +107,27 @@ cdm_logging_open (const gchar *app_name,
   DLT_REGISTER_APP (app_name, app_desc);
   DLT_REGISTER_CONTEXT (cdh_default_ctx, ctx_name, ctx_desc);
 #else
-  CDH_UNUSED (app_name);
-  CDH_UNUSED (app_desc);
-  CDH_UNUSED (ctx_name);
-  CDH_UNUSED (ctx_desc);
+  CDM_UNUSED (app_name);
+  CDM_UNUSED (app_desc);
+  CDM_UNUSED (ctx_name);
+  CDM_UNUSED (ctx_desc);
 #endif
-  g_log_default_handle (cdm_logging_handle, NULL);
+  g_log_set_default_handler (cdm_logging_handler, NULL);
 }
 
 static void
-cdm_logging_handler (const ggchar *log_domain,
+cdm_logging_handler (const gchar *log_domain,
                      GLogLevelFlags log_level,
-                     const ggchar *message,
+                     const gchar *message,
                      gpointer user_data)
 {
-  CDH_UNUSED (log_domain);
-  CDH_UNUSED (user_data);
+  CDM_UNUSED (log_domain);
+  CDM_UNUSED (user_data);
 
 #ifdef WITH_DLT
   DLT_LOG (cdh_default_ctx, priority_to_dlt (log_level), DLT_STRING (message));
 #else
-  syslog (priority_to_syslog (log_level), message);
+  syslog (priority_to_syslog (log_level), "%s", message);
 #endif
 }
 

@@ -30,6 +30,7 @@
 #include "cdh-crashid.h"
 #include "cdh-data.h"
 #include "cdh-coredump.h"
+#include "cdm-utils.h"
 
 #include <errno.h>
 #include <inttypes.h>
@@ -44,28 +45,7 @@
 #define CRASH_ID_LOW (2)
 #define CRASH_ID_QUALITY(x) ((x) > CRASH_ID_HIGH ? "high" : (x) < CRASH_ID_LOW ? "low" : "medium")
 
-uint64_t jenkins_hash (const char *key);
-
 static CdmStatus create_crashid (CdhData *d);
-
-guint64
-jenkins_hash (const gchar *key)
-{
-  guint64 hash, i;
-
-  for (hash = i = 0; i < strlen (key); ++i)
-    {
-      hash += (guint64)key[i];
-      hash += (hash << 10);
-      hash ^= (hash >> 6);
-    }
-
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-
-  return hash;
-}
 
 static CdmStatus
 create_crashid (CdhData *d)
@@ -98,17 +78,17 @@ create_crashid (CdhData *d)
     }
 
   /* hash and write crashid */
-  d->info->crashid = g_strdup_printf ("%016lX", jenkins_hash (cid_str));
+  d->info->crashid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (cid_str));
 
   if (d->crashid_info & CID_RA_FILE_OFFSET)
     {
       vid_str = g_strdup_printf ("%s%lx%s", d->info->name, d->ip_file_offset, d->ra_module_name);
 
-      d->info->vectorid = g_strdup_printf ("%016lX", jenkins_hash (vid_str));
+      d->info->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (vid_str));
     }
   else
     {
-      d->info->vectorid = g_strdup_printf ("%016lX", jenkins_hash (cid_str));
+      d->info->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (cid_str));
     }
 
   /* crash context location string */

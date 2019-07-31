@@ -29,6 +29,7 @@
 
 #include "cdh-context.h"
 #include "cdh-archive.h"
+#include "cdm-utils.h"
 
 #include <glib.h>
 #include <dirent.h>
@@ -46,32 +47,11 @@
 
 static char g_buffer[CONTEXT_TMP_BUFFER_SIZE];
 
-uint64_t jenkins_hash (const char *key);
-
 static CdmStatus dump_file_to (gchar *fname, CdhArchive *ar);
 
 static CdmStatus list_dircontent_to (gchar *dname, CdhArchive *ar);
 
 static CdmStatus update_context_info (CdhData *d);
-
-guint64
-jenkins_hash (const gchar *key)
-{
-  guint64 hash, i;
-
-  for (hash = i = 0; i < strlen (key); ++i)
-    {
-      hash += (guint64)key[i];
-      hash += (hash << 10);
-      hash ^= (hash >> 6);
-    }
-
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-
-  return hash;
-}
 
 gchar *
 cdh_context_get_procname (gint64 pid)
@@ -206,7 +186,7 @@ update_context_info (CdhData *d)
         }
     }
 
-  d->info->contextid = g_strdup_printf ("%016lX", jenkins_hash (ctx_str));
+  d->info->contextid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (ctx_str));
 
   return d->info->contextid != NULL ? CDM_STATUS_OK : CDM_STATUS_ERROR;
 }

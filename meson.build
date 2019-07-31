@@ -7,14 +7,12 @@ add_project_arguments([
   '-I' + meson.build_root(),
   ], language: 'c')
 
-cdm_c_include_dir = [
-   'crashmanager'
-   ]
+cdm_c_include_dirs = include_directories('crashmanager')
 
 cdm_c_compiler_args = [
   '-Wall',
   '-Wextra',
-  '-Wno-unused_function',
+  '-Wno-unused-function',
   '-Wformat',
   '-Wno-variadic-macros',
   '-Wno-strict-aliasing',
@@ -118,7 +116,7 @@ endif
 
 if get_option('CRASHTEST')
   crashtest_sources = [
-	'ctests/crashtest/crashtest.c',
+	'testing/crashtest/crashtest.c',
 	]
 
   crashtest_deps = []
@@ -134,6 +132,7 @@ if get_option('SANITIZER')
 endif
 
 dep_glib = dependency('glib-2.0')
+dep_libarchive = dependency('libarchive')
 
 if get_option('CRASHMANAGER')
   crashmanager_sources = [
@@ -170,17 +169,19 @@ if get_option('CRASHHANDLER')
 	'crashhandler/cdh-coredump.c',
 	'crashhandler/cdh-crashid.c',
 	'crashhandler/cdh-data.c',
+	'crashhandler/cdh-info.c',
 	'crashhandler/cdh-manager.c',
 	'crashmanager/cdm-message.c',
 	'crashmanager/cdm-options.c',
 	'crashmanager/cdm-logging.c',
+	'crashmanager/cdm-utils.c',
 	]
 
-  crashhandler_deps = [dep_glib]
+  crashhandler_deps = [dep_glib, dep_libarchive]
 
   executable('crashhandler', crashhandler_sources,
 	dependencies: crashhandler_deps,
-	include_directories : cdm_c_include_dir,
+	include_directories : cdm_c_include_dirs, 
 	c_args: cdm_c_compiler_args,
 	install: true,
 	)

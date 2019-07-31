@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-utils.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,37 +27,24 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#ifndef CDM_UTILS_H
+#define CDM_UTILS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <glib.h>
-#include <stdlib.h>
 
-gint
-main (gint argc, gchar *argv[])
-{
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+/**
+ * @brief Calculate the jankins hash from a string
+ * @param key The input string
+ * @return The long unsigned int as hash
+ */
+guint64 cdm_utils_jenkins_hash (const gchar *key);
 
-  cdm_logging_open ("CDH", "Coredumper instance", "CDH", "Default context");
-
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
-    {
-      g_autofree CdhData *data = g_malloc0 (sizeof(CdhData));
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
-    }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
-
-  cdm_logging_close ();
-
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* CDM_UTILS_H */

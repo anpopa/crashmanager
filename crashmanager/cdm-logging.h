@@ -35,7 +35,6 @@ extern "C" {
 #endif
 
 #include <glib.h>
-#include <syslog.h>
 
 /**
  * @brief Open logging subsystem

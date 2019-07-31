@@ -33,7 +33,7 @@
 #include <glib.h>
 #include <stdlib.h>
 
-static gint64 get_long_option (CdmOptions *opts, const gchar *section_name, const gchar *property_name GError **error);
+static gint64 get_long_option (CdmOptions *opts, const gchar *section_name, const gchar *property_name, GError **error);
 
 CdmOptions *
 cdm_options_new (const gchar *conf_path)
@@ -50,7 +50,7 @@ cdm_options_new (const gchar *conf_path)
 
       g_assert (opts->conf);
 
-      if (g_key_file_load_from_file (opts->conf, conf_path, G_KEY_FILE_NONE, *error) == TRUE)
+      if (g_key_file_load_from_file (opts->conf, conf_path, G_KEY_FILE_NONE, &error) == TRUE)
         {
           opts->has_conf = true;
         }
@@ -166,13 +166,12 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
 static gint64
 get_long_option (CdmOptions *opts,
                  const gchar *section_name,
-                 const gchar *property_name
+                 const gchar *property_name,
                  GError **error)
 {
   g_assert (opts);
   g_assert (section_name);
   g_assert (property_name);
-  g_assert (value);
 
   if (opts->has_conf)
     {
@@ -263,7 +262,5 @@ cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key)
       break;
     }
 
-  g_error ("No default value provided for long key");
-
-  return -1;
+  return value;
 }
