@@ -437,6 +437,8 @@ create_file_chunk (CdhArchive *ar)
     }
 
   dname = g_strdup_printf ("%s.%04ld", ar->file_name, ar->file_chunk_cnt);
+
+  ar->file_write_sz = 0;
   ar->file_chunk_cnt++;
 
   archive_entry_clear (ar->archive_entry);
@@ -444,6 +446,7 @@ create_file_chunk (CdhArchive *ar)
   archive_entry_set_filetype (ar->archive_entry, AE_IFREG);
   archive_entry_set_perm (ar->archive_entry, 0644);
   archive_entry_set_size (ar->archive_entry, ar->file_chunk_sz);
+
   archive_write_header (ar->archive, ar->archive_entry);
 
   return CDM_STATUS_OK;
