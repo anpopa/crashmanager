@@ -43,6 +43,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <archive.h>
 #include <archive_entry.h>
+#include <time.h>
 
 #ifndef ARCHIVE_READ_BUFFER_SZ
 #define ARCHIVE_READ_BUFFER_SZ 1024 * 128
@@ -55,13 +56,14 @@ extern "C" {
 typedef struct _CdhArchive {
   struct archive *archive;                       /**< Archive object  */
   struct archive_entry *archive_entry;           /**< Current archive entry */
+  time_t artime;                                 /**< Archive time (process crash time) */
 
   gboolean file_active;                          /**< Archive open for write */
-  gchar *file_name;                                 /**< Current output file size  */
-  gssize file_size;                                 /**< Current output file size  */
-  gssize file_chunk_sz;                           /**< Current output file chunk size  */
-  gssize file_chunk_cnt;                          /**< Current output file chunk count  */
-  gssize file_write_sz;                           /**< Current output writen size  */
+  gchar *file_name;                              /**< Current output file size  */
+  gssize file_size;                              /**< Current output file size  */
+  gssize file_chunk_sz;                          /**< Current output file chunk size  */
+  gssize file_chunk_cnt;                         /**< Current output file chunk count  */
+  gssize file_write_sz;                          /**< Current output writen size  */
 
   FILE *in_stream;                               /**< The input file stream */
   gsize in_stream_offset;                        /**< Current offset */
@@ -77,7 +79,7 @@ typedef struct _CdhArchive {
  *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_open (CdhArchive *ar, const gchar *dst);
+CdmStatus cdh_archive_open (CdhArchive *ar, const gchar *dst, time_t artime);
 
 /**
  * @brief Close cdh archive

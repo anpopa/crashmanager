@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 #ifndef ARCHIVE_NAME_PATTERN
-#define ARCHIVE_NAME_PATTERN "%s/%s_%ld_%lu.cdh.tgz"
+#define ARCHIVE_NAME_PATTERN "%s/%s_%ld_%lu.cdh.tar.gz"
 #endif
 
 enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };

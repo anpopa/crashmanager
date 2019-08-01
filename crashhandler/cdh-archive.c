@@ -45,7 +45,7 @@ static CdmStatus stream_chunk_write (CdhArchive *ar, void *buf, gssize size);
 static gssize real_file_size (const gchar *fpath);
 
 CdmStatus
-cdh_archive_open (CdhArchive *ar, const gchar *dst)
+cdh_archive_open (CdhArchive *ar, const gchar *dst, time_t artime)
 {
   CdmStatus status = CDM_STATUS_OK;
 
@@ -75,6 +75,8 @@ cdh_archive_open (CdhArchive *ar, const gchar *dst)
     {
       ar->archive_entry = archive_entry_new ();
     }
+
+  ar->artime = artime;
 
   return status;
 }
@@ -132,6 +134,10 @@ cdh_archive_create_file (CdhArchive *ar, const gchar *dst, gsize file_size)
   archive_entry_set_filetype (ar->archive_entry, AE_IFREG);
   archive_entry_set_perm (ar->archive_entry, 0644);
   archive_entry_set_size (ar->archive_entry, ar->file_size);
+  archive_entry_set_birthtime (ar->archive_entry, ar->artime, 0);
+  archive_entry_set_atime (ar->archive_entry, ar->artime, 0);
+  archive_entry_set_ctime (ar->archive_entry, ar->artime, 0);
+  archive_entry_set_mtime (ar->archive_entry, ar->artime, 0);
 
   archive_write_header (ar->archive, ar->archive_entry);
 
@@ -214,6 +220,10 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
       archive_entry_set_filetype (ar->archive_entry, AE_IFREG);
       archive_entry_set_perm (ar->archive_entry, 0644);
       archive_entry_set_size (ar->archive_entry, ar->file_size);
+      archive_entry_set_birthtime (ar->archive_entry, ar->artime, 0);
+      archive_entry_set_atime (ar->archive_entry, ar->artime, 0);
+      archive_entry_set_ctime (ar->archive_entry, ar->artime, 0);
+      archive_entry_set_mtime (ar->archive_entry, ar->artime, 0);
 
       if (dst == NULL)
         {
@@ -444,6 +454,10 @@ create_file_chunk (CdhArchive *ar)
   archive_entry_set_filetype (ar->archive_entry, AE_IFREG);
   archive_entry_set_perm (ar->archive_entry, 0644);
   archive_entry_set_size (ar->archive_entry, ar->file_chunk_sz);
+  archive_entry_set_birthtime (ar->archive_entry, ar->artime, 0);
+  archive_entry_set_atime (ar->archive_entry, ar->artime, 0);
+  archive_entry_set_ctime (ar->archive_entry, ar->artime, 0);
+  archive_entry_set_mtime (ar->archive_entry, ar->artime, 0);
 
   archive_write_header (ar->archive, ar->archive_entry);
 

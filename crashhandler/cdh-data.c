@@ -166,7 +166,7 @@ init_crashdump_archive (CdhData *d, const gchar *dirname)
 
   aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid, d->info->tstamp);
 
-  if (cdh_archive_open (&d->archive, aname) != CDM_STATUS_OK)
+  if (cdh_archive_open (&d->archive, aname, (time_t)d->info->tstamp) != CDM_STATUS_OK)
     {
       return CDM_STATUS_ERROR;
     }
