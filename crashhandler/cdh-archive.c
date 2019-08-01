@@ -365,14 +365,12 @@ cdh_archive_stream_move_ahead (CdhArchive *ar, gulong nbbytes)
 
   while (toread > 0)
     {
-      gsize chunksz =
-        toread > ARCHIVE_READ_BUFFER_SZ ? ARCHIVE_READ_BUFFER_SZ : toread;
+      gsize chunksz = toread > ARCHIVE_READ_BUFFER_SZ ? ARCHIVE_READ_BUFFER_SZ : toread;
       gsize readsz = fread (ar->in_read_buffer, 1, chunksz, ar->in_stream);
 
       if (readsz != chunksz)
         {
-          g_warning ("Cannot move ahead by %lu bytes from src. Read %lu bytes", nbbytes,
-                     readsz);
+          g_warning ("Cannot move ahead by %lu bytes from src. Read %lu bytes", nbbytes, readsz);
           return CDM_STATUS_ERROR;
         }
 
@@ -486,11 +484,26 @@ stream_chunk_write (CdhArchive *ar, void *buf, gssize size)
             {
               writesz = archive_write_data (ar->archive, buf + writesz, (gsize)size);
             }
+  
+          if (writesz < 0)
+            {
+              g_warning ("Fail to write archive");
+            }
+          else
+            {
+              ar->file_write_sz += writesz;
+              size -= writesz;
+            }
         }
       else
         {
           return CDM_STATUS_ERROR;
         }
+    }
+
+  if (size <= 0)
+    {
+      g_warning ("Fail to write requiered size in chunk write")
     }
 
   return CDM_STATUS_OK;

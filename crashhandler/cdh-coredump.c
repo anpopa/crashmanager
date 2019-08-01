@@ -503,7 +503,7 @@ finished:
   else
     {
       d->info->cdsize = cdh_archive_stream_get_offset (&d->archive);
-      g_info ("Coredump compression finished for %s with pid %ld", d->info->name, d->info->pid);
+      g_info ("Coredump compression finished for %s with pid %ld cdsize %lu", d->info->name, d->info->pid, d->info->cdsize);
     }
 
   /* In all cases, let's close the files */
