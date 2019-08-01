@@ -82,18 +82,67 @@ ProcName = .*
 DataPath = /etc/os-release
 PostCore = true
 
-[crashcontext-cmdline]
+[crashcontext-proc_cmdline]
 ProcName = .*
 DataPath = /proc/$$/cmdline
 PostCore = false
 
-[crashcontext-procfd]
+[crashcontext-proc_fd]
 ProcName = .*
 DataPath = /proc/$$/fd
 PostCore = false
 
-[crashcontext-procns]
+[crashcontext-proc_ns]
 ProcName = .*
 DataPath = /proc/$$/ns
 PostCore = false
 
+[crashcontext-proc_cgroup]
+ProcName = .*
+DataPath = /proc/$$/cgroup
+PostCore = false
+
+[crashcontext-proc_stack]
+ProcName = .*
+DataPath = /proc/$$/cgroup
+PostCore = false
+
+[crashcontext-proc_environ]
+ProcName = .*
+DataPath = /proc/$$/environ
+PostCore = false
+
+[crashcontext-proc_status]
+ProcName = .*
+DataPath = /proc/$$/status
+PostCore = false
+
+[crashcontext-proc_sched]
+ProcName = .*
+DataPath = /proc/$$/sched
+PostCore = false
+
+[crashcontext-proc_maps]
+ProcName = .*
+DataPath = /proc/$$/maps
+PostCore = false
+
+[crashcontext-proc_stat]
+ProcName = .*
+DataPath = /proc/$$/stat
+PostCore = false
+
+[crashcontext-proc_smaps]
+ProcName = .*
+DataPath = /proc/$$/smaps
+PostCore = false
+
+[crashcontext-proc_loadavg]
+ProcName = .*
+DataPath = /proc/loadavg
+PostCore = false
+
+[crashcontext-proc_version]
+ProcName = .*
+DataPath = /proc/version
+PostCore = false

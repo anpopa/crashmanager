@@ -484,7 +484,7 @@ stream_chunk_write (CdhArchive *ar, void *buf, gssize size)
             {
               writesz = archive_write_data (ar->archive, buf + writesz, (gsize)size);
             }
-  
+
           if (writesz < 0)
             {
               g_warning ("Fail to write archive");
@@ -501,9 +501,9 @@ stream_chunk_write (CdhArchive *ar, void *buf, gssize size)
         }
     }
 
-  if (size <= 0)
+  if (size != 0)
     {
-      g_warning ("Fail to write requiered size in chunk write")
+      g_warning ("Fail to write requiered size in chunk write");
     }
 
   return CDM_STATUS_OK;

@@ -42,10 +42,14 @@
 
 /* Global buffer for file reading */
 #ifndef CONTEXT_TMP_BUFFER_SIZE
-#define CONTEXT_TMP_BUFFER_SIZE (4096)
+#define CONTEXT_TMP_BUFFER_SIZE (8192)
 #endif
 
-static char g_buffer[CONTEXT_TMP_BUFFER_SIZE];
+static gchar g_buffer[CONTEXT_TMP_BUFFER_SIZE];
+
+static gchar ftypelet (mode_t bits);
+
+static void strmode (mode_t mode, gchar str[12]);
 
 static CdmStatus dump_file_to (gchar *fname, CdhArchive *ar);
 
@@ -108,13 +112,185 @@ dump_file_to (gchar *fname, CdhArchive *ar)
   return CDM_STATUS_ERROR;
 }
 
+static gchar
+ftypelet (mode_t bits)
+{
+  if (S_ISREG (bits))
+    {
+      return '-';
+    }
+
+  if (S_ISDIR (bits))
+    {
+      return 'd';
+    }
+
+  if (S_ISBLK (bits))
+    {
+      return 'b';
+    }
+
+  if (S_ISCHR (bits))
+    {
+      return 'c';
+    }
+
+  if (S_ISLNK (bits))
+    {
+      return 'l';
+    }
+
+  if (S_ISFIFO (bits))
+    {
+      return 'p';
+    }
+
+  if (S_ISSOCK (bits))
+    {
+      return 's';
+    }
+
+  return '?';
+}
+
+static void
+strmode (mode_t mode, gchar str[12])
+{
+  g_assert (str);
+
+  str[0] = ftypelet (mode);
+  str[1] = mode & S_IRUSR ? 'r' : '-';
+  str[2] = mode & S_IWUSR ? 'w' : '-';
+  str[3] = (mode & S_ISUID ? (mode & S_IXUSR ? 's' : 'S') : (mode & S_IXUSR ? 'x' : '-'));
+  str[4] = mode & S_IRGRP ? 'r' : '-';
+  str[5] = mode & S_IWGRP ? 'w' : '-';
+  str[6] = (mode & S_ISGID ? (mode & S_IXGRP ? 's' : 'S') : (mode & S_IXGRP ? 'x' : '-'));
+  str[7] = mode & S_IROTH ? 'r' : '-';
+  str[8] = mode & S_IWOTH ? 'w' : '-';
+  str[9] = (mode & S_ISVTX ? (mode & S_IXOTH ? 't' : 'T') : (mode & S_IXOTH ? 'x' : '-'));
+  str[10] = ' ';
+  str[11] = '\0';
+}
 static CdmStatus
 list_dircontent_to (gchar *dname, CdhArchive *ar)
 {
+  g_autofree gchar *output = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+  GDir *gdir = NULL;
+  GError *error = NULL;
+  const gchar *nfile = NULL;
+
   g_assert (dname);
   g_assert (ar);
 
-  return CDM_STATUS_OK;
+  gdir = g_dir_open (dname, 0, &error);
+  if (error != NULL)
+    {
+      g_error_free (error);
+      return CDM_STATUS_ERROR;
+    }
+
+  while ((nfile = g_dir_read_name (gdir)) != NULL)
+    {
+      g_autofree gchar *fmode = NULL;
+      g_autofree gchar *fpath = NULL;
+      g_autofree gchar *fline = NULL;
+      gchar *output_tmp = NULL;
+      gchar mbuf[12] = { 0 };
+      struct stat fstat;
+
+      fpath = g_build_filename (dname, nfile, NULL);
+      if (lstat (fpath, &fstat) < 0)
+        {
+          continue;
+        }
+
+      strmode (fstat.st_mode, mbuf);
+
+      switch (fstat.st_mode & S_IFMT)
+        {
+        case S_IFBLK:
+          fmode = g_strdup (" [block device]");
+          break;
+
+        case S_IFCHR:
+          fmode = g_strdup (" [character device]");
+          break;
+
+        case S_IFDIR:
+          fmode = g_strdup (" [directory]");
+          break;
+
+        case S_IFIFO:
+          fmode = g_strdup (" [FIFO/pipe]");
+          break;
+
+        case S_IFLNK:
+        {
+          g_autofree gchar *lnk_data = g_file_read_link (fpath, NULL);
+          fmode = g_strdup_printf (" -> %s", lnk_data);
+        }
+        break;
+
+        case S_IFREG:
+          fmode = g_strdup (" [regular file]");
+          break;
+
+        case S_IFSOCK:
+          fmode = g_strdup (" [socket]");
+          break;
+
+        default:
+          fmode = g_strdup (" [unknown?]");
+          break;
+        }
+
+      fline = g_strdup_printf ("%s  %u  %u %u %ld %4s %s",
+                               mbuf,
+                               (unsigned int)fstat.st_nlink,
+                               fstat.st_uid,
+                               fstat.st_gid,
+                               fstat.st_size,
+                               nfile,
+                               fmode
+                               );
+
+      if (output != NULL)
+        {
+          output_tmp = g_strjoin ("\n", output, fline, NULL);
+          g_free (output);
+          output = output_tmp;
+        }
+      else
+        {
+          output = g_strdup_printf ("%s", fline);
+        }
+    }
+
+  g_dir_close (gdir);
+
+  if (output != NULL)
+    {
+      g_autofree gchar *outfile = g_strdup_printf ("root%s", dname);
+
+      g_strdelimit (outfile, "/ ", '.');
+
+      if (cdh_archive_create_file (ar, outfile, strlen (output) + 1) == CDM_STATUS_OK)
+        {
+          status = cdh_archive_write_file (ar, (const void*)output, strlen (output) + 1);
+
+          if (cdh_archive_finish_file (ar) != CDM_STATUS_OK)
+            {
+              status = CDM_STATUS_ERROR;
+            }
+        }
+      else
+        {
+          status = CDM_STATUS_ERROR;
+        }
+    }
+
+  return status;
 }
 
 static CdmStatus
@@ -208,7 +384,8 @@ crash_context_dump (CdhData *d, gboolean postcore)
 
   for (gint i = 0; groups[i] != NULL; i++)
     {
-      g_autofree gchar *key = NULL;
+      g_autofree gchar *proc_key = NULL;
+      g_autofree gchar *data_key = NULL;
       g_autofree gchar *data_path = NULL;
       g_autofree gchar *str_pid = NULL;
       gchar **path_tokens = NULL;
@@ -221,14 +398,14 @@ crash_context_dump (CdhData *d, gboolean postcore)
           continue;
         }
 
-      key = g_key_file_get_string (key_file, gname, "ProcName", &error);
+      proc_key = g_key_file_get_string (key_file, gname, "ProcName", &error);
       if (error != NULL)
         {
           g_error_free (error);
           continue;
         }
 
-      if (g_regex_match_simple (key, d->info->name, 0, 0) == FALSE)
+      if (g_regex_match_simple (proc_key, d->info->name, 0, 0) == FALSE)
         {
           continue;
         }
@@ -245,14 +422,19 @@ crash_context_dump (CdhData *d, gboolean postcore)
           continue;
         }
 
-      key = g_key_file_get_string (key_file, gname, "DataPath", &error);
+      data_key = g_key_file_get_string (key_file, gname, "DataPath", &error);
       if (error != NULL)
         {
           g_error_free (error);
           continue;
         }
 
-      path_tokens = g_strsplit (key, "$$", 3);
+      if (g_access (data_key, R_OK) == 0)
+        {
+          continue;
+        }
+
+      path_tokens = g_strsplit (data_key, "$$", 3);
       str_pid = g_strdup_printf ("%ld", d->info->pid);
       data_path = g_strjoinv (str_pid, path_tokens);
       g_strfreev (path_tokens);
