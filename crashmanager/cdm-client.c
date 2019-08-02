@@ -30,14 +30,14 @@
 #include "cdm-client.h"
 
 static GSourceFuncs client_source_funcs =
-  {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
 
 CdmClient *
 cdm_client_new (void)
@@ -75,7 +75,8 @@ cdm_client_unref (CdmClient *client)
     }
 }
 
-GSource *cdm_client_get_source (CdmClient *client)
+GSource *
+cdm_client_get_source (CdmClient *client)
 {
   g_assert (client);
   return client->source;

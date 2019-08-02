@@ -30,14 +30,14 @@
 #include "cdm-bitstore.h"
 
 static GSourceFuncs bitstore_source_funcs =
-  {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
 
 CdmBitstore *
 cdm_bitstore_new (void)
@@ -75,7 +75,8 @@ cdm_bitstore_unref (CdmBitstore *bitstore)
     }
 }
 
-GSource *cdm_bitstore_get_source (CdmBitstore *bitstore)
+GSource *
+cdm_bitstore_get_source (CdmBitstore *bitstore)
 {
   g_assert (bitstore);
   return bitstore->source;

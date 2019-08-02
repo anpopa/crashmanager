@@ -68,6 +68,6 @@ void cdm_server_unref (CdmServer *server);
  */
 GSource *cdm_server_get_source (CdmServer *server);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmServer, cdm_server_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmServer, cdm_server_unref);
 
 #endif /* CDM_SERVER_H */

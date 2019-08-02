@@ -67,6 +67,6 @@ void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
  */
 GSource *cdm_lifecycle_get_source (CdmLifecycle *lifecycle);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmLifecycle, cdm_lifecycle_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmLifecycle, cdm_lifecycle_unref);
 
 #endif /* CDM_LIFECYCLE_H */

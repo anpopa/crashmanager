@@ -30,14 +30,14 @@
 #include "cdm-transfer.h"
 
 static GSourceFuncs transfer_source_funcs =
-  {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
 
 CdmTransfer *
 cdm_transfer_new (void)
@@ -75,7 +75,8 @@ cdm_transfer_unref (CdmTransfer *transfer)
     }
 }
 
-GSource *cdm_transfer_get_source (CdmTransfer *transfer)
+GSource *
+cdm_transfer_get_source (CdmTransfer *transfer)
 {
   g_assert (transfer);
   return transfer->source;

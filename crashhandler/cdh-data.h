@@ -1,4 +1,4 @@
-/* cdm-data.h
+/* cdh-data.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *

@@ -72,6 +72,8 @@ cdm_options_ref (CdmOptions *opts)
 {
   g_assert (opts);
   g_ref_count_inc (&opts->rc);
+
+  return opts;
 }
 
 void
@@ -82,9 +84,9 @@ cdm_options_unref (CdmOptions *opts)
   if (g_ref_count_dec (&opts->rc) == TRUE)
     {
       if (opts->conf)
-      {
-        g_key_file_unref (opts->conf);
-      }
+        {
+          g_key_file_unref (opts->conf);
+        }
 
       g_free (opts);
     }

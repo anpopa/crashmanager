@@ -30,14 +30,14 @@
 #include "cdm-janitor.h"
 
 static GSourceFuncs janitor_source_funcs =
-  {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
 
 CdmJanitor *
 cdm_janitor_new (void)
@@ -75,7 +75,8 @@ cdm_janitor_unref (CdmJanitor *janitor)
     }
 }
 
-GSource *cdm_janitor_get_source (CdmJanitor *janitor)
+GSource *
+cdm_janitor_get_source (CdmJanitor *janitor)
 {
   g_assert (janitor);
   return janitor->source;

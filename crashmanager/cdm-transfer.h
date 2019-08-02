@@ -67,6 +67,6 @@ void cdm_transfer_unref (CdmTransfer *transfer);
  */
 GSource *cdm_transfer_get_source (CdmTransfer *transfer);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmTransfer, cdm_transfer_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmTransfer, cdm_transfer_unref);
 
 #endif /* CDM_TRANSFER_H */

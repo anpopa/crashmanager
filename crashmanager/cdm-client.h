@@ -67,6 +67,6 @@ void cdm_client_unref (CdmClient *client);
  */
 GSource *cdm_client_get_source (CdmClient *client);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmClient, cdm_client_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmClient, cdm_client_unref);
 
 #endif /* CDM_CLIENT_H */

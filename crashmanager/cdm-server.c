@@ -30,14 +30,14 @@
 #include "cdm-server.h"
 
 static GSourceFuncs server_source_funcs =
-  {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
 
 CdmServer *
 cdm_server_new (void)
@@ -75,7 +75,8 @@ cdm_server_unref (CdmServer *server)
     }
 }
 
-GSource *cdm_server_get_source (CdmServer *server)
+GSource *
+cdm_server_get_source (CdmServer *server)
 {
   g_assert (server);
   return server->source;

@@ -67,6 +67,6 @@ void cdm_bitstore_unref (CdmBitstore *bitstore);
  */
 GSource *cdm_bitstore_get_source (CdmBitstore *bitstore);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmBitstore, cdm_bitstore_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmBitstore, cdm_bitstore_unref);
 
 #endif /* CDM_BITSTORE_H */

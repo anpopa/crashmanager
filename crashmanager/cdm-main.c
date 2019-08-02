@@ -38,19 +38,23 @@
 
 #include <glib.h>
 #include <stdlib.h>
+#include <glib/gstdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 typedef struct _CdmData {
-   CdmServer *server;
-   CdmJanitor *janitor;
-   CdmBitstore *bitstore;
-   CdmSDNotify *sdnotify;
-   CdmTransfer *transfer;
+  CdmServer *server;
+  CdmJanitor *janitor;
+  CdmBitstore *bitstore;
+  CdmSDNotify *sdnotify;
+  CdmTransfer *transfer;
 } CdmData;
 
 static CdmData *cdm_data_new (void);
-static void cdm_data_free(CdmData *data);
+static void cdm_data_free (CdmData *data);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmData, cdm_data_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmData, cdm_data_free);
 
 static CdmData *
 cdm_data_new (void)
@@ -59,17 +63,17 @@ cdm_data_new (void)
 
   g_assert (data);
 
-  data->server = cdm_server_new();
-  data->janitor = cdm_janitor_new();
-  data->bitstore = cdm_bitstore_new();
-  data->sdnotify = cdm_sdnotify_new();
-  data->transfer = cdm_transfer_new();
+  data->server = cdm_server_new ();
+  data->janitor = cdm_janitor_new ();
+  data->bitstore = cdm_bitstore_new ();
+  data->sdnotify = cdm_sdnotify_new ();
+  data->transfer = cdm_transfer_new ();
 
   return data;
 }
 
 static void
-cdm_data_free(CdmData *data)
+cdm_data_free (CdmData *data)
 {
   g_assert (data);
   g_assert (data->server);
@@ -91,6 +95,9 @@ static CdmStatus
 cdm_data_run (CdmData *data)
 {
   CdmStatus status = CDM_STATUS_OK;
+
+  CDM_UNUSED (data);
+
   return status;
 }
 
@@ -105,8 +112,9 @@ main (gint argc, gchar *argv[])
   CdmStatus status = CDM_STATUS_OK;
 
   GOptionEntry main_entries[] = {
-    { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL },
-    { "config", 'c', 0, G_OPTION_ARG_FILENAME, config_path, "Override configuration file", NULL }
+    { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
+    { "config", 'c', 0, G_OPTION_ARG_FILENAME, config_path, "Override configuration file", "" },
+    { NULL }
   };
 
   cdm_logging_open ("CDM", "Crashmanager service", "CDM", "Default context");
@@ -135,8 +143,7 @@ main (gint argc, gchar *argv[])
 
   if (g_access (config_path, R_OK) == 0)
     {
-      g_autoptr (CdmData) data = cdm_data_new();
-
+      data = cdm_data_new ();
       status = cdm_data_run (data);
     }
   else

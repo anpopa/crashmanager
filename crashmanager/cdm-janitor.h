@@ -67,6 +67,6 @@ void cdm_janitor_unref (CdmJanitor *janitor);
  */
 GSource *cdm_janitor_get_source (CdmJanitor *janitor);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmJanitor, cdm_janitor_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJanitor, cdm_janitor_unref);
 
 #endif /* CDM_JANITOR_H */

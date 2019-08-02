@@ -30,14 +30,14 @@
 #include "cdm-lifecycle.h"
 
 static GSourceFuncs lifecycle_source_funcs =
-  {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-  };
+{
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+};
 
 CdmLifecycle *
 cdm_lifecycle_new (void)
@@ -75,7 +75,8 @@ cdm_lifecycle_unref (CdmLifecycle *lifecycle)
     }
 }
 
-GSource *cdm_lifecycle_get_source (CdmLifecycle *lifecycle)
+GSource *
+cdm_lifecycle_get_source (CdmLifecycle *lifecycle)
 {
   g_assert (lifecycle);
   return lifecycle->source;
