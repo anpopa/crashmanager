@@ -147,6 +147,7 @@ if get_option('CRASHMANAGER')
     'crashmanager/cdm-sdnotify.c',
     'crashmanager/cdm-transfer.c',
     'crashmanager/cdm-bitstore.c',
+    'crashmanager/cdm-options.c',
     ]
 
   crashmanager_deps = [
