@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-sdnotify.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,46 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
+#ifndef CDM_SDNOTIFY_H
+#define CDM_SDNOTIFY_H
+
 #include "cdm-types.h"
-#include "cdm-logging.h"
 
 #include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
 
-gint
-main (gint argc, gchar *argv[])
-{
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+/**
+ * @struct CdmSDNotify
+ * @brief The CdmSDNotify opaque data structure
+ */
+typedef struct _CdmSDNotify {
+  GSource *source;  /**< Event loop source */
+  grefcount rc;     /**< Reference counter variable  */
+} CdmSDNotify;
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+/*
+ * @brief Create a new sdnotify object
+ * @return On success return a new CdmSDNotify object otherwise return NULL
+ */
+CdmSDNotify *cdm_sdnotify_new (void);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+/**
+ * @brief Aquire sdnotify object
+ * @param c Pointer to the sdnotify object
+ */
+CdmSDNotify *cdm_sdnotify_ref (CdmSDNotify *sdnotify);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
-    {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
+/**
+ * @brief Release sdnotify object
+ * @param c Pointer to the sdnotify object
+ */
+void cdm_sdnotify_unref (CdmSDNotify *sdnotify);
 
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
-    }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+/**
+ * @brief Get object event loop source
+ * @param c Pointer to the sdnotify object
+ */
+GSource *cdm_sdnotify_get_source (CdmSDNotify *sdnotify);
 
-  cdm_logging_close ();
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmSDNotify, cdm_sdnotify_unref);
 
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif /* CDM_SDNOTIFY_H */

@@ -43,9 +43,22 @@ cdh_manager_init (CdhManager *c, CdmOptions *opts)
 
   c->sfd = -1;
   c->connected = false;
-  c->opts = opts;
+  c->opts = cdm_options_ref (opts);
 
   return CDM_STATUS_OK;
+}
+
+void
+cdh_manager_deinit (CdhManager *c)
+{
+  g_assert (c);
+
+  if (cdh_manager_connected (c) == TRUE)
+    {
+      (void)cdh_manager_disconnect (c);
+    }
+
+  cdm_options_unref (c->opts);
 }
 
 void

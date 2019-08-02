@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-janitor.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,56 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdm-janitor.h"
 
-#include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
+static GSourceFuncs janitor_source_funcs =
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+  };
 
-gint
-main (gint argc, gchar *argv[])
+CdmJanitor *
+cdm_janitor_new (void)
 {
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+  CdmJanitor *janitor = g_new0 (CdmJanitor, 1);
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+  g_assert (janitor);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+  g_ref_count_init (&janitor->rc);
+  g_ref_count_inc (&janitor->rc);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
+  janitor->source = g_source_new (&janitor_source_funcs, sizeof(GSource));
+  g_source_ref (janitor->source);
+
+  return janitor;
+}
+
+CdmJanitor *
+cdm_janitor_ref (CdmJanitor *janitor)
+{
+  g_assert (janitor);
+  g_ref_count_inc (&janitor->rc);
+  return janitor;
+}
+
+void
+cdm_janitor_unref (CdmJanitor *janitor)
+{
+  g_assert (janitor);
+
+  if (g_ref_count_dec (&janitor->rc) == TRUE)
     {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
+      g_source_unref (janitor->source);
+      g_free (janitor);
     }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+}
 
-  cdm_logging_close ();
-
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+GSource *cdm_janitor_get_source (CdmJanitor *janitor)
+{
+  g_assert (janitor);
+  return janitor->source;
 }

@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-lifecycle.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,56 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdm-lifecycle.h"
 
-#include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
+static GSourceFuncs lifecycle_source_funcs =
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+  };
 
-gint
-main (gint argc, gchar *argv[])
+CdmLifecycle *
+cdm_lifecycle_new (void)
 {
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+  CdmLifecycle *lifecycle = g_new0 (CdmLifecycle, 1);
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+  g_assert (lifecycle);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+  g_ref_count_init (&lifecycle->rc);
+  g_ref_count_inc (&lifecycle->rc);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
+  lifecycle->source = g_source_new (&lifecycle_source_funcs, sizeof(GSource));
+  g_source_ref (lifecycle->source);
+
+  return lifecycle;
+}
+
+CdmLifecycle *
+cdm_lifecycle_ref (CdmLifecycle *lifecycle)
+{
+  g_assert (lifecycle);
+  g_ref_count_inc (&lifecycle->rc);
+  return lifecycle;
+}
+
+void
+cdm_lifecycle_unref (CdmLifecycle *lifecycle)
+{
+  g_assert (lifecycle);
+
+  if (g_ref_count_dec (&lifecycle->rc) == TRUE)
     {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
+      g_source_unref (lifecycle->source);
+      g_free (lifecycle);
     }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+}
 
-  cdm_logging_close ();
-
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+GSource *cdm_lifecycle_get_source (CdmLifecycle *lifecycle)
+{
+  g_assert (lifecycle);
+  return lifecycle->source;
 }

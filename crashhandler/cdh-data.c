@@ -81,7 +81,7 @@ cdh_data_deinit (CdhData *d)
 
   if (d->opts)
     {
-      cdm_options_free (d->opts);
+      cdm_options_unref (d->opts);
     }
 }
 
@@ -219,7 +219,7 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
 #if defined(WITH_CRASHMANAGER)
   if (cdh_manager_init (&d->crash_mgr, d->opts) != CDM_STATUS_OK)
     {
-      g_warning ("Crashhandler object init failed");
+      g_warning ("Crashmanager ipc object init failed");
     }
 
   if (cdh_manager_connect (&d->crash_mgr) != CDM_STATUS_OK)
@@ -323,6 +323,8 @@ enter_cleanup:
           g_warning ("Fail to disconnect to manager socket");
         }
     }
+
+  cdh_manager_deinit (&d->crash_mgr);
 #endif
 
   return status;

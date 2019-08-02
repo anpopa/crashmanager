@@ -62,11 +62,9 @@ typedef struct _CdhData {
 #if defined(WITH_CRASHMANAGER)
   CdhManager crash_mgr;   /**< manager ipc object */
 #endif
-
   Elf64_Ehdr ehdr;     /**< coredump elf Ehdr structure */
   Elf64_Phdr *pphdr;   /**< coredump elf pPhdr pointer to structure */
   gchar *nhdr;         /**< buffer with all NOTE pages */
-
   guint64 ra;                        /**< return address for top frame */
   guint64 ip_file_offset;            /**< instruction pointer file offset for top frame */
   guint64 ra_file_offset;            /**< return address file offset for top frame */

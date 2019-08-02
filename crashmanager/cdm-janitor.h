@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-janitor.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,46 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
+#ifndef CDM_JANITOR_H
+#define CDM_JANITOR_H
+
 #include "cdm-types.h"
-#include "cdm-logging.h"
 
 #include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
 
-gint
-main (gint argc, gchar *argv[])
-{
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+/**
+ * @struct CdmJanitor
+ * @brief The CdmJanitor opaque data structure
+ */
+typedef struct _CdmJanitor {
+  GSource *source;  /**< Event loop source */
+  grefcount rc;     /**< Reference counter variable  */
+} CdmJanitor;
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+/*
+ * @brief Create a new janitor object
+ * @return On success return a new CdmJanitor object otherwise return NULL
+ */
+CdmJanitor *cdm_janitor_new (void);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+/**
+ * @brief Aquire janitor object
+ * @param c Pointer to the janitor object
+ */
+CdmJanitor *cdm_janitor_ref (CdmJanitor *janitor);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
-    {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
+/**
+ * @brief Release janitor object
+ * @param c Pointer to the janitor object
+ */
+void cdm_janitor_unref (CdmJanitor *janitor);
 
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
-    }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+/**
+ * @brief Get object event loop source
+ * @param c Pointer to the janitor object
+ */
+GSource *cdm_janitor_get_source (CdmJanitor *janitor);
 
-  cdm_logging_close ();
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmJanitor, cdm_janitor_unref);
 
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif /* CDM_JANITOR_H */

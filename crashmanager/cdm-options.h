@@ -60,6 +60,7 @@ typedef enum _CdmOptionsKey {
 typedef struct _CdmOptions {
   GKeyFile *conf;   /**< The GKeyFile object */
   bool has_conf;      /**< Flag to check if a runtime option object is available */
+  grefcount rc;     /**< Reference counter variable  */
 } CdmOptions;
 
 /*
@@ -68,11 +69,17 @@ typedef struct _CdmOptions {
  */
 CdmOptions *cdm_options_new (const gchar *conf_path);
 
+/*
+ * @brief Aquire options object
+ * @return On success return a new CdmOptions object otherwise return NULL
+ */
+CdmOptions *cdm_options_ref (CdmOptions *opts);
+
 /**
  * @brief Release an options object
  * @param opts Pointer to the options object
  */
-void cdm_options_free (CdmOptions *opts);
+void cdm_options_unref (CdmOptions *opts);
 
 /**
  * @brief Get the GKeyFile object

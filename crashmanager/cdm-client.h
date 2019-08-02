@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-client.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,46 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
+#ifndef CDM_CLIENT_H
+#define CDM_CLIENT_H
+
 #include "cdm-types.h"
-#include "cdm-logging.h"
 
 #include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
 
-gint
-main (gint argc, gchar *argv[])
-{
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+/**
+ * @struct CdmClient
+ * @brief The CdmClient opaque data structure
+ */
+typedef struct _CdmClient {
+  GSource *source;  /**< Event loop source */
+  grefcount rc;     /**< Reference counter variable  */
+} CdmClient;
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+/*
+ * @brief Create a new client object
+ * @return On success return a new CdmClient object otherwise return NULL
+ */
+CdmClient *cdm_client_new (void);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+/**
+ * @brief Aquire client object
+ * @param c Pointer to the client object
+ */
+CdmClient *cdm_client_ref (CdmClient *client);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
-    {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
+/**
+ * @brief Release client object
+ * @param c Pointer to the client object
+ */
+void cdm_client_unref (CdmClient *client);
 
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
-    }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+/**
+ * @brief Get object event loop source
+ * @param c Pointer to the client object
+ */
+GSource *cdm_client_get_source (CdmClient *client);
 
-  cdm_logging_close ();
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmClient, cdm_client_unref);
 
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif /* CDM_CLIENT_H */

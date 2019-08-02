@@ -38,7 +38,7 @@ static gint64 get_long_option (CdmOptions *opts, const gchar *section_name, cons
 CdmOptions *
 cdm_options_new (const gchar *conf_path)
 {
-  CdmOptions *opts = calloc (1, sizeof(CdmOptions));
+  CdmOptions *opts = g_new0 (CdmOptions, 1);
 
   opts->has_conf = false;
 
@@ -61,20 +61,33 @@ cdm_options_new (const gchar *conf_path)
         }
     }
 
+  g_ref_count_init (&opts->rc);
+  g_ref_count_inc (&opts->rc);
+
   return opts;
 }
 
+CdmOptions *
+cdm_options_ref (CdmOptions *opts)
+{
+  g_assert (opts);
+  g_ref_count_inc (&opts->rc);
+}
+
 void
-cdm_options_free (CdmOptions *opts)
+cdm_options_unref (CdmOptions *opts)
 {
   g_assert (opts);
 
-  if (opts->conf)
+  if (g_ref_count_dec (&opts->rc) == TRUE)
     {
-      g_key_file_free (opts->conf);
-    }
+      if (opts->conf)
+      {
+        g_key_file_unref (opts->conf);
+      }
 
-  free (opts);
+      g_free (opts);
+    }
 }
 
 GKeyFile *

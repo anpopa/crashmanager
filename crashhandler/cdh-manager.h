@@ -73,6 +73,14 @@ typedef struct _CdhManager {
 CdmStatus cdh_manager_init (CdhManager *c, CdmOptions *opts);
 
 /**
+ * @brief Denitialize pre-allocated CdhManager object
+ *
+ * @param c Manager object
+ * @param opts Pointer to global options object
+ */
+void cdh_manager_deinit (CdhManager *c);
+
+/**
  * @brief Connect to cdh manager
  * @param c Manager object
  * @return CDM_STATUS_OK on success

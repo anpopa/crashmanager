@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-sdnotify.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,56 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdm-sdnotify.h"
 
-#include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
+static GSourceFuncs sdnotify_source_funcs =
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+  };
 
-gint
-main (gint argc, gchar *argv[])
+CdmSDNotify *
+cdm_sdnotify_new (void)
 {
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+  CdmSDNotify *sdnotify = g_new0 (CdmSDNotify, 1);
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+  g_assert (sdnotify);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+  g_ref_count_init (&sdnotify->rc);
+  g_ref_count_inc (&sdnotify->rc);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
+  sdnotify->source = g_source_new (&sdnotify_source_funcs, sizeof(GSource));
+  g_source_ref (sdnotify->source);
+
+  return sdnotify;
+}
+
+CdmSDNotify *
+cdm_sdnotify_ref (CdmSDNotify *sdnotify)
+{
+  g_assert (sdnotify);
+  g_ref_count_inc (&sdnotify->rc);
+  return sdnotify;
+}
+
+void
+cdm_sdnotify_unref (CdmSDNotify *sdnotify)
+{
+  g_assert (sdnotify);
+
+  if (g_ref_count_dec (&sdnotify->rc) == TRUE)
     {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
+      g_source_unref (sdnotify->source);
+      g_free (sdnotify);
     }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+}
 
-  cdm_logging_close ();
-
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+GSource *cdm_sdnotify_get_source (CdmSDNotify *sdnotify)
+{
+  g_assert (sdnotify);
+  return sdnotify->source;
 }

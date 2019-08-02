@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-server.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,56 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdm-server.h"
 
-#include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
+static GSourceFuncs server_source_funcs =
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+  };
 
-gint
-main (gint argc, gchar *argv[])
+CdmServer *
+cdm_server_new (void)
 {
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+  CdmServer *server = g_new0 (CdmServer, 1);
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+  g_assert (server);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+  g_ref_count_init (&server->rc);
+  g_ref_count_inc (&server->rc);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
+  server->source = g_source_new (&server_source_funcs, sizeof(GSource));
+  g_source_ref (server->source);
+
+  return server;
+}
+
+CdmServer *
+cdm_server_ref (CdmServer *server)
+{
+  g_assert (server);
+  g_ref_count_inc (&server->rc);
+  return server;
+}
+
+void
+cdm_server_unref (CdmServer *server)
+{
+  g_assert (server);
+
+  if (g_ref_count_dec (&server->rc) == TRUE)
     {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
+      g_source_unref (server->source);
+      g_free (server);
     }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+}
 
-  cdm_logging_close ();
-
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+GSource *cdm_server_get_source (CdmServer *server)
+{
+  g_assert (server);
+  return server->source;
 }

@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-bitstore.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,56 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdm-bitstore.h"
 
-#include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
+static GSourceFuncs bitstore_source_funcs =
+  {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+  };
 
-gint
-main (gint argc, gchar *argv[])
+CdmBitstore *
+cdm_bitstore_new (void)
 {
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+  CdmBitstore *bitstore = g_new0 (CdmBitstore, 1);
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+  g_assert (bitstore);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+  g_ref_count_init (&bitstore->rc);
+  g_ref_count_inc (&bitstore->rc);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
+  bitstore->source = g_source_new (&bitstore_source_funcs, sizeof(GSource));
+  g_source_ref (bitstore->source);
+
+  return bitstore;
+}
+
+CdmBitstore *
+cdm_bitstore_ref (CdmBitstore *bitstore)
+{
+  g_assert (bitstore);
+  g_ref_count_inc (&bitstore->rc);
+  return bitstore;
+}
+
+void
+cdm_bitstore_unref (CdmBitstore *bitstore)
+{
+  g_assert (bitstore);
+
+  if (g_ref_count_dec (&bitstore->rc) == TRUE)
     {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
+      g_source_unref (bitstore->source);
+      g_free (bitstore);
     }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+}
 
-  cdm_logging_close ();
-
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+GSource *cdm_bitstore_get_source (CdmBitstore *bitstore)
+{
+  g_assert (bitstore);
+  return bitstore->source;
 }

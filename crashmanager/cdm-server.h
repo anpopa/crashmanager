@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-server.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,47 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
+#ifndef CDM_SERVER_H
+#define CDM_SERVER_H
+
 #include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdm-server.h"
 
 #include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
 
-gint
-main (gint argc, gchar *argv[])
-{
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+/**
+ * @struct CdmServer
+ * @brief The CdmServer opaque data structure
+ */
+typedef struct _CdmServer {
+  GSource *source;  /**< Event loop source */
+  grefcount rc;     /**< Reference counter variable  */
+} CdmServer;
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+/*
+ * @brief Create a new server object
+ * @return On success return a new CdmServer object otherwise return NULL
+ */
+CdmServer *cdm_server_new (void);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+/**
+ * @brief Aquire server object
+ * @param c Pointer to the server object
+ */
+CdmServer *cdm_server_ref (CdmServer *server);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
-    {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
+/**
+ * @brief Release server object
+ * @param c Pointer to the server object
+ */
+void cdm_server_unref (CdmServer *server);
 
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
-    }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+/**
+ * @brief Get object event loop source
+ * @param c Pointer to the server object
+ */
+GSource *cdm_server_get_source (CdmServer *server);
 
-  cdm_logging_close ();
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmServer, cdm_server_unref);
 
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif /* CDM_SERVER_H */

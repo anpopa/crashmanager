@@ -1,4 +1,4 @@
-/* cdh-main.c
+/* cdm-lifecycle.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,44 +27,46 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
+#ifndef CDM_LIFECYCLE_H
+#define CDM_LIFECYCLE_H
+
 #include "cdm-types.h"
-#include "cdm-logging.h"
 
 #include <glib.h>
-#include <stdlib.h>
-#ifdef WITH_DEBUG_ATTACH
-#include <signal.h>
-#endif
 
-gint
-main (gint argc, gchar *argv[])
-{
-  g_autofree gchar *conf_path = NULL;
-  CdmStatus status = CDM_STATUS_OK;
+/**
+ * @struct CdmLifecycle
+ * @brief The CdmLifecycle opaque data structure
+ */
+typedef struct _CdmLifecycle {
+  GSource *source;  /**< Event loop source */
+  grefcount rc;     /**< Reference counter variable  */
+} CdmLifecycle;
 
-#ifdef WITH_DEBUG_ATTACH
-  raise (SIGSTOP);
-#endif
+/*
+ * @brief Create a new lifecycle object
+ * @return On success return a new CdmLifecycle object otherwise return NULL
+ */
+CdmLifecycle *cdm_lifecycle_new (void);
 
-  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
+/**
+ * @brief Aquire lifecycle object
+ * @param c Pointer to the lifecycle object
+ */
+CdmLifecycle *cdm_lifecycle_ref (CdmLifecycle *lifecycle);
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-  if (g_access (conf_path, R_OK) == 0)
-    {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
+/**
+ * @brief Release lifecycle object
+ * @param c Pointer to the lifecycle object
+ */
+void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
 
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
-    }
-  else
-    {
-      status = CDM_STATUS_ERROR;
-    }
+/**
+ * @brief Get object event loop source
+ * @param c Pointer to the lifecycle object
+ */
+GSource *cdm_lifecycle_get_source (CdmLifecycle *lifecycle);
 
-  cdm_logging_close ();
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmLifecycle, cdm_lifecycle_unref);
 
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
-}
+#endif /* CDM_LIFECYCLE_H */
