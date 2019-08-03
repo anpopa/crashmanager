@@ -42,6 +42,8 @@
 typedef struct _CdmServer {
   GSource *source;  /**< Event loop source */
   grefcount rc;     /**< Reference counter variable  */
+  gpointer tag;     /**< Unix server socket tag  */
+  gint sockfd;      /**< Module file descriptor (server listen fd) */
 } CdmServer;
 
 /*
@@ -55,6 +57,12 @@ CdmServer *cdm_server_new (void);
  * @param c Pointer to the server object
  */
 CdmServer *cdm_server_ref (CdmServer *server);
+
+/**
+ * @brief Start the server an listen for clients
+ * @param c Pointer to the server object
+ */
+CdmStatus cdm_server_bind_and_listen (CdmServer *server, const char *udspath);
 
 /**
  * @brief Release server object
