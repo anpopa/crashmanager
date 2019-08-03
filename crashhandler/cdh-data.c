@@ -241,7 +241,7 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
 
       cdm_message_set_data (&msg, &data, sizeof(data));
 
-      if (cdm_manager_send (&d->crash_mgr, &msg) == CDM_STATUS_ERROR)
+      if (cdh_manager_send (&d->crash_mgr, &msg) == CDM_STATUS_ERROR)
         {
           g_warning ("Failed to send new message to manager");
         }
@@ -313,12 +313,12 @@ enter_cleanup:
 
       cdm_message_init (&msg, type, (guint16)((gulong)d->info->pid | d->info->tstamp));
 
-      if (cdm_manager_send (&d->crash_mgr, &msg) == CDM_STATUS_ERROR)
+      if (cdh_manager_send (&d->crash_mgr, &msg) == CDM_STATUS_ERROR)
         {
           g_warning ("Failed to send status message to manager");
         }
 
-      if (cdm_manager_disconnect (&d->crash_mgr) != CDM_STATUS_OK)
+      if (cdh_manager_disconnect (&d->crash_mgr) != CDM_STATUS_OK)
         {
           g_warning ("Fail to disconnect to manager socket");
         }

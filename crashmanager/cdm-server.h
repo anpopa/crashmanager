@@ -31,7 +31,7 @@
 #define CDM_SERVER_H
 
 #include "cdm-types.h"
-#include "cdm-server.h"
+#include "cdm-options.h"
 
 #include <glib.h>
 
@@ -41,6 +41,7 @@
  */
 typedef struct _CdmServer {
   GSource *source;  /**< Event loop source */
+  CdmOptions *opts; /**< Own reference to global options */
   grefcount rc;     /**< Reference counter variable  */
   gpointer tag;     /**< Unix server socket tag  */
   gint sockfd;      /**< Module file descriptor (server listen fd) */
@@ -50,7 +51,7 @@ typedef struct _CdmServer {
  * @brief Create a new server object
  * @return On success return a new CdmServer object otherwise return NULL
  */
-CdmServer *cdm_server_new (void);
+CdmServer *cdm_server_new (CdmOptions *opts);
 
 /**
  * @brief Aquire server object
@@ -62,7 +63,7 @@ CdmServer *cdm_server_ref (CdmServer *server);
  * @brief Start the server an listen for clients
  * @param c Pointer to the server object
  */
-CdmStatus cdm_server_bind_and_listen (CdmServer *server, const char *udspath);
+CdmStatus cdm_server_bind_and_listen (CdmServer *server);
 
 /**
  * @brief Release server object

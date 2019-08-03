@@ -38,23 +38,52 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define SOCKTOUT (3)
+gboolean server_source_prepare (GSource *source, gint *timeout);
+gboolean server_source_check (GSource *source);
+gboolean server_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data);
+static gboolean server_source_callback (gpointer data);
+static void server_source_destroy_notify (gpointer data);
 
 static GSourceFuncs server_source_funcs =
 {
+  server_source_prepare,
   NULL,
-  NULL,
-  NULL,
+  server_source_dispatch,
   NULL,
   NULL,
   NULL,
 };
 
-static gboolean source_server_event_callback (gpointer data);
-static void source_server_destroy_notify (gpointer data);
+gboolean
+server_source_prepare (GSource *source, gint *timeout)
+{
+  CDM_UNUSED (source);
+  *timeout = -1;
+  return FALSE;
+}
+
+gboolean
+server_source_check (GSource *source)
+{
+  CDM_UNUSED (source);
+  return TRUE;
+}
+
+gboolean
+server_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
+{
+  CDM_UNUSED (source);
+
+  if (callback == NULL)
+    {
+      return G_SOURCE_CONTINUE;
+    }
+
+  return callback (user_data) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+}
 
 static gboolean
-source_server_event_callback (gpointer data)
+server_source_callback (gpointer data)
 {
   CdmServer *server = (CdmServer *)data;
   gint clientfd;
@@ -77,18 +106,22 @@ source_server_event_callback (gpointer data)
 }
 
 static void
-source_server_destroy_notify (gpointer data)
+server_source_destroy_notify (gpointer data)
 {
   CDM_UNUSED (data);
   g_info ("Server terminated");
 }
 
 CdmServer *
-cdm_server_new (void)
+cdm_server_new (CdmOptions *opts)
 {
-  CdmServer *server = g_new0 (CdmServer, 1);
+  CdmServer *server = NULL;
   struct timeval tout;
+  glong timeout;
 
+  g_assert (opts);
+
+  server = g_new0 (CdmServer, 1);
   g_assert (server);
 
   g_ref_count_init (&server->rc);
@@ -97,13 +130,17 @@ cdm_server_new (void)
   server->source = g_source_new (&server_source_funcs, sizeof(GSource));
   g_source_ref (server->source);
 
+  server->opts = cdm_options_ref (opts);
+
   server->sockfd = socket (AF_UNIX, SOCK_STREAM, 0);
   if (server->sockfd < 0)
     {
       g_error ("Cannot create server socket");
     }
 
-  tout.tv_sec = SOCKTOUT;
+  timeout = cdm_options_long_for (opts, KEY_IPC_TIMEOUT_SEC);
+
+  tout.tv_sec = timeout;
   tout.tv_usec = 0;
 
   if (setsockopt (server->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, sizeof(tout)) == -1)
@@ -116,7 +153,8 @@ cdm_server_new (void)
       g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
     }
 
-  g_source_set_callback (server->source, G_SOURCE_FUNC (source_server_event_callback), server, source_server_destroy_notify);
+  g_source_set_callback (server->source, G_SOURCE_FUNC (server_source_callback),
+                         server, server_source_destroy_notify);
   g_source_attach (server->source, NULL); /* attach the source to the default context */
 
   return server;
@@ -137,19 +175,26 @@ cdm_server_unref (CdmServer *server)
 
   if (g_ref_count_dec (&server->rc) == TRUE)
     {
+      cdm_options_unref (server->opts);
       g_source_unref (server->source);
       g_free (server);
     }
 }
 
 CdmStatus
-cdm_server_bind_and_listen (CdmServer *server, const gchar *udspath)
+cdm_server_bind_and_listen (CdmServer *server)
 {
+  g_autofree gchar *sock_addr = NULL;
+  g_autofree gchar *run_dir = NULL;
+  g_autofree gchar *udspath = NULL;
   CdmStatus status = CDM_STATUS_OK;
   struct sockaddr_un saddr;
 
   g_assert (server);
-  g_assert (udspath);
+
+  run_dir = cdm_options_string_for (server->opts, KEY_RUN_DIR);
+  sock_addr = cdm_options_string_for (server->opts, KEY_IPC_SOCK_ADDR);
+  udspath = g_build_filename (run_dir, sock_addr, NULL);
 
   unlink (udspath);
 
@@ -157,7 +202,7 @@ cdm_server_bind_and_listen (CdmServer *server, const gchar *udspath)
   saddr.sun_family = AF_UNIX;
   strncpy (saddr.sun_path, udspath, sizeof(saddr.sun_path) - 1);
 
-  g_debug ("Server socket path %s", saddr.sun_path);
+  g_info ("Server socket path %s", saddr.sun_path);
 
   if (bind (server->sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_un)) != -1)
     {

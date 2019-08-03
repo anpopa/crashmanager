@@ -69,7 +69,7 @@ cdm_data_new (const gchar *config)
   g_assert (data);
 
   data->options = cdm_options_new (config);
-  data->server = cdm_server_new ();
+  data->server = cdm_server_new (data->options);
   data->janitor = cdm_janitor_new ();
   data->bitstore = cdm_bitstore_new ();
   data->sdnotify = cdm_sdnotify_new ();
@@ -119,6 +119,7 @@ cdm_data_run (CdmData *data)
 {
   CdmStatus status = CDM_STATUS_OK;
 
+  status = cdm_server_bind_and_listen (data->server);
 
   g_main_loop_run (data->mainloop);
 

@@ -116,6 +116,10 @@ if get_option('TESTS')
   add_project_arguments('-DWITH_TESTS', language : 'c')
 endif
 
+if get_option('CRASHMANAGER')
+  add_project_arguments('-DWITH_CRASHMANAGER', language : 'c')
+endif
+
 if get_option('CRASHTEST')
   crashtest_sources = [
     'testing/crashtest/crashtest.c',
