@@ -105,7 +105,7 @@ cdm_data_free (CdmData *data)
 }
 
 static void
-terminate(int signum)
+terminate (int signum)
 {
   g_info ("Crashmanager received signal %d", signum);
   if (g_mainloop != NULL)
@@ -118,6 +118,7 @@ static CdmStatus
 cdm_data_run (CdmData *data)
 {
   CdmStatus status = CDM_STATUS_OK;
+
 
   g_main_loop_run (data->mainloop);
 
@@ -140,8 +141,8 @@ main (gint argc, gchar *argv[])
     { NULL }
   };
 
-  signal(SIGINT, terminate);
-  signal(SIGTERM, terminate);
+  signal (SIGINT, terminate);
+  signal (SIGTERM, terminate);
 
   context = g_option_context_new ("- Crash manager service daemon");
   g_option_context_set_summary (context, "The service listen for Crashhandler events and manage its output");
