@@ -107,7 +107,7 @@ cdm_data_free (CdmData *data)
 static void
 terminate (int signum)
 {
-  g_info ("Crashmanager received signal %d", signum);
+  g_info ("Crashmanager terminate with signal %d", signum);
   if (g_mainloop != NULL)
     {
       g_main_loop_quit (g_mainloop);
