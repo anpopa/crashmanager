@@ -70,7 +70,7 @@ cdh_archive_unref (CdhArchive *ar)
 
   if (g_ref_count_dec (&ar->rc) == TRUE)
     {
-      (void) cdh_archive_close (ar);
+      (void)cdh_archive_close (ar);
       g_free (ar);
     }
 }
