@@ -1,4 +1,4 @@
-/* cdh-archive.v
+/* cdh-archive.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -43,6 +43,37 @@ static CdmStatus create_file_chunk (CdhArchive *ar);
 static CdmStatus stream_chunk_write (CdhArchive *ar, void *buf, gssize size);
 
 static gssize real_file_size (const gchar *fpath);
+
+CdhArchive *
+cdh_archive_new (void)
+{
+  CdhArchive *ar = g_new0 (CdhArchive, 1);
+
+  g_ref_count_init (&ar->rc);
+  g_ref_count_inc (&ar->rc);
+
+  return ar;
+}
+
+CdhArchive *
+cdh_archive_ref (CdhArchive *ar)
+{
+  g_assert (ar);
+  g_ref_count_inc (&ar->rc);
+  return ar;
+}
+
+void
+cdh_archive_unref (CdhArchive *ar)
+{
+  g_assert (ar);
+
+  if (g_ref_count_dec (&ar->rc) == TRUE)
+    {
+      (void) cdh_archive_close (ar);
+      g_free (ar);
+    }
+}
 
 CdmStatus
 cdh_archive_open (CdhArchive *ar, const gchar *dst, time_t artime)
@@ -91,6 +122,7 @@ cdh_archive_close (CdhArchive *ar)
   if (ar->archive_entry)
     {
       archive_entry_free (ar->archive_entry);
+      ar->archive_entry = NULL;
     }
 
   if (ar->archive)
@@ -100,6 +132,7 @@ cdh_archive_close (CdhArchive *ar)
           status = CDM_STATUS_ERROR;
         }
       archive_write_free (ar->archive);
+      ar->archive = NULL;
     }
 
   return status;

@@ -27,82 +27,17 @@
  * authorization.
  */
 
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
-#include "cdm-options.h"
-#include "cdm-server.h"
-#include "cdm-janitor.h"
-#include "cdm-bitstore.h"
-#include "cdm-sdnotify.h"
-#include "cdm-transfer.h"
+#include "cdm-application.h"
 
 #include <glib.h>
 #include <stdlib.h>
 #include <glib/gstdio.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 static GMainLoop *g_mainloop = NULL;
-
-typedef struct _CdmData {
-  CdmOptions *options;
-  CdmServer *server;
-  CdmJanitor *janitor;
-  CdmBitstore *bitstore;
-  CdmSDNotify *sdnotify;
-  CdmTransfer *transfer;
-  GMainLoop *mainloop;
-} CdmData;
-
-static CdmData *cdm_data_new (const gchar *config);
-static void cdm_data_free (CdmData *data);
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmData, cdm_data_free);
-
-static CdmData *
-cdm_data_new (const gchar *config)
-{
-  CdmData *data = g_new0 (CdmData, 1);
-
-  g_assert (data);
-
-  data->options = cdm_options_new (config);
-  data->server = cdm_server_new (data->options);
-  data->janitor = cdm_janitor_new ();
-  data->bitstore = cdm_bitstore_new ();
-  data->sdnotify = cdm_sdnotify_new ();
-  data->transfer = cdm_transfer_new ();
-
-  data->mainloop = g_main_loop_new (NULL, TRUE);
-  g_mainloop = data->mainloop;
-
-  return data;
-}
-
-static void
-cdm_data_free (CdmData *data)
-{
-  g_assert (data);
-  g_assert (data->options);
-  g_assert (data->server);
-  g_assert (data->janitor);
-  g_assert (data->bitstore);
-  g_assert (data->sdnotify);
-  g_assert (data->transfer);
-
-  cdm_server_unref (data->server);
-  cdm_janitor_unref (data->janitor);
-  cdm_bitstore_unref (data->bitstore);
-  cdm_sdnotify_unref (data->sdnotify);
-  cdm_transfer_unref (data->transfer);
-  cdm_options_unref (data->options);
-
-  g_main_loop_unref (data->mainloop);
-
-  g_free (data);
-}
 
 static void
 terminate (int signum)
@@ -114,24 +49,12 @@ terminate (int signum)
     }
 }
 
-static CdmStatus
-cdm_data_run (CdmData *data)
-{
-  CdmStatus status = CDM_STATUS_OK;
-
-  status = cdm_server_bind_and_listen (data->server);
-
-  g_main_loop_run (data->mainloop);
-
-  return status;
-}
-
 gint
 main (gint argc, gchar *argv[])
 {
   g_autoptr (GOptionContext) context = NULL;
   g_autoptr (GError) error = NULL;
-  g_autoptr (CdmData) data = NULL;
+  g_autoptr (CdmApplication) app = NULL;
   gboolean version = FALSE;
   gchar *config_path = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -170,8 +93,9 @@ main (gint argc, gchar *argv[])
 
   if (g_access (config_path, R_OK) == 0)
     {
-      data = cdm_data_new (config_path);
-      status = cdm_data_run (data);
+      app = cdm_application_new (config_path);
+      g_mainloop = cdm_application_get_mainloop (app);
+      status = cdm_application_execute (app);
     }
   else
     {

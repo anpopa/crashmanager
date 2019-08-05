@@ -1,4 +1,4 @@
-/* cdh-data.c
+/* cdh-application.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,68 +27,110 @@
  * authorization.
  */
 
-#define _GNU_SOURCE
-
-#include "cdh-data.h"
-#include "cdh-context.h"
-#include "cdh-coredump.h"
-#include "cdm-message.h"
+#include "cdh-application.h"
+#include "cdm-utils.h"
 
 #include <glib.h>
-#include <glib/gstdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
 #include <sys/statvfs.h>
-#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
-static CdmStatus read_args (CdhData *d, gint argc, gchar **argv);
+static CdmStatus read_args (CdhApplication *app, gint argc, gchar **argv);
 
 static CdmStatus check_disk_space (const gchar *path, gsize min);
 
-static CdmStatus init_crashdump_archive (CdhData *d, const gchar *dirname);
+static CdmStatus init_crashdump_archive (CdhApplication *app, const gchar *appirname);
 
-static CdmStatus close_crashdump_archive (CdhData *d);
+static CdmStatus close_crashdump_archive (CdhApplication *app);
 
-void
-cdh_data_init (CdhData *d, const gchar *config_path)
+CdhApplication *
+cdh_application_new (const gchar *config_path)
 {
-  g_assert (d);
+  CdhApplication *app = g_new0 (CdhApplication, 1);
 
-  memset (d, 0, sizeof(CdhData));
+  g_ref_count_init (&app->rc);
+  g_ref_count_inc (&app->rc);
 
-  d->opts = cdm_options_new (config_path);
-  g_assert (d->opts);
+  app->options = cdm_options_new (config_path);
+  g_assert (app->options);
 
-  d->info = cdh_info_new ();
-  g_assert (d->info);
+  app->archive = cdh_archive_new ();
+  g_assert (app->archive);
+
+  app->context = cdh_context_new (app->options, app->archive);
+  g_assert (app->context);
+
+#if defined(WITH_CRASHMANAGER)
+  app->manager = cdh_manager_new (app->options);
+  g_assert (app->manager);
+
+  app->coredump = cdh_coredump_new (app->context, app->archive, app->manager);
+#else
+  app->coredump = cdh_coredump_new (app->context, app->archive);
+#endif
+
+  g_assert (app->coredump);
+
+  return app;
+}
+
+CdhApplication *
+cdh_application_ref (CdhApplication *app)
+{
+  g_assert (app);
+  g_ref_count_inc (&app->rc);
+  return app;
 }
 
 void
-cdh_data_deinit (CdhData *d)
+cdh_application_unref (CdhApplication *app)
 {
-  if (d->info)
-    {
-      cdh_info_free (d->info);
-    }
+  g_assert (app);
 
-  if (d->opts)
+  if (g_ref_count_dec (&app->rc) == TRUE)
     {
-      cdm_options_unref (d->opts);
+      if (app->context)
+        {
+          cdh_context_unref (app->context);
+        }
+
+      if (app->archive)
+        {
+          cdh_archive_unref (app->archive);
+        }
+
+      if (app->options)
+        {
+          cdm_options_unref (app->options);
+        }
+
+#if defined(WITH_CRASHMANAGER)
+      if (app->manager)
+        {
+          cdh_manager_unref (app->manager);
+        }
+#endif
+      if (app->coredump)
+        {
+          cdh_coredump_unref (app->coredump);
+        }
+
+      g_free (app);
     }
 }
 
 static CdmStatus
-read_args (CdhData *d, gint argc, gchar **argv)
+read_args (CdhApplication *app, gint argc, gchar **argv)
 {
-  g_assert (d);
+  g_assert (app);
 
   if (argc < 6)
     {
@@ -96,36 +138,36 @@ read_args (CdhData *d, gint argc, gchar **argv)
       return CDM_STATUS_ERROR;
     }
 
-  d->info->tstamp = g_ascii_strtoull (argv[1], NULL, 10);
-  if (d->info->tstamp == 0)
+  app->context->tstamp = g_ascii_strtoull (argv[1], NULL, 10);
+  if (app->context->tstamp == 0)
     {
       g_warning ("Unable to read tstamp argument %s", argv[1]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->pid = g_ascii_strtoll (argv[2], NULL, 10);
-  if (d->info->pid == 0)
+  app->context->pid = g_ascii_strtoll (argv[2], NULL, 10);
+  if (app->context->pid == 0)
     {
       g_warning ("Unable to read pid argument %s", argv[2]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->cpid = g_ascii_strtoll (argv[3], NULL, 10);
-  if (d->info->cpid == 0)
+  app->context->cpid = g_ascii_strtoll (argv[3], NULL, 10);
+  if (app->context->cpid == 0)
     {
       g_warning ("Unable to read context cpid argument %s", argv[3]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->sig = g_ascii_strtoll (argv[4], NULL, 10);
-  if (d->info->sig == 0)
+  app->context->sig = g_ascii_strtoll (argv[4], NULL, 10);
+  if (app->context->sig == 0)
     {
       g_warning ("Unable to read sig argument %s", argv[4]);
       return CDM_STATUS_ERROR;
     }
 
-  d->info->tname = g_strdup (argv[5]);
-  d->info->name = g_strdup (argv[5]);
+  app->context->tname = g_strdup (argv[5]);
+  app->context->name = g_strdup (argv[5]);
 
   return CDM_STATUS_OK;
 }
@@ -157,16 +199,16 @@ check_disk_space (const gchar *path, gsize min)
 }
 
 static CdmStatus
-init_crashdump_archive (CdhData *d, const gchar *dirname)
+init_crashdump_archive (CdhApplication *app, const gchar *dirname)
 {
   g_autofree gchar *aname = NULL;
 
-  g_assert (d);
+  g_assert (app);
   g_assert (dirname);
 
-  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, d->info->name, d->info->pid, d->info->tstamp);
+  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, app->context->name, app->context->pid, app->context->tstamp);
 
-  if (cdh_archive_open (&d->archive, aname, (time_t)d->info->tstamp) != CDM_STATUS_OK)
+  if (cdh_archive_open (app->archive, aname, (time_t)app->context->tstamp) != CDM_STATUS_OK)
     {
       return CDM_STATUS_ERROR;
     }
@@ -175,11 +217,11 @@ init_crashdump_archive (CdhData *d, const gchar *dirname)
 }
 
 static CdmStatus
-close_crashdump_archive (CdhData *d)
+close_crashdump_archive (CdhApplication *app)
 {
-  g_assert (d);
+  g_assert (app);
 
-  if (cdh_archive_close (&d->archive) != CDM_STATUS_OK)
+  if (cdh_archive_close (app->archive) != CDM_STATUS_OK)
     {
       return CDM_STATUS_ERROR;
     }
@@ -188,7 +230,7 @@ close_crashdump_archive (CdhData *d)
 }
 
 CdmStatus
-cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
+cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
 {
   CdmStatus status = CDM_STATUS_OK;
   g_autofree gchar *opt_coredir = NULL;
@@ -196,52 +238,47 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
   gsize opt_fs_min_size;
   gint opt_nice_value;
 
-  g_assert (d);
+  g_assert (app);
 
-  if (read_args (d, argc, argv) < 0)
+  if (read_args (app, argc, argv) < 0)
     {
       status = CDM_STATUS_ERROR;
       goto enter_cleanup;
     }
 
-  procname = cdh_context_get_procname (d->info->pid);
+  procname = cdm_utils_get_procname (app->context->pid);
   if (procname != NULL)
     {
-      g_free (d->info->name);
-      d->info->name = procname;
+      g_free (app->context->name);
+      app->context->name = procname;
     }
 
-  g_strdelimit (d->info->name, ":/\\!*", '_');
+  g_strdelimit (app->context->name, ":/\\!*", '_');
 
   g_info ("New process crash: name=%s pid=%ld signal=%ld timestamp=%lu",
-          d->info->name, d->info->pid, d->info->sig, d->info->tstamp);
+          app->context->name, app->context->pid, app->context->sig, app->context->tstamp);
 
 #if defined(WITH_CRASHMANAGER)
-  if (cdh_manager_init (&d->crash_mgr, d->opts) != CDM_STATUS_OK)
-    {
-      g_warning ("Crashmanager ipc object init failed");
-    }
-
-  if (cdh_manager_connect (&d->crash_mgr) != CDM_STATUS_OK)
+  if (cdh_manager_connect (app->manager) != CDM_STATUS_OK)
     {
       g_warning ("Fail to connect to manager socket");
     }
   else
     {
       CdmMessage msg;
-      CdmMessageDataNew data;
+      CdmMessageDataNew msg_data;
 
-      cdm_message_init (&msg, CDM_CORE_NEW, (guint16)((gulong)d->info->pid | d->info->tstamp));
+      cdm_message_init (&msg, CDM_CORE_NEW, (guint16)((gulong)app->context->pid | app->context->tstamp));
 
-      data.pid = d->info->pid;
-      data.coresig = d->info->sig;
-      data.tstamp = d->info->tstamp;
-      memcpy (data.tname, d->info->tname, strlen (d->info->tname) + 1);
-      memcpy (data.pname, d->info->name, strlen (d->info->name) + 1);
+      msg_data.pid = app->context->pid;
+      msg_data.coresig = app->context->sig;
+      msg_data.tstamp = app->context->tstamp;
+      memcpy (msg_data.tname, app->context->tname, strlen (app->context->tname) + 1);
+      memcpy (msg_data.pname, app->context->name, strlen (app->context->name) + 1);
 
-      cdm_message_set_data (&msg, &data, sizeof(data));
+      cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
 
-      if (cdh_manager_send (&d->crash_mgr, &msg) == CDM_STATUS_ERROR)
+      if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
         {
           g_warning ("Failed to send new message to manager");
         }
@@ -249,11 +286,11 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
 #endif
 
   /* get optionals */
-  opt_coredir = cdm_options_string_for (d->opts, KEY_CRASHDUMP_DIR);
-  opt_fs_min_size = (gsize)cdm_options_long_for (d->opts, KEY_FILESYSTEM_MIN_SIZE);
-  opt_nice_value = (gint)cdm_options_long_for (d->opts, KEY_ELEVATED_NICE_VALUE);
+  opt_coredir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
+  opt_fs_min_size = (gsize)cdm_options_long_for (app->options, KEY_FILESYSTEM_MIN_SIZE);
+  opt_nice_value = (gint)cdm_options_long_for (app->options, KEY_ELEVATED_NICE_VALUE);
 
-  g_debug ("Coredump database path %s", opt_coredir);
+  g_debug ("Coredump appbase path %s", opt_coredir);
 
   if (nice (opt_nice_value) != opt_nice_value)
     {
@@ -272,59 +309,57 @@ cdh_main_enter (CdhData *d, gint argc, gchar *argv[])
       goto enter_cleanup;
     }
 
-  if (init_crashdump_archive (d, opt_coredir) != CDM_STATUS_OK)
+  if (init_crashdump_archive (app, opt_coredir) != CDM_STATUS_OK)
     {
       g_warning ("Fail to create crashdump archive");
       status = CDM_STATUS_ERROR;
       goto enter_cleanup;
     }
 
-  if (cdh_context_generate_prestream (d) != CDM_STATUS_OK)
+  if (cdh_context_generate_prestream (app->context) != CDM_STATUS_OK)
     {
       g_warning ("Failed to generate the context file, continue with coredump");
     }
 
-  if (cdh_coredump_generate (d) != CDM_STATUS_OK)
+  if (cdh_coredump_generate (app->coredump) != CDM_STATUS_OK)
     {
       g_warning ("Coredump handling failed");
       status = CDM_STATUS_ERROR;
       goto enter_cleanup;
     }
 
-  if (cdh_context_generate_poststream (d) != CDM_STATUS_OK)
+  if (cdh_context_generate_poststream (app->context) != CDM_STATUS_OK)
     {
       g_warning ("Failed to generate the context file, continue with coredump");
     }
 
-  if (close_crashdump_archive (d) != CDM_STATUS_OK)
+  if (close_crashdump_archive (app) != CDM_STATUS_OK)
     {
       g_warning ("Failed to close corectly the crashdump archive");
     }
 enter_cleanup:
 #if defined(WITH_CRASHMANAGER)
-  cdh_manager_set_coredir (&d->crash_mgr, opt_coredir);
+  cdh_manager_set_coredir (app->manager, opt_coredir);
 
-  if (cdh_manager_connected (&d->crash_mgr))
+  if (cdh_manager_connected (app->manager))
     {
       CdmMessage msg;
       CdmMessageType type;
 
       type = (status == CDM_STATUS_OK ? CDM_CORE_COMPLETE : CDM_CORE_FAILED);
 
-      cdm_message_init (&msg, type, (guint16)((gulong)d->info->pid | d->info->tstamp));
+      cdm_message_init (&msg, type, (guint16)((gulong)app->context->pid | app->context->tstamp));
 
-      if (cdh_manager_send (&d->crash_mgr, &msg) == CDM_STATUS_ERROR)
+      if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
         {
           g_warning ("Failed to send status message to manager");
         }
 
-      if (cdh_manager_disconnect (&d->crash_mgr) != CDM_STATUS_OK)
+      if (cdh_manager_disconnect (app->manager) != CDM_STATUS_OK)
         {
           g_warning ("Fail to disconnect to manager socket");
         }
     }
-
-  cdh_manager_deinit (&d->crash_mgr);
 #endif
 
   return status;

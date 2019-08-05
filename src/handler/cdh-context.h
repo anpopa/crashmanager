@@ -34,34 +34,86 @@
 extern "C" {
 #endif
 
-#include "cdh-data.h"
+#include "cdm-options.h"
+#include "cdh-archive.h"
+
 #include <glib.h>
 
 /**
- * @brief Get process name for pid
- *
- * @param pid Process ID to lookup for
- * @param exec_name String buffer to write the name into
- * @param exec_name_maxsize Maximum size to write into exec_name buffer (truncated if proc name is
- * longer)
- *
+ * @struct CdhContext
+ * @brief The context object
+ */
+typedef struct _CdhContext {
+  CdmOptions *opts;       /**< Reference to objects (owned) */
+  CdhArchive *archive;    /**< Reference to archive (owned)  */
+  grefcount rc;           /**< Reference counter variable  */
+
+  gchar *name;       /**< process name */
+  gchar *tname;      /**< thread name  */
+  guint64 tstamp;    /**< crash timestamp */
+  gint64 sig;        /**< signal id */
+  gint64 pid;        /**< process id as seen on host */
+  gint64 cpid;       /**< process id as seen on namespace */
+
+  gsize cdsize;      /**< coredump size */
+
+  gchar *contextid;  /**< namespace context for the crashed pid */
+  gchar *crashid;    /**< crash id value */
+  gchar *vectorid;   /**< crash course id value */
+  gboolean onhost;   /**< true if the crash is in host context */
+
+  CdmRegisters regs;   /**< cpu registers for crash id calculation */
+  Elf64_Ehdr ehdr;     /**< coredump elf Ehdr structure */
+  Elf64_Phdr *pphdr;   /**< coredump elf pPhdr pointer to structure */
+  gchar *nhdr;         /**< buffer with all NOTE pages */
+  guint64 ra;                        /**< return address for top frame */
+  guint64 ip_file_offset;            /**< instruction pointer file offset for top frame */
+  guint64 ra_file_offset;            /**< return address file offset for top frame */
+  const gchar *ip_module_name;       /**< module name pointed by instruction pointer */
+  const gchar *ra_module_name;       /**< module name pointed by return address */
+  gulong note_page_size;             /**< note section page size */
+  gulong elf_vma_page_size;          /**< elf vma page size */
+  guint8 crashid_info;               /**< type of information available for crashid */
+} CdhContext;
+
+/**
+ * @brief Create a new CdhContext object
+ * @return A pointer to the new object
+ */
+CdhContext *cdh_context_new (CdmOptions *opts, CdhArchive *archive);
+
+/**
+ * @brief Aquire CdhContext object
+ * @param ctx Pointer to the CdhContext object
+ * @return Pointer to the CdhContext object
+ */
+CdhContext *cdh_context_ref (CdhContext *ctx);
+
+/**
+ * @brief Release a CdhContext object
+ * @param ctx Pointer to the cdh_context object
+ */
+void cdh_context_unref (CdhContext *ctx);
+
+/* @brief Generate crashid file
+ * @param ctx
  * @return CDM_STATUS_OK on success
  */
-gchar *cdh_context_get_procname (gint64 pid);
+CdmStatus cdh_context_crashid_process (CdhContext *ctx);
 
 /**
  * @brief Generate context data available pre coredump stream
- * @param d Global CDData
+ * @param ctx The context object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_context_generate_prestream (CdhData *d);
+CdmStatus cdh_context_generate_prestream (CdhContext *ctx);
 
 /**
  * @brief Generate context data available post coredump stream
- * @param d Global CDData
+ * @param ctx The context object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_context_generate_poststream (CdhData *d);
+CdmStatus cdh_context_generate_poststream (CdhContext *ctx);
 
 #ifdef __cplusplus
 }

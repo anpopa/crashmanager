@@ -34,17 +34,54 @@
 extern "C" {
 #endif
 
-#include "cdh-data.h"
+#include "cdh-context.h"
+#include "cdh-archive.h"
+#if defined(WITH_CRASHMANAGER)
+#include "cdh-manager.h"
+#endif
 #include <glib.h>
 
+/**
+ * @struct CdhCoredump
+ * @brief The coredump generation object
+ */
+typedef struct _CdhCoredump {
+  CdhContext *context; /**< Context object owned */
+  CdhArchive *archive; /**< Archive object owned */
+#if defined(WITH_CRASHMANAGER)
+  CdhManager *manager; /**< Manager object owned */
+#endif
+  grefcount rc;        /**< Reference counter variable  */
+} CdhCoredump;
+
+/**
+ * @brief Create a new CdhCoredump object
+ * @return A pointer to the new object
+ */
+#if defined(WITH_CRASHMANAGER)
+CdhCoredump *cdh_coredump_new (CdhContext *context, CdhArchive *archive, CdhManager *manager);
+#else
+CdhCoredump *cdh_coredump_new (CdhContext *context, CdhArchive *archive);
+#endif
+
+/**
+ * @brief Aquire CdhCoredump object
+ * @param cd Pointer to the CdhCoredump object
+ * @return Pointer to the CdhCoredump object
+ */
+CdhCoredump *cdh_coredump_ref (CdhCoredump *cd);
+
+/**
+ * @brief Release a CdhCoredump object
+ * @param cd Pointer to the cdh_context object
+ */
+void cdh_coredump_unref (CdhCoredump *cd);
+
 /* @brief Generate coredump file
- *
- * @param d Global cdh data
- * @param tmpdir Temp directory to store the coredump file into
- *
+ * @param cd Coredump object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_coredump_generate (CdhData *d);
+CdmStatus cdh_coredump_generate (CdhCoredump *cd);
 
 #ifdef __cplusplus
 }

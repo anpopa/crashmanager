@@ -150,6 +150,7 @@ if get_option('CRASHMANAGER')
     'src/manager/cdm-sdnotify.c',
     'src/manager/cdm-transfer.c',
     'src/manager/cdm-bitstore.c',
+    'src/manager/cdm-application.c',
     ]
 
   crashmanager_deps = [
@@ -162,6 +163,7 @@ if get_option('CRASHMANAGER')
 
   executable('crashmanager', crashmanager_sources,
     dependencies: crashmanager_deps,
+    include_directories : include_directories(cdm_c_include_dirs), 
     c_args: cdm_c_compiler_args,
     install: true,
     )
@@ -184,9 +186,7 @@ if get_option('CRASHHANDLER')
     'src/handler/cdh-archive.c',
     'src/handler/cdh-context.c',
     'src/handler/cdh-coredump.c',
-    'src/handler/cdh-crashid.c',
-    'src/handler/cdh-data.c',
-    'src/handler/cdh-info.c',
+    'src/handler/cdh-application.c',
     'src/handler/cdh-manager.c',
     ]
 
@@ -213,6 +213,7 @@ if get_option('CRASHDECODER')
 
   executable('crashdecoder', crashdecoder_sources,
     dependencies: crashdecoder_deps,
+    include_directories : include_directories(cdm_c_include_dirs), 
     c_args: cdm_c_compiler_args,
     install: true,
     )

@@ -58,6 +58,8 @@ typedef struct _CdhArchive {
   struct archive_entry *archive_entry;           /**< Current archive entry */
   time_t artime;                                 /**< Archive time (process crash time) */
 
+  grefcount rc;                                  /**< Reference counter variable  */
+
   gboolean file_active;                          /**< Archive open for write */
   gchar *file_name;                              /**< Current output file size  */
   gssize file_size;                              /**< Current output file size  */
@@ -69,6 +71,25 @@ typedef struct _CdhArchive {
   gsize in_stream_offset;                        /**< Current offset */
   guint8 in_read_buffer[ARCHIVE_READ_BUFFER_SZ]; /**< Read buffer */
 } CdhArchive;
+
+/**
+ * @brief Create a new CdhArchive object
+ * @return A pointer to the new CdhArchive object
+ */
+CdhArchive *cdh_archive_new (void);
+
+/**
+ * @brief Aquire the archive object
+ * @param context Pointer to the object
+ * @return a pointer to archive object
+ */
+CdhArchive *cdh_archive_ref (CdhArchive *ar);
+
+/**
+ * @brief Release archive object
+ * @param i Pointer to the cdh_context object
+ */
+void cdh_archive_unref (CdhArchive *ar);
 
 /**
  * @brief Initialize pre-allocated CdhArchive object

@@ -1,4 +1,4 @@
-/* cdh-context.h
+/* cdh-context.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -40,73 +40,168 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-/* Global buffer for file reading */
-#ifndef CONTEXT_TMP_BUFFER_SIZE
-#define CONTEXT_TMP_BUFFER_SIZE (8192)
-#endif
-
-static gchar g_buffer[CONTEXT_TMP_BUFFER_SIZE];
+#define CRASH_ID_HIGH (6)
+#define CRASH_ID_LOW (2)
+#define CRASH_ID_QUALITY(x) ((x) > CRASH_ID_HIGH ? "high" : (x) < CRASH_ID_LOW ? "low" : "medium")
 
 static gchar ftypelet (mode_t bits);
 
 static void strmode (mode_t mode, gchar str[12]);
 
-static CdmStatus dump_file_to (gchar *fname, CdhArchive *ar);
+static CdmStatus dump_file_to (CdhContext *ctx, const gchar *fname);
 
-static CdmStatus list_dircontent_to (gchar *dname, CdhArchive *ar);
+static CdmStatus list_dircontent_to (CdhContext *ctx, const gchar *dname);
 
-static CdmStatus update_context_info (CdhData *d);
+static CdmStatus update_context_info (CdhContext *ctx);
 
-static void crash_context_dump (CdhData *d, gboolean postcore);
+static void crash_context_dump (CdhContext *ctx, gboolean postcore);
 
-gchar *
-cdh_context_get_procname (gint64 pid)
+static CdmStatus create_crashid (CdhContext *ctx);
+
+CdhContext *
+cdh_context_new (CdmOptions *opts, CdhArchive *archive)
 {
-  g_autofree gchar *statfile = NULL;
-  gboolean done = FALSE;
-  gchar *retval = NULL;
-  FILE *fstm;
+  CdhContext *ctx = g_new0 (CdhContext, 1);
 
-  statfile = g_strdup_printf ("/proc/%ld/status", pid);
+  g_assert (ctx);
+  g_assert (opts);
+  g_assert (archive);
 
-  if ((fstm = fopen (statfile, "r")) == NULL)
+  g_ref_count_init (&ctx->rc);
+  g_ref_count_inc (&ctx->rc);
+
+  ctx->opts = cdm_options_ref (opts);
+  ctx->archive = cdh_archive_ref (archive);
+  ctx->onhost = TRUE;
+
+  return ctx;
+}
+
+CdhContext *
+cdh_context_ref (CdhContext *ctx)
+{
+  g_assert (ctx);
+  g_ref_count_inc (&ctx->rc);
+  return ctx;
+}
+
+void
+cdh_context_unref (CdhContext *ctx)
+{
+  g_assert (ctx);
+
+  if (g_ref_count_dec (&ctx->rc) == TRUE)
     {
-      g_warning ("Open status file '%s' for dumping %s", statfile, strerror (errno));
-      return NULL;
+      cdm_options_unref (ctx->opts);
+      cdh_archive_unref (ctx->archive);
+
+      g_free (ctx->name);
+      g_free (ctx->tname);
+      g_free (ctx->contextid);
+      g_free (ctx->crashid);
+      g_free (ctx->vectorid);
+
+      g_free (ctx);
     }
-
-  while (fgets (g_buffer, sizeof(g_buffer), fstm) && !done)
-    {
-      gchar *name = g_strrstr (g_buffer, "Name:");
-
-      if (name != NULL)
-        {
-          retval = g_strdup (name + strlen ("Name:") + 1);
-
-          if (retval != NULL)
-            {
-              g_strstrip (retval);
-            }
-          done = TRUE;
-        }
-    }
-
-  fclose (fstm);
-
-  return retval;
 }
 
 static CdmStatus
-dump_file_to (gchar *fname, CdhArchive *ar)
+create_crashid (CdhContext *ctx)
 {
+  const gchar *locstr[] = { "host", "container" };
+  const gchar *loc = NULL;
+  g_autofree gchar *cid_str = NULL;
+  g_autofree gchar *vid_str = NULL;
+
+  g_assert (ctx);
+
+  if (ctx->crashid_info & CID_IP_FILE_OFFSET)
+    {
+      if (ctx->crashid_info & CID_RA_FILE_OFFSET)
+        {
+          cid_str = g_strdup_printf ("%s%lx%s%s", ctx->name, ctx->ip_file_offset, ctx->ip_module_name, ctx->ra_module_name);
+        }
+      else
+        {
+          cid_str = g_strdup_printf ("%s%lx%s", ctx->name, ctx->ip_file_offset, ctx->ip_module_name);
+        }
+    }
+  else
+    {
+#ifdef __x86_64__
+      cid_str = g_strdup_printf ("%s%lx", ctx->name, ctx->regs.rip);
+#elif __aarch64__
+      cid_str = g_strdup_printf ("%s%lx", ctx->name, ctx->regs.lr);
+#endif
+    }
+
+  /* hash and write crashid */
+  ctx->crashid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (cid_str));
+
+  if (ctx->crashid_info & CID_RA_FILE_OFFSET)
+    {
+      vid_str = g_strdup_printf ("%s%lx%s", ctx->name, ctx->ip_file_offset, ctx->ra_module_name);
+
+      ctx->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (vid_str));
+    }
+  else
+    {
+      ctx->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (cid_str));
+    }
+
+  /* crash context location string */
+  loc = ctx->onhost == TRUE ? locstr[0] : locstr[1];
+#ifdef __x86_64__
+  g_info (
+    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s "
+    "vectorID=%s confidence=\"%s\" signal=\"%s\" rip=0x%lx rbp=0x%lx retaddr=0x%lx "
+    "IPFileOffset=0x%lx RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
+    loc, ctx->contextid, ctx->name, ctx->tname, ctx->pid, ctx->cpid,
+    ctx->crashid, ctx->vectorid, CRASH_ID_QUALITY (ctx->crashid_info),
+    strsignal ((gint)ctx->sig), ctx->regs.rip, ctx->regs.rbp, ctx->ra, ctx->ip_file_offset,
+    ctx->ra_file_offset, ctx->ip_module_name, ctx->ra_module_name);
+#elif __aarch64__
+  g_info (
+    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s "
+    "vectorID=%s confidence=\"%s\" signal=\"%s\" pc=0x%lx lr=0x%lx retaddr=0x%lx "
+    "IPFileOffset=0x%lx RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
+    loc, ctx->contextid, ctx->name, ctx->tname, ctx->pid, ctx->cpid,
+    ctx->crashid, ctx->vectorid, CRASH_ID_QUALITY (ctx->crashid_info),
+    strsignal (ctx->sig), ctx->regs.pc, ctx->regs.lr, ctx->ra, ctx->ip_file_offset,
+    ctx->ra_file_offset, ctx->ip_module_name, ctx->ra_module_name);
+#endif
+
+  return CDM_STATUS_OK;
+}
+
+CdmStatus
+cdh_context_crashid_process (CdhContext *ctx)
+{
+  g_assert (ctx);
+
+  if (create_crashid (ctx) != CDM_STATUS_OK)
+    {
+      g_warning ("CrashID not generated");
+      return CDM_STATUS_ERROR;
+    }
+
+  return CDM_STATUS_OK;
+}
+
+static CdmStatus
+dump_file_to (CdhContext *ctx, const gchar *fname)
+{
+  g_assert (ctx);
+  g_assert (fname);
+
   if (g_file_test (fname, G_FILE_TEST_IS_REGULAR) == TRUE)
     {
-      return cdh_archive_add_system_file (ar, fname, NULL);
+      return cdh_archive_add_system_file (ctx->archive, fname, NULL);
     }
 
   if (g_file_test (fname, G_FILE_TEST_IS_DIR) == TRUE)
     {
-      return list_dircontent_to (fname, ar);
+      return list_dircontent_to (ctx, fname);
     }
 
   return CDM_STATUS_ERROR;
@@ -172,7 +267,7 @@ strmode (mode_t mode, gchar str[12])
   str[11] = '\0';
 }
 static CdmStatus
-list_dircontent_to (gchar *dname, CdhArchive *ar)
+list_dircontent_to (CdhContext *ctx, const gchar *dname)
 {
   g_autofree gchar *output = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -181,7 +276,7 @@ list_dircontent_to (gchar *dname, CdhArchive *ar)
   const gchar *nfile = NULL;
 
   g_assert (dname);
-  g_assert (ar);
+  g_assert (ctx);
 
   gdir = g_dir_open (dname, 0, &error);
   if (error != NULL)
@@ -275,11 +370,11 @@ list_dircontent_to (gchar *dname, CdhArchive *ar)
 
       g_strdelimit (outfile, "/ ", '.');
 
-      if (cdh_archive_create_file (ar, outfile, strlen (output) + 1) == CDM_STATUS_OK)
+      if (cdh_archive_create_file (ctx->archive, outfile, strlen (output) + 1) == CDM_STATUS_OK)
         {
-          status = cdh_archive_write_file (ar, (const void*)output, strlen (output) + 1);
+          status = cdh_archive_write_file (ctx->archive, (const void*)output, strlen (output) + 1);
 
-          if (cdh_archive_finish_file (ar) != CDM_STATUS_OK)
+          if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
             {
               status = CDM_STATUS_ERROR;
             }
@@ -294,14 +389,14 @@ list_dircontent_to (gchar *dname, CdhArchive *ar)
 }
 
 static CdmStatus
-update_context_info (CdhData *d)
+update_context_info (CdhContext *ctx)
 {
   g_autofree gchar *ctx_str = NULL;
   pid_t pid;
 
-  g_assert (d);
+  g_assert (ctx);
 
-  d->info->onhost = true;
+  ctx->onhost = true;
 
   pid = getpid ();
 
@@ -316,37 +411,37 @@ update_context_info (CdhData *d)
         {
         case 0: /* cgroup */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/cgroup", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/cgroup", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/cgroup", ctx->pid);
           break;
 
         case 1: /* ipc */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/ipc", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/ipc", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/ipc", ctx->pid);
           break;
 
         case 2: /* mnt */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/mnt", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/mnt", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/mnt", ctx->pid);
           break;
 
         case 3: /* net */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/net", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/net", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/net", ctx->pid);
           break;
 
         case 4: /* pid */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/pid", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/pid", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/pid", ctx->pid);
           break;
 
         case 5: /* user */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/user", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/user", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/user", ctx->pid);
           break;
 
         case 6: /* uts */
           tmp_host_path = g_strdup_printf ("/proc/%d/ns/uts", pid);
-          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/uts", d->info->pid);
+          tmp_proc_path = g_strdup_printf ("/proc/%ld/ns/uts", ctx->pid);
           break;
 
         default: /* never reached */
@@ -358,7 +453,7 @@ update_context_info (CdhData *d)
 
       if (g_strcmp0 (host_ns_buf, proc_ns_buf) != 0)
         {
-          d->info->onhost = false;
+          ctx->onhost = false;
         }
 
       if (ctx_str != NULL)
@@ -371,16 +466,21 @@ update_context_info (CdhData *d)
         }
     }
 
-  d->info->contextid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (ctx_str));
+  ctx->contextid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (ctx_str));
 
-  return d->info->contextid != NULL ? CDM_STATUS_OK : CDM_STATUS_ERROR;
+  return ctx->contextid != NULL ? CDM_STATUS_OK : CDM_STATUS_ERROR;
 }
 
 static void
-crash_context_dump (CdhData *d, gboolean postcore)
+crash_context_dump (CdhContext *ctx, gboolean postcore)
 {
-  GKeyFile *key_file = cdm_options_get_key_file (d->opts);
-  gchar **groups = g_key_file_get_groups (key_file, NULL);
+  GKeyFile *key_file = NULL;
+  gchar **groups = NULL;
+
+  g_assert (ctx);
+
+  key_file = cdm_options_get_key_file (ctx->opts);
+  groups = g_key_file_get_groups (key_file, NULL);
 
   for (gint i = 0; groups[i] != NULL; i++)
     {
@@ -405,7 +505,7 @@ crash_context_dump (CdhData *d, gboolean postcore)
           continue;
         }
 
-      if (g_regex_match_simple (proc_key, d->info->name, 0, 0) == FALSE)
+      if (g_regex_match_simple (proc_key, ctx->name, 0, 0) == FALSE)
         {
           continue;
         }
@@ -435,11 +535,11 @@ crash_context_dump (CdhData *d, gboolean postcore)
         }
 
       path_tokens = g_strsplit (data_key, "$$", 3);
-      str_pid = g_strdup_printf ("%ld", d->info->pid);
+      str_pid = g_strdup_printf ("%ld", ctx->pid);
       data_path = g_strjoinv (str_pid, path_tokens);
       g_strfreev (path_tokens);
 
-      if (dump_file_to (data_path, &d->archive) == CDM_STATUS_ERROR)
+      if (dump_file_to (ctx, data_path) == CDM_STATUS_ERROR)
         {
           g_warning ("Fail to dump file %s", data_path);
         }
@@ -449,44 +549,44 @@ crash_context_dump (CdhData *d, gboolean postcore)
 }
 
 CdmStatus
-cdh_context_generate_prestream (CdhData *d)
+cdh_context_generate_prestream (CdhContext *ctx)
 {
   g_autofree gchar *file = NULL;
 
-  g_assert (d);
+  g_assert (ctx);
 
-  if (update_context_info (d) == CDM_STATUS_ERROR)
+  if (update_context_info (ctx) == CDM_STATUS_ERROR)
     {
       g_warning ("Fail to parse namespace information");
     }
 
-  crash_context_dump (d, FALSE);
+  crash_context_dump (ctx, FALSE);
 
   return CDM_STATUS_OK;
 }
 
 CdmStatus
-cdh_context_generate_poststream (CdhData *d)
+cdh_context_generate_poststream (CdhContext *ctx)
 {
   g_autofree gchar *file_data = NULL;
   CdmStatus status = CDM_STATUS_OK;
 
-  g_assert (d);
+  g_assert (ctx);
 
   file_data = g_strdup_printf (
     "ProcessName = %s\nProcessThread = %s\nCrashTimestamp = %lu\n"
     "ProcessHostID = %ld\nProcessContainerID = %ld\nCrashSignal = %ld\n"
     "CrashID = %s\nVectorID = %s\nContextID = %s\n"
     "CoredumpSize = %lu\n",
-    d->info->name, d->info->tname, d->info->tstamp, d->info->pid, d->info->cpid,
-    d->info->sig, d->info->crashid, d->info->vectorid, d->info->contextid, d->info->cdsize
+    ctx->name, ctx->tname, ctx->tstamp, ctx->pid, ctx->cpid,
+    ctx->sig, ctx->crashid, ctx->vectorid, ctx->contextid, ctx->cdsize
     );
 
-  if (cdh_archive_create_file (&d->archive, "info.crashdata", strlen (file_data) + 1) == CDM_STATUS_OK)
+  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data) + 1) == CDM_STATUS_OK)
     {
-      status = cdh_archive_write_file (&d->archive, (const void*)file_data, strlen (file_data) + 1);
+      status = cdh_archive_write_file (ctx->archive, (const void*)file_data, strlen (file_data) + 1);
 
-      if (cdh_archive_finish_file (&d->archive) != CDM_STATUS_OK)
+      if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
         {
           status = CDM_STATUS_ERROR;
         }
@@ -496,7 +596,9 @@ cdh_context_generate_poststream (CdhData *d)
       status = CDM_STATUS_ERROR;
     }
 
-  crash_context_dump (d, TRUE);
+  crash_context_dump (ctx, TRUE);
 
   return status;
 }
+
+

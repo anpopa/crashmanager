@@ -1,4 +1,4 @@
-/* cdh-data.h
+/* cdh-application.h
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,66 +27,59 @@
  * authorization.
  */
 
-#ifndef CDH_DATA_H
-#define CDH_DATA_H
+#ifndef CDH_APPLICATION_H
+#define CDH_APPLICATION_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "cdh-archive.h"
-#include "cdh-info.h"
-#include "cdm-logging.h"
-#include "cdm-options.h"
+#include "cdm-defaults.h"
 #include "cdm-types.h"
+#include "cdm-logging.h"
+#include "cdh-archive.h"
+#include "cdh-context.h"
+#include "cdm-options.h"
+#include "cdh-coredump.h"
 #if defined(WITH_CRASHMANAGER)
 #include "cdh-manager.h"
 #endif
 
 #include <glib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <sys/procfs.h>
-#include <sys/user.h>
-#include <unistd.h>
 
 /**
- * @struct CdhData
- * @brief The global cdh data object referencing main submodules and states
+ * @struct CdhApplication
+ * @brief The global cdh app object referencing main submodules and states
  */
-typedef struct _CdhData {
-  CdmOptions *opts;    /**< Global options */
-  CdhInfo *info;       /**< Crash info data */
-  CdhArchive archive;  /**< coredump archive streamer */
-  CdmRegisters regs;   /**< cpu registers for crash id calculation */
+typedef struct _CdhApplication {
+  CdmOptions *options;    /**< Global options */
+  CdhContext *context;       /**< Crash info app */
+  CdhCoredump *coredump;       /**< Crash info app */
+  CdhArchive *archive;  /**< coredump archive streamer */
 #if defined(WITH_CRASHMANAGER)
-  CdhManager crash_mgr;   /**< manager ipc object */
+  CdhManager *manager;   /**< manager ipc object */
 #endif
-  Elf64_Ehdr ehdr;     /**< coredump elf Ehdr structure */
-  Elf64_Phdr *pphdr;   /**< coredump elf pPhdr pointer to structure */
-  gchar *nhdr;         /**< buffer with all NOTE pages */
-  guint64 ra;                        /**< return address for top frame */
-  guint64 ip_file_offset;            /**< instruction pointer file offset for top frame */
-  guint64 ra_file_offset;            /**< return address file offset for top frame */
-  const gchar *ip_module_name;       /**< module name pointed by instruction pointer */
-  const gchar *ra_module_name;       /**< module name pointed by return address */
-  gulong note_page_size;             /**< note section page size */
-  gulong elf_vma_page_size;          /**< elf vma page size */
-  guint8 crashid_info;               /**< type of information available for crashid */
-} CdhData;
+  grefcount rc;           /**< Reference counter variable  */
+} CdhApplication;
 
 /**
- * @brief Initialize pre-allocated cdh object
- * @param d The cdh object to initialize
+ * @brief Create a new CdhApplication object
  * @param conf_path Full path to the cdh configuration fole
  */
-void cdh_data_init (CdhData *d, const gchar *config_path);
+CdhApplication *cdh_application_new (const gchar *config_path);
 
 /**
- * @brief Deinitialize pre-allocated cdm object
- * @param d The cdh object to deinitialize
+ * @brief Aquire CdhApplication object
+ * @param app The object to aquire
+ * @return The aquiered app object
  */
-void cdh_data_deinit (CdhData *d);
+CdhApplication *cdh_application_ref (CdhApplication *app);
+
+/**
+ * @brief Release a app object
+ * @param app The cdh app object to release
+ */
+void cdh_application_unref (CdhApplication *app);
 
 /**
  * @brief Execute cdh logic
@@ -97,10 +90,12 @@ void cdh_data_deinit (CdhData *d);
  *
  * @return If run was succesful CDH_OK is returned
  */
-CdmStatus cdh_main_enter (CdhData *d, gint argc, gchar *argv[]);
+CdmStatus cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[]);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdhApplication, cdh_application_unref);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CDH_DATA_H */
+#endif /* CDH_APPLICATION_H */

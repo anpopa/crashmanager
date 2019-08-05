@@ -37,6 +37,18 @@ extern "C" {
 #include <glib.h>
 
 /**
+ * @brief Get process name for pid
+ *
+ * @param pid Process ID to lookup for
+ * @param exec_name String buffer to write the name into
+ * @param exec_name_maxsize Maximum size to write into exec_name buffer (truncated if proc name is
+ * longer)
+ *
+ * @return CDM_STATUS_OK on success
+ */
+gchar *cdm_utils_get_procname (gint64 pid);
+
+/**
  * @brief Calculate the jankins hash from a string
  * @param key The input string
  * @return The long unsigned int as hash

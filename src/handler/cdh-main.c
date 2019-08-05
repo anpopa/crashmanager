@@ -27,10 +27,7 @@
  * authorization.
  */
 
-#include "cdh-data.h"
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
+#include "cdh-application.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -53,11 +50,8 @@ main (gint argc, gchar *argv[])
   conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
   if (g_access (conf_path, R_OK) == 0)
     {
-      g_autofree CdhData *data = g_new0 (CdhData, 1);
-
-      cdh_data_init (data, conf_path);
-      status = cdh_main_enter (data, argc, argv);
-      cdh_data_deinit (data);
+      g_autoptr (CdhApplication) app = cdh_application_new (conf_path);
+      status = cdh_application_execute (app, argc, argv);
     }
   else
     {

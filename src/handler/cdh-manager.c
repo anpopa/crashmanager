@@ -33,32 +33,46 @@
 #include <errno.h>
 #include <stdio.h>
 
-CdmStatus
-cdh_manager_init (CdhManager *c, CdmOptions *opts)
+CdhManager *
+cdh_manager_new (CdmOptions *opts)
 {
-  g_assert (c);
+  CdhManager *c = g_new0 (CdhManager, 1);
+
   g_assert (opts);
 
-  memset (c, 0, sizeof(CdhManager));
+  g_ref_count_init (&c->rc);
+  g_ref_count_inc (&c->rc);
 
   c->sfd = -1;
   c->connected = false;
   c->opts = cdm_options_ref (opts);
 
-  return CDM_STATUS_OK;
+  return c;
+}
+
+CdhManager *
+cdh_manager_ref (CdhManager *c)
+{
+  g_assert (c);
+  g_ref_count_inc (&c->rc);
+  return c;
 }
 
 void
-cdh_manager_deinit (CdhManager *c)
+cdh_manager_unref (CdhManager *c)
 {
   g_assert (c);
 
-  if (cdh_manager_connected (c) == TRUE)
+  if (g_ref_count_dec (&c->rc) == TRUE)
     {
-      (void)cdh_manager_disconnect (c);
-    }
+      if (cdh_manager_connected (c) == TRUE)
+        {
+          (void)cdh_manager_disconnect (c);
+        }
 
-  cdm_options_unref (c->opts);
+      cdm_options_unref (c->opts);
+      g_free (c);
+    }
 }
 
 void

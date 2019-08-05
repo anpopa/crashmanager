@@ -28,6 +28,53 @@
  */
 
 #include "cdm-utils.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define TMP_BUFFER_SIZE (1024)
+
+gchar *
+cdm_utils_get_procname (gint64 pid)
+{
+  g_autofree gchar *statfile = NULL;
+  gboolean done = FALSE;
+  gchar *retval = NULL;
+  gchar tmpbuf[TMP_BUFFER_SIZE];
+  FILE *fstm;
+
+  statfile = g_strdup_printf ("/proc/%ld/status", pid);
+
+  if ((fstm = fopen (statfile, "r")) == NULL)
+    {
+      g_warning ("Open status file '%s' for dumping %s", statfile, strerror (errno));
+      return NULL;
+    }
+
+  while (fgets (tmpbuf, sizeof(tmpbuf), fstm) && !done)
+    {
+      gchar *name = g_strrstr (tmpbuf, "Name:");
+
+      if (name != NULL)
+        {
+          retval = g_strdup (name + strlen ("Name:") + 1);
+
+          if (retval != NULL)
+            {
+              g_strstrip (retval);
+            }
+          done = TRUE;
+        }
+    }
+
+  fclose (fstm);
+
+  return retval;
+}
 
 guint64
 cdm_utils_jenkins_hash (const gchar *key)

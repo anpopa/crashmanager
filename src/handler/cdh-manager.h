@@ -55,6 +55,7 @@ extern "C" {
  * @brief The coredump handler manager object
  */
 typedef struct _CdhManager {
+  grefcount rc;                /**< Reference counter variable  */
   gint sfd;                    /**< Server (manager) unix domain file descriptor */
   gboolean connected;          /**< Server connection state */
   struct sockaddr_un saddr;    /**< Server socket addr struct */
@@ -63,22 +64,23 @@ typedef struct _CdhManager {
 } CdhManager;
 
 /**
- * @brief Initialize pre-allocated CdhManager object
- *
- * @param c Manager object
+ * @brief Create a new CdhManager object
  * @param opts Pointer to global options object
- *
- * @return CDM_STATUS_OK on success
+ * @return A new CdhManager objects
  */
-CdmStatus cdh_manager_init (CdhManager *c, CdmOptions *opts);
+CdhManager *cdh_manager_new (CdmOptions *opts);
 
 /**
- * @brief Denitialize pre-allocated CdhManager object
- *
+ * @brief Aquire CdhManager object
  * @param c Manager object
- * @param opts Pointer to global options object
  */
-void cdh_manager_deinit (CdhManager *c);
+CdhManager *cdh_manager_ref (CdhManager *c);
+
+/**
+ * @brief Release CdhManager object
+ * @param c Manager object
+ */
+void cdh_manager_unref (CdhManager *c);
 
 /**
  * @brief Connect to cdh manager
