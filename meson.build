@@ -8,7 +8,7 @@ add_project_arguments([
   ], language: 'c')
 
 cdm_c_include_dirs = [
-  'crashmanager'
+  'src/common'
   ]
 
 cdm_c_compiler_args = [
@@ -43,13 +43,13 @@ cdm_c_compiler_args = [
 cdm_defaults_data = configuration_data()
 cdm_defaults_data.set('version', meson.project_version())
 cdm_defaults_data.set('config_dir', get_option('CONFDIR'))
-configure_file(input : 'crashmanager/cdm-defaults.h.in',
+configure_file(input : 'src/common/cdm-defaults.h.in',
   output : 'cdm-defaults.h',
   configuration : cdm_defaults_data)
 
 cdm_msgtype_data = configuration_data()
 cdm_msgtype_data.set('version', meson.project_version())
-configure_file(input : 'crashmanager/cdm-message-type.h.in',
+configure_file(input : 'src/common/cdm-message-type.h.in',
   output : 'cdm-message-type.h',
   configuration : cdm_msgtype_data)
 
@@ -95,7 +95,7 @@ if get_option('GENIVI_NSM')
     ])
 
   libcapiwrap_sources = [
-    'genivi/libcapiwrap/nsm_consumer.c',
+    'src/extern/libcapiwrap/nsm_consumer.c',
     ]
 
   libcapiwrap_deps = [dep_genivi_nsm]
@@ -122,7 +122,7 @@ endif
 
 if get_option('CRASHTEST')
   crashtest_sources = [
-    'testing/crashtest/crashtest.c',
+    'tests/crashtest/crashtest.c',
     ]
 
   crashtest_deps = []
@@ -133,25 +133,23 @@ if get_option('CRASHTEST')
     )
 endif
 
-if get_option('SANITIZER')
-  add_global_arguments('-DSANITIZER', language : 'c')
-endif
-
 dep_glib = dependency('glib-2.0', version : '>=2.58')
 dep_libarchive = dependency('libarchive')
 
 if get_option('CRASHMANAGER')
   crashmanager_sources = [
-    'crashmanager/cdm-main.c',
-    'crashmanager/cdm-logging.c',
-    'crashmanager/cdm-client.c',
-    'crashmanager/cdm-server.c',
-    'crashmanager/cdm-janitor.c',
-    'crashmanager/cdm-lifecycle.c',
-    'crashmanager/cdm-sdnotify.c',
-    'crashmanager/cdm-transfer.c',
-    'crashmanager/cdm-bitstore.c',
-    'crashmanager/cdm-options.c',
+    'src/common/cdm-message.c',
+    'src/common/cdm-logging.c',
+    'src/common/cdm-options.c',
+    'src/common/cdm-utils.c',
+    'src/manager/cdm-main.c',
+    'src/manager/cdm-client.c',
+    'src/manager/cdm-server.c',
+    'src/manager/cdm-janitor.c',
+    'src/manager/cdm-lifecycle.c',
+    'src/manager/cdm-sdnotify.c',
+    'src/manager/cdm-transfer.c',
+    'src/manager/cdm-bitstore.c',
     ]
 
   crashmanager_deps = [
@@ -178,18 +176,18 @@ if get_option('CRASHHANDLER')
     install_dir : '/etc/sysctl.d')
 
   crashhandler_sources = [
-    'crashhandler/cdh-main.c',
-    'crashhandler/cdh-archive.c',
-    'crashhandler/cdh-context.c',
-    'crashhandler/cdh-coredump.c',
-    'crashhandler/cdh-crashid.c',
-    'crashhandler/cdh-data.c',
-    'crashhandler/cdh-info.c',
-    'crashhandler/cdh-manager.c',
-    'crashmanager/cdm-message.c',
-    'crashmanager/cdm-options.c',
-    'crashmanager/cdm-logging.c',
-    'crashmanager/cdm-utils.c',
+    'src/common/cdm-message.c',
+    'src/common/cdm-options.c',
+    'src/common/cdm-logging.c',
+    'src/common/cdm-utils.c',
+    'src/handler/cdh-main.c',
+    'src/handler/cdh-archive.c',
+    'src/handler/cdh-context.c',
+    'src/handler/cdh-coredump.c',
+    'src/handler/cdh-crashid.c',
+    'src/handler/cdh-data.c',
+    'src/handler/cdh-info.c',
+    'src/handler/cdh-manager.c',
     ]
 
   crashhandler_deps = [
@@ -208,7 +206,7 @@ endif
 
 if get_option('CRASHDECODER')
   crashdecoder_sources = [
-    'crashdecoder/cdd-main.c',
+    'src/decoder/cdd-main.c',
     ]
 
   crashdecoder_deps = [dep_glib]
@@ -219,3 +217,4 @@ if get_option('CRASHDECODER')
     install: true,
     )
 endif
+

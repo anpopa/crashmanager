@@ -9,4 +9,3 @@ option('CRASHTEST', type : 'boolean', value : true, description : 'Build crashte
 option('CRASHMANAGER', type : 'boolean', value : true, description : 'Build crashmanager daemon')
 option('CRASHHANDLER', type : 'boolean', value : true, description : 'Build crashhandler application')
 option('CRASHDECODER', type : 'boolean', value : true, description : 'Build crashdecoder application')
-option('SANITIZER', type : 'boolean', value : false, description : 'Build components with ASAN')
