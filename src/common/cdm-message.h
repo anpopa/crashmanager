@@ -76,7 +76,7 @@ bool cdm_message_is_valid (CdmMessage *m);
  * @brief Get message type
  * @param m The message object
  */
-CdmMessageType cdm_message_getype (CdmMessage *m);
+CdmMessageType cdm_message_get_type (CdmMessage *m);
 
 /*
  * @brief Set message version

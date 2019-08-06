@@ -28,6 +28,7 @@
  */
 
 #include "cdm-server.h"
+#include "cdm-client.h"
 
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -94,7 +95,12 @@ server_source_callback (gpointer data)
 
   if (clientfd >= 0)
     {
-      g_info ("New client connected %d", clientfd);
+      CdmClient *client = cdm_client_new (clientfd, server->transfer);
+
+      CDM_UNUSED (client);
+
+      g_debug ("New client connected %d", clientfd);
+
     }
   else
     {
@@ -113,7 +119,7 @@ server_source_destroy_notify (gpointer data)
 }
 
 CdmServer *
-cdm_server_new (CdmOptions *opts)
+cdm_server_new (CdmOptions *opts, CdmTransfer *transfer)
 {
   CdmServer *server = NULL;
   struct timeval tout;
@@ -131,6 +137,7 @@ cdm_server_new (CdmOptions *opts)
   g_source_ref (server->source);
 
   server->opts = cdm_options_ref (opts);
+  server->transfer = cdm_transfer_ref (transfer);
 
   server->sockfd = socket (AF_UNIX, SOCK_STREAM, 0);
   if (server->sockfd < 0)
@@ -176,6 +183,7 @@ cdm_server_unref (CdmServer *server)
   if (g_ref_count_dec (&server->rc) == TRUE)
     {
       cdm_options_unref (server->opts);
+      cdm_transfer_unref (server->transfer);
       g_source_unref (server->source);
       g_free (server);
     }

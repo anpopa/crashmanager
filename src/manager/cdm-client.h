@@ -31,6 +31,8 @@
 #define CDM_CLIENT_H
 
 #include "cdm-types.h"
+#include "cdm-message.h"
+#include "cdm-transfer.h"
 
 #include <glib.h>
 
@@ -40,14 +42,24 @@
  */
 typedef struct _CdmClient {
   GSource *source;  /**< Event loop source */
+  gpointer tag;     /**< Unix server socket tag  */
   grefcount rc;     /**< Reference counter variable  */
+  gint sockfd;      /**< Module file descriptor (client fd) */
+  guint64 id;       /**< Client instance id */
+
+  CdmTransfer *transfer; /**< Own a reference to transfer object */
+
+  CdmMessageType last_msg_type; /**< Last processed message type */
+  CdmMessageDataNew *init_data;          /**< Coredump initial data */
+  CdmMessageDataUpdate *update_data;     /**< Coredump update data */
+  CdmMessageDataComplete *complete_data; /**< Coredump complete data */
 } CdmClient;
 
 /*
  * @brief Create a new client object
  * @return On success return a new CdmClient object otherwise return NULL
  */
-CdmClient *cdm_client_new (void);
+CdmClient *cdm_client_new (gint clientfd, CdmTransfer *transfer);
 
 /**
  * @brief Aquire client object

@@ -49,7 +49,7 @@ source_timer_callback (gpointer data)
     }
   else
     {
-      g_info ("Watchdog heartbeat sent");
+      g_debug ("Watchdog heartbeat sent");
     }
 
   return TRUE;

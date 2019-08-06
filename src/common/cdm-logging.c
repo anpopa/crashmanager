@@ -42,7 +42,7 @@
 static void cdm_logging_handler (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data);
 
 #ifdef WITH_GENIVI_DLT
-DLT_DECLARE_CONTEXT (cdh_default_ctx);
+DLT_DECLARE_CONTEXT (cdm_default_ctx);
 
 static int
 priority_to_dlt (int priority)
@@ -105,7 +105,7 @@ cdm_logging_open (const gchar *app_name,
 {
 #ifdef WITH_GENIVI_DLT
   DLT_REGISTER_APP (app_name, app_desc);
-  DLT_REGISTER_CONTEXT (cdh_default_ctx, ctx_name, ctx_desc);
+  DLT_REGISTER_CONTEXT (cdm_default_ctx, ctx_name, ctx_desc);
 #else
   CDM_UNUSED (app_name);
   CDM_UNUSED (app_desc);
@@ -125,7 +125,7 @@ cdm_logging_handler (const gchar *log_domain,
   CDM_UNUSED (user_data);
 
 #ifdef WITH_GENIVI_DLT
-  DLT_LOG (cdh_default_ctx, priority_to_dlt (log_level), DLT_STRING (message));
+  DLT_LOG (cdm_default_ctx, priority_to_dlt (log_level), DLT_STRING (message));
 #else
   syslog (priority_to_syslog (log_level), "%s", message);
 #endif
@@ -135,7 +135,7 @@ void
 cdm_logging_close (void)
 {
 #ifdef WITH_GENIVI_DLT
-  DLT_UNREGISTER_CONTEXT (cdh_default_ctx);
+  DLT_UNREGISTER_CONTEXT (cdm_default_ctx);
   DLT_UNREGISTER_APP ();
 #endif
 }

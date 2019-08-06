@@ -84,7 +84,7 @@ cdm_message_is_valid (CdmMessage *m)
 }
 
 CdmMessageType
-cdm_message_getype (CdmMessage *m)
+cdm_message_get_type (CdmMessage *m)
 {
   g_assert (m);
   return m->hdr.type;

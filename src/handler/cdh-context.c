@@ -458,7 +458,9 @@ update_context_info (CdhContext *ctx)
 
       if (ctx_str != NULL)
         {
-          ctx_str = g_strconcat (ctx_str, proc_ns_buf, NULL);
+          gchar *ctx_tmp = g_strconcat (ctx_str, proc_ns_buf, NULL);
+          g_free (ctx_str);
+          ctx_str = ctx_tmp;
         }
       else
         {

@@ -39,8 +39,10 @@
  * @brief The CdmTransfer opaque data structure
  */
 typedef struct _CdmTransfer {
-  GSource *source;  /**< Event loop source */
+  GSource source;  /**< Event loop source */
   grefcount rc;     /**< Reference counter variable  */
+  GAsyncQueue    *queue;  /**< Async queue */
+  GThreadPool    *tpool;  /**< Transfer thread pool */
 } CdmTransfer;
 
 /*
@@ -51,19 +53,25 @@ CdmTransfer *cdm_transfer_new (void);
 
 /**
  * @brief Aquire transfer object
- * @param c Pointer to the transfer object
+ * @param transfer Pointer to the transfer object
  */
 CdmTransfer *cdm_transfer_ref (CdmTransfer *transfer);
 
 /**
  * @brief Release transfer object
- * @param c Pointer to the transfer object
+ * @param transfer Pointer to the transfer object
  */
 void cdm_transfer_unref (CdmTransfer *transfer);
 
 /**
+ * @brief Transfer a file
+ * @param transfer Pointer to the transfer object
+ */
+CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *fpath);
+
+/**
  * @brief Get object event loop source
- * @param c Pointer to the transfer object
+ * @param transfer Pointer to the transfer object
  */
 GSource *cdm_transfer_get_source (CdmTransfer *transfer);
 
