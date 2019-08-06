@@ -31,21 +31,20 @@
 
 #ifdef WITH_GENIVI_DLT
 #include <dlt.h>
+#include <dlt_filetransfer.h>
 #endif
 
 #ifdef WITH_GENIVI_DLT
 DLT_DECLARE_CONTEXT (cdm_transfer_ctx);
 #endif
 
-typedef gboolean (*TransferFileMessageFunc) (gpointer message, gpointer data);
-
-
 gboolean transfer_source_prepare (GSource *source, gint *timeout);
 gboolean transfer_source_check (GSource *source);
-gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data);
-static gboolean transfer_source_callback (gpointer message, gpointer data);
-static void transfer_source_destroy_notify (gpointer data);
-static void transfer_queue_destroy_notify (gpointer data);
+gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans);
+static gboolean transfer_source_callback (gpointer cdmtrans, gchar *file_path);
+static void transfer_source_destroy_notify (gpointer cdmtrans);
+static void transfer_queue_destroy_notify (gpointer cdmtrans);
+static void transfer_thread_func (gpointer data, gpointer user_data);
 
 static GSourceFuncs transfer_source_funcs =
 {
@@ -64,7 +63,7 @@ transfer_source_prepare (GSource *source, gint *timeout)
 
   CDM_UNUSED (timeout);
 
-  return (g_async_queue_length (transfer->queue) > 0);
+  return(g_async_queue_length (transfer->queue) > 0);
 }
 
 gboolean
@@ -75,37 +74,31 @@ transfer_source_check (GSource *source)
 }
 
 gboolean
-transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
+transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans)
 {
-  TransferFileMessageFunc transfer_cb = (TransferFileMessageFunc) callback;
   CdmTransfer *transfer = (CdmTransfer *)source;
-  gpointer message;
+  gchar *file_path = (gchar *)g_async_queue_try_pop (transfer->queue);
 
-  if (callback == NULL)
+  CDM_UNUSED (callback);
+
+  if (file_path == NULL)
     {
       return G_SOURCE_CONTINUE;
     }
 
-  message = g_async_queue_try_pop (transfer->queue);
-
-  if (message == NULL)
-    {
-      return G_SOURCE_CONTINUE;
-    }
-
-  return transfer_cb (message, user_data) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+  return transfer->callback (cdmtrans, file_path) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 static gboolean
-transfer_source_callback (gpointer message, gpointer data)
+transfer_source_callback (gpointer cdmtrans, gchar *file_path)
 {
-  CdmTransfer *transfer = (CdmTransfer *)data;
-  gchar *fpath = (gchar *)message;
+  CdmTransfer *transfer = (CdmTransfer *)cdmtrans;
 
   g_assert (transfer);
-  g_assert (fpath);
+  g_assert (file_path);
 
-  g_info ("Transfer file %s", fpath);
+  g_debug ("Push file to tread pool transfer %s", file_path);
+  g_thread_pool_push (transfer->tpool, file_path, NULL);
 
   return TRUE;
 }
@@ -116,7 +109,7 @@ transfer_source_destroy_notify (gpointer data)
   CdmTransfer *transfer = (CdmTransfer *)data;
 
   g_assert (transfer);
-  g_info ("Transfer destroy");
+  g_debug ("Transfer destroy notification");
 
   cdm_transfer_unref (transfer);
 }
@@ -125,7 +118,25 @@ static void
 transfer_queue_destroy_notify (gpointer data)
 {
   CDM_UNUSED (data);
-  g_info ("Transfer queue destroyed");
+  g_debug ("Transfer queue destroy notification");
+}
+
+static void
+transfer_thread_func (gpointer data, gpointer user_data)
+{
+  CdmTransfer *transfer = (CdmTransfer *)user_data;
+  gchar *file_path = (gchar *)data;
+
+  CDM_UNUSED (transfer);
+
+  g_info ("Transfer file %s", file_path);
+
+  if (dlt_user_log_file_complete (&cdm_transfer_ctx, file_path, 0, 60) < 0)
+    {
+      g_warning ("File couldn't be transferred. Please check the dlt log messages");
+    }
+
+  g_free (file_path);
 }
 
 CdmTransfer *
@@ -142,11 +153,12 @@ cdm_transfer_new (void)
   DLT_REGISTER_CONTEXT (cdm_transfer_ctx, "FILE", "Crashdumps file transfer");
 #endif
 
+  transfer->callback = transfer_source_callback;
   transfer->queue = g_async_queue_new_full (transfer_queue_destroy_notify);
+  transfer->tpool = g_thread_pool_new (transfer_thread_func, transfer, 1, TRUE, NULL);
 
-  g_source_set_callback ((GSource *)transfer, G_SOURCE_FUNC (transfer_source_callback),
-                         transfer, transfer_source_destroy_notify);
-  g_source_attach ((GSource *)transfer, NULL); /* attach the source to the default context */
+  g_source_set_callback (CDM_EVENT_SOURCE (transfer), NULL, transfer, transfer_source_destroy_notify);
+  g_source_attach (CDM_EVENT_SOURCE (transfer), NULL); /* attach the source to the default context */
 
   return transfer;
 }
@@ -170,24 +182,18 @@ cdm_transfer_unref (CdmTransfer *transfer)
 #ifdef WITH_GENIVI_DLT
       DLT_UNREGISTER_CONTEXT (cdm_transfer_ctx);
 #endif
-      g_free (transfer);
+      g_thread_pool_free (transfer->tpool, TRUE, FALSE);
+      g_source_unref (CDM_EVENT_SOURCE (transfer));
     }
 }
 
 CdmStatus
-cdm_transfer_file (CdmTransfer *transfer, const gchar *fpath)
+cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path)
 {
   g_assert (transfer);
-  g_assert (fpath);
+  g_assert (file_path);
 
-  g_async_queue_push (transfer->queue, g_strdup (fpath));
+  g_async_queue_push (transfer->queue, g_strdup (file_path));
 
   return CDM_STATUS_OK;
-}
-
-GSource *
-cdm_transfer_get_source (CdmTransfer *transfer)
-{
-  g_assert (transfer);
-  return (GSource *)transfer;
 }

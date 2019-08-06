@@ -121,10 +121,3 @@ cdm_sdnotify_unref (CdmSDNotify *sdnotify)
       g_free (sdnotify);
     }
 }
-
-GSource *
-cdm_sdnotify_get_source (CdmSDNotify *sdnotify)
-{
-  g_assert (sdnotify);
-  return sdnotify->source;
-}

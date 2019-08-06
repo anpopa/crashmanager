@@ -41,7 +41,7 @@
  * @brief The CdmClient opaque data structure
  */
 typedef struct _CdmClient {
-  GSource *source;  /**< Event loop source */
+  GSource source;  /**< Event loop source */
   gpointer tag;     /**< Unix server socket tag  */
   grefcount rc;     /**< Reference counter variable  */
   gint sockfd;      /**< Module file descriptor (client fd) */
@@ -72,12 +72,6 @@ CdmClient *cdm_client_ref (CdmClient *client);
  * @param c Pointer to the client object
  */
 void cdm_client_unref (CdmClient *client);
-
-/**
- * @brief Get object event loop source
- * @param c Pointer to the client object
- */
-GSource *cdm_client_get_source (CdmClient *client);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmClient, cdm_client_unref);
 

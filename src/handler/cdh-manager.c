@@ -75,15 +75,6 @@ cdh_manager_unref (CdhManager *c)
     }
 }
 
-void
-cdh_manager_set_coredir (CdhManager *c, const gchar *coredir)
-{
-  g_assert (c);
-  g_assert (coredir);
-
-  c->coredir = coredir;
-}
-
 CdmStatus
 cdh_manager_connect (CdhManager *c)
 {

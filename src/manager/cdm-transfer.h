@@ -35,6 +35,12 @@
 #include <glib.h>
 
 /**
+ * @function CdmTransferCallback
+ * @brief Custom callback used internally by CdmTransfer as source callback
+ */
+typedef gboolean (*CdmTransferCallback) (gpointer cdmtrans, gchar *file_path);
+
+/**
  * @struct CdmTransfer
  * @brief The CdmTransfer opaque data structure
  */
@@ -43,6 +49,7 @@ typedef struct _CdmTransfer {
   grefcount rc;     /**< Reference counter variable  */
   GAsyncQueue    *queue;  /**< Async queue */
   GThreadPool    *tpool;  /**< Transfer thread pool */
+  CdmTransferCallback callback; /**< Transfer callback function */
 } CdmTransfer;
 
 /*
@@ -66,14 +73,9 @@ void cdm_transfer_unref (CdmTransfer *transfer);
 /**
  * @brief Transfer a file
  * @param transfer Pointer to the transfer object
+ * @param file_path A pointer to file_path string
  */
-CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *fpath);
-
-/**
- * @brief Get object event loop source
- * @param transfer Pointer to the transfer object
- */
-GSource *cdm_transfer_get_source (CdmTransfer *transfer);
+CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmTransfer, cdm_transfer_unref);
 

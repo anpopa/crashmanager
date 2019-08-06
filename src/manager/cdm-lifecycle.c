@@ -74,10 +74,3 @@ cdm_lifecycle_unref (CdmLifecycle *lifecycle)
       g_free (lifecycle);
     }
 }
-
-GSource *
-cdm_lifecycle_get_source (CdmLifecycle *lifecycle)
-{
-  g_assert (lifecycle);
-  return lifecycle->source;
-}

@@ -41,9 +41,9 @@
 
 gboolean server_source_prepare (GSource *source, gint *timeout);
 gboolean server_source_check (GSource *source);
-gboolean server_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data);
-static gboolean server_source_callback (gpointer data);
-static void server_source_destroy_notify (gpointer data);
+gboolean server_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmserver);
+static gboolean server_source_callback (gpointer cdmserver);
+static void server_source_destroy_notify (gpointer cdmserver);
 
 static GSourceFuncs server_source_funcs =
 {
@@ -71,7 +71,7 @@ server_source_check (GSource *source)
 }
 
 gboolean
-server_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
+server_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmserver)
 {
   CDM_UNUSED (source);
 
@@ -80,13 +80,13 @@ server_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_dat
       return G_SOURCE_CONTINUE;
     }
 
-  return callback (user_data) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+  return callback (cdmserver) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 static gboolean
-server_source_callback (gpointer data)
+server_source_callback (gpointer cdmserver)
 {
-  CdmServer *server = (CdmServer *)data;
+  CdmServer *server = (CdmServer *)cdmserver;
   gint clientfd;
 
   g_assert (server);
@@ -100,7 +100,6 @@ server_source_callback (gpointer data)
       CDM_UNUSED (client);
 
       g_debug ("New client connected %d", clientfd);
-
     }
   else
     {
@@ -112,31 +111,29 @@ server_source_callback (gpointer data)
 }
 
 static void
-server_source_destroy_notify (gpointer data)
+server_source_destroy_notify (gpointer cdmserver)
 {
-  CDM_UNUSED (data);
+  CDM_UNUSED (cdmserver);
   g_info ("Server terminated");
 }
 
 CdmServer *
-cdm_server_new (CdmOptions *opts, CdmTransfer *transfer)
+cdm_server_new (CdmOptions *options, CdmTransfer *transfer)
 {
   CdmServer *server = NULL;
   struct timeval tout;
   glong timeout;
 
-  g_assert (opts);
+  g_assert (options);
+  g_assert (transfer);
 
-  server = g_new0 (CdmServer, 1);
+  server = (CdmServer *)g_source_new (&server_source_funcs, sizeof(CdmServer));
   g_assert (server);
 
   g_ref_count_init (&server->rc);
   g_ref_count_inc (&server->rc);
 
-  server->source = g_source_new (&server_source_funcs, sizeof(GSource));
-  g_source_ref (server->source);
-
-  server->opts = cdm_options_ref (opts);
+  server->options = cdm_options_ref (options);
   server->transfer = cdm_transfer_ref (transfer);
 
   server->sockfd = socket (AF_UNIX, SOCK_STREAM, 0);
@@ -145,7 +142,7 @@ cdm_server_new (CdmOptions *opts, CdmTransfer *transfer)
       g_error ("Cannot create server socket");
     }
 
-  timeout = cdm_options_long_for (opts, KEY_IPC_TIMEOUT_SEC);
+  timeout = cdm_options_long_for (options, KEY_IPC_TIMEOUT_SEC);
 
   tout.tv_sec = timeout;
   tout.tv_usec = 0;
@@ -160,9 +157,9 @@ cdm_server_new (CdmOptions *opts, CdmTransfer *transfer)
       g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
     }
 
-  g_source_set_callback (server->source, G_SOURCE_FUNC (server_source_callback),
+  g_source_set_callback (CDM_EVENT_SOURCE (server), G_SOURCE_FUNC (server_source_callback),
                          server, server_source_destroy_notify);
-  g_source_attach (server->source, NULL); /* attach the source to the default context */
+  g_source_attach (CDM_EVENT_SOURCE (server), NULL); /* attach the source to the default context */
 
   return server;
 }
@@ -182,10 +179,9 @@ cdm_server_unref (CdmServer *server)
 
   if (g_ref_count_dec (&server->rc) == TRUE)
     {
-      cdm_options_unref (server->opts);
+      cdm_options_unref (server->options);
       cdm_transfer_unref (server->transfer);
-      g_source_unref (server->source);
-      g_free (server);
+      g_source_unref (CDM_EVENT_SOURCE (server));
     }
 }
 
@@ -200,8 +196,8 @@ cdm_server_bind_and_listen (CdmServer *server)
 
   g_assert (server);
 
-  run_dir = cdm_options_string_for (server->opts, KEY_RUN_DIR);
-  sock_addr = cdm_options_string_for (server->opts, KEY_IPC_SOCK_ADDR);
+  run_dir = cdm_options_string_for (server->options, KEY_RUN_DIR);
+  sock_addr = cdm_options_string_for (server->options, KEY_IPC_SOCK_ADDR);
   udspath = g_build_filename (run_dir, sock_addr, NULL);
 
   unlink (udspath);
@@ -236,15 +232,8 @@ cdm_server_bind_and_listen (CdmServer *server)
     }
   else
     {
-      server->tag = g_source_add_unix_fd (server->source, server->sockfd, G_IO_IN | G_IO_PRI);
+      server->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (server), server->sockfd, G_IO_IN | G_IO_PRI);
     }
 
   return status;
-}
-
-GSource *
-cdm_server_get_source (CdmServer *server)
-{
-  g_assert (server);
-  return server->source;
 }

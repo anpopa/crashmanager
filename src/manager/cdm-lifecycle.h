@@ -61,12 +61,6 @@ CdmLifecycle *cdm_lifecycle_ref (CdmLifecycle *lifecycle);
  */
 void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
 
-/**
- * @brief Get object event loop source
- * @param c Pointer to the lifecycle object
- */
-GSource *cdm_lifecycle_get_source (CdmLifecycle *lifecycle);
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmLifecycle, cdm_lifecycle_unref);
 
 #endif /* CDM_LIFECYCLE_H */

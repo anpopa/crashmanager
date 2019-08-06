@@ -41,8 +41,8 @@
  * @brief The CdmServer opaque data structure
  */
 typedef struct _CdmServer {
-  GSource *source;  /**< Event loop source */
-  CdmOptions *opts; /**< Own reference to global options */
+  GSource source;  /**< Event loop source */
+  CdmOptions *options; /**< Own reference to global options */
   grefcount rc;     /**< Reference counter variable  */
   gpointer tag;     /**< Unix server socket tag  */
   gint sockfd;      /**< Module file descriptor (server listen fd) */
@@ -53,7 +53,7 @@ typedef struct _CdmServer {
  * @brief Create a new server object
  * @return On success return a new CdmServer object otherwise return NULL
  */
-CdmServer *cdm_server_new (CdmOptions *opts, CdmTransfer *transfer);
+CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer);
 
 /**
  * @brief Aquire server object
@@ -72,12 +72,6 @@ CdmStatus cdm_server_bind_and_listen (CdmServer *server);
  * @param c Pointer to the server object
  */
 void cdm_server_unref (CdmServer *server);
-
-/**
- * @brief Get object event loop source
- * @param c Pointer to the server object
- */
-GSource *cdm_server_get_source (CdmServer *server);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmServer, cdm_server_unref);
 

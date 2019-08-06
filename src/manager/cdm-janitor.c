@@ -74,10 +74,3 @@ cdm_janitor_unref (CdmJanitor *janitor)
       g_free (janitor);
     }
 }
-
-GSource *
-cdm_janitor_get_source (CdmJanitor *janitor)
-{
-  g_assert (janitor);
-  return janitor->source;
-}

@@ -36,6 +36,7 @@ extern "C" {
 
 #include "cdm-message-type.h"
 #include <elf.h>
+#include <glib.h>
 
 #ifndef CDM_UNUSED
 #define CDM_UNUSED(x) (void)(x)
@@ -44,6 +45,8 @@ extern "C" {
 #ifndef ARCHIVE_NAME_PATTERN
 #define ARCHIVE_NAME_PATTERN "%s/%s_%ld_%lu.cdh.tar.gz"
 #endif
+
+#define CDM_EVENT_SOURCE(x) (GSource *)(x)
 
 enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
 

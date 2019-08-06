@@ -74,10 +74,3 @@ cdm_bitstore_unref (CdmBitstore *bitstore)
       g_free (bitstore);
     }
 }
-
-GSource *
-cdm_bitstore_get_source (CdmBitstore *bitstore)
-{
-  g_assert (bitstore);
-  return bitstore->source;
-}

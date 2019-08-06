@@ -339,16 +339,31 @@ cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
     }
 enter_cleanup:
 #if defined(WITH_CRASHMANAGER)
-  cdh_manager_set_coredir (app->manager, opt_coredir);
-
   if (cdh_manager_connected (app->manager))
     {
-      CdmMessage msg;
+      g_autofree gchar *file_path = NULL;
+      CdmMessageDataComplete msg_data;
       CdmMessageType type;
+      CdmMessage msg;
+      gssize sz = 0;
 
       type = (status == CDM_STATUS_OK ? CDM_CORE_COMPLETE : CDM_CORE_FAILED);
 
       cdm_message_init (&msg, type, (guint16)((gulong)app->context->pid | app->context->tstamp));
+
+      memset (&msg_data, 0, sizeof(CdmMessageDataComplete));
+      file_path = g_strdup_printf (ARCHIVE_NAME_PATTERN, opt_coredir, app->context->name, app->context->pid, app->context->tstamp);
+
+      sz = snprintf (msg_data.core_file, CDM_MESSAGE_FILENAME_LEN, "%s", file_path);
+
+      if (sz > 0 && sz < CDM_MESSAGE_FILENAME_LEN)
+        {
+          cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
+        }
+      else
+        {
+          g_warning ("Fail to set the complete file name. Name too long!");
+        }
 
       if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
         {

@@ -61,12 +61,6 @@ CdmBitstore *cdm_bitstore_ref (CdmBitstore *bitstore);
  */
 void cdm_bitstore_unref (CdmBitstore *bitstore);
 
-/**
- * @brief Get object event loop source
- * @param c Pointer to the bitstore object
- */
-GSource *cdm_bitstore_get_source (CdmBitstore *bitstore);
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmBitstore, cdm_bitstore_unref);
 
 #endif /* CDM_BITSTORE_H */

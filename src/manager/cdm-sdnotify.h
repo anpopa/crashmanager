@@ -61,12 +61,6 @@ CdmSDNotify *cdm_sdnotify_ref (CdmSDNotify *sdnotify);
  */
 void cdm_sdnotify_unref (CdmSDNotify *sdnotify);
 
-/**
- * @brief Get object event loop source
- * @param c Pointer to the sdnotify object
- */
-GSource *cdm_sdnotify_get_source (CdmSDNotify *sdnotify);
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmSDNotify, cdm_sdnotify_unref);
 
 #endif /* CDM_SDNOTIFY_H */

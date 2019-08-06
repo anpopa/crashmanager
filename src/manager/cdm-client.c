@@ -105,8 +105,14 @@ client_source_callback (gpointer data)
 
       if ((type == CDM_CORE_COMPLETE) || (type == CDM_CORE_FAILED))
         {
-          g_info ("Transfer crash file");
+          CdmMessageDataComplete *msg_data = (CdmMessageDataComplete *)msg.data;
+          g_autofree gchar *file_name = NULL;
+
+          file_name = g_strdup (msg_data->core_file);
+          cdm_transfer_file (client->transfer, file_name);
         }
+
+      cdm_message_free_data (&msg);
     }
 
   return TRUE;
@@ -315,24 +321,20 @@ process_message (CdmClient *c, CdmMessage *msg)
 CdmClient *
 cdm_client_new (gint clientfd, CdmTransfer *transfer)
 {
-  CdmClient *client = g_new0 (CdmClient, 1);
+  CdmClient *client = (CdmClient *)g_source_new (&client_source_funcs, sizeof(CdmClient));
 
   g_assert (client);
 
   g_ref_count_init (&client->rc);
   g_ref_count_inc (&client->rc);
 
-  client->source = g_source_new (&client_source_funcs, sizeof(GSource));
-  g_source_ref (client->source);
-
   client->sockfd = clientfd;
   client->transfer = cdm_transfer_ref (transfer);
 
-  g_source_set_callback (client->source, G_SOURCE_FUNC (client_source_callback),
-                         client, client_source_destroy_notify);
-  g_source_attach (client->source, NULL); /* attach the source to the default context */
+  g_source_set_callback (CDM_EVENT_SOURCE (client), G_SOURCE_FUNC (client_source_callback), client, client_source_destroy_notify);
+  g_source_attach (CDM_EVENT_SOURCE (client), NULL); /* attach the source to the default context */
 
-  client->tag = g_source_add_unix_fd (client->source, client->sockfd, G_IO_IN | G_IO_PRI);
+  client->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (client), client->sockfd, G_IO_IN | G_IO_PRI);
 
   return client;
 }
@@ -352,15 +354,7 @@ cdm_client_unref (CdmClient *client)
 
   if (g_ref_count_dec (&client->rc) == TRUE)
     {
-      g_source_unref (client->source);
       cdm_transfer_unref (client->transfer);
-      g_free (client);
+      g_source_unref (CDM_EVENT_SOURCE (client));
     }
-}
-
-GSource *
-cdm_client_get_source (CdmClient *client)
-{
-  g_assert (client);
-  return client->source;
 }

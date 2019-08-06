@@ -61,12 +61,6 @@ CdmJanitor *cdm_janitor_ref (CdmJanitor *janitor);
  */
 void cdm_janitor_unref (CdmJanitor *janitor);
 
-/**
- * @brief Get object event loop source
- * @param c Pointer to the janitor object
- */
-GSource *cdm_janitor_get_source (CdmJanitor *janitor);
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJanitor, cdm_janitor_unref);
 
 #endif /* CDM_JANITOR_H */
