@@ -36,32 +36,6 @@
 #include <sqlite3.h>
 
 /**
- * @enum CdmJournalEntryType
- * @brief The CdmJournalEntry opaque data structure
- */
-typedef enum _CdmJournalEntryType {
-  JENTRY_CREATE,
-  JENTRY_SET_TRANSFER_COMPLETE
-} CdmJournalEntryType;
-
-/**
- * @struct CdmJournalEntry
- * @brief The CdmJournalEntry data structure
- */
-typedef struct _CdmJournalEntry {
-  CdmJournalEntryType type;
-  grefcount rc;     /**< Reference counter variable  */
-
-  guint64 id;
-  gchar *proc_name;
-  gchar *crash_id;
-  gchar *vector_id;
-  gchar *context_id;
-  gchar *file_path;
-  gboolean transferred;
-} CdmJournalEntry;
-
-/**
  * @struct CdmJournal
  * @brief The CdmJournal opaque data structure
  */
@@ -70,13 +44,13 @@ typedef struct _CdmJournal {
   grefcount rc;     /**< Reference counter variable  */
 } CdmJournal;
 
-/*
+/**
  * @brief Create a new journal object
  * @return On success return a new CdmJournal object otherwise return NULL
  */
 CdmJournal *cdm_journal_new (const gchar *database_path);
 
-/*
+/**
  * @brief Aquire journal object
  * @return On success return a new CdmJournal object otherwise return NULL
  */
@@ -88,25 +62,62 @@ CdmJournal *cdm_journal_ref (CdmJournal *journal);
  */
 void cdm_journal_unref (CdmJournal *journal);
 
-/*
- * @brief Create a new journal object
- * @return On success return a new CdmJournal object otherwise return NULL
+/**
+ * @brief Set journal entry as type new data
+ * @return Return the new journal entry ID. If error is not NULL and an error
+ * occured the error is set and return value is 0
  */
-CdmJournalEntry *cdm_journal_entry_new (void);
-
-/*
- * @brief Aquire journal object
- * @return On success return a new CdmJournal object otherwise return NULL
- */
-CdmJournalEntry *cdm_journal_entry_ref (CdmJournalEntry *entry);
+guint64 cdm_journal_add_crash (CdmJournal *journal, 
+                              const gchar *proc_name, 
+                              const gchar *crash_id, 
+                              const gchar *vector_id, 
+                              const gchar *context_id, 
+                              const gchar *file_path,
+                              gint64 pid, 
+                              gint64 sig, 
+                              guint64 tstamp, 
+                              GError *error);
 
 /**
- * @brief Release an journal object
- * @param c Pointer to the journal object
+ * @brief Get journal entry ID for a given archive path
+ *
+ * @param journal The journal object
+ * @param file_path The archive file path
+ *
+ * @return Return the new journal entry ID. If error is not NULL and an error
+ * occured the error is set and return value is 0. If error is return the caller
+ * should release the GError object
  */
-void cdm_journal_entry_unref (CdmJournalEntry *entry);
+guint64 cdm_journal_get_id (CdmJournal *journal, const gchar *file_path, GError *error);
+
+/**
+ * @brief Set transfer state for an entry
+ *
+ * @param journal The journal object
+ * @param file_path The archive file path
+ * @param complete The transfer complete state
+ * @param error The GError object or NULL
+ *
+ * @return Return the new journal entry ID. If error is not NULL and an error
+ * occured the error is set and return value is 0. If error is return the caller
+ * should release the GError object
+ */
+guint64 cdm_journal_set_transfer (CdmJournal *journal, const gchar *file_path, gboolean complete, GError *error);
+
+/**
+ * @brief Set archive removed state for an entry
+ *
+ * @param journal The journal object
+ * @param file_path The archive file path
+ * @param complete The transfer complete state
+ * @param error The GError object or NULL
+ *
+ * @return Return the new journal entry ID. If error is not NULL and an error
+ * occured the error is set and return value is 0. If error is return the caller
+ * should release the GError object
+ */
+guint64 cdm_journal_set_removed (CdmJournal *journal, const gchar *file_path, gboolean removed, GError *error);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJournal, cdm_journal_unref);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJournalEntry, cdm_journal_entry_unref);
 
 #endif /* CDM_JOURNAL_H */

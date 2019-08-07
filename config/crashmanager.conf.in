@@ -57,7 +57,7 @@ ElevatedNiceValue = -19
 # KDumpSourceDir defines the source directory to read at start for previous
 #     kernel crashes.
 [crashmanager]
-StateDatabaseFile=/var/crashmanager/coredumps.info
+DatabaseFile=/var/cache/crashmanager/cdm.db
 MaxCrashdumpDirSize=512
 MinCrashdumpDirSize=100
 MaxCrashdumpArchives=10

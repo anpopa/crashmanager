@@ -29,10 +29,41 @@
 
 #include "cdm-journal.h"
 
+typedef enum _JournalQueryType {
+    QUERY_CREATE, 
+    QUERY_ADD_ENTRY
+} JournalQueryType;
+
+typedef struct _JournalQueryData {
+    JournalQueryType type;
+    gpointer response;
+} JournalQueryData;
+
+const gchar *cdm_journal_table_name = "CrashTable";
+
+static int sqlite_callback(void *data, int argc, char **argv, char **azColName);
+
+static int 
+sqlite_callback(void *data, int argc, char **argv, char **azColName)
+{
+  CDM_UNUSED (data);
+  CDM_UNUSED (argc);
+  CDM_UNUSED (argv);
+  CDM_UNUSED (azColName);
+
+  return 0;
+}
+
 CdmJournal *
 cdm_journal_new (const gchar *database_path)
 {
   CdmJournal *journal = NULL;
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  JournalQueryData data = {
+      .type = QUERY_CREATE, 
+      .response = NULL
+  };
 
   g_assert (database_path);
   
@@ -42,6 +73,30 @@ cdm_journal_new (const gchar *database_path)
 
   g_ref_count_init (&journal->rc);
   g_ref_count_inc (&journal->rc);
+
+  if (sqlite3_open (database_path, &journal->database))
+    {
+      g_error ("Cannot open journal database at path %s", database_path);
+    }
+
+  sql = g_strdup_printf ("CREATE TABLE IF NOT EXISTS %s       "
+                         "(ID INT PRIMARY KEY     NOT   NULL, "
+                         "PROCNAME        TEXT    NOT   NULL, "
+                         "CRASHID         TEXT    NOT   NULL, "
+                         "VECTORID        TEXT    NOT   NULL, "
+                         "CONTEXTID       TEXT    NOT   NULL, "
+                         "FILEPATH        TEXT    NOT   NULL, "
+                         "PID             INT     NOT   NULL, "
+                         "SIGNAL          INT     NOT   NULL, "
+                         "TIMESTAMP       INT     NOT   NULL, "
+                         "TSTATE          BOOL    NOT   NULL, "
+                         "RSTATE          BOOL    NOT   NULL);", 
+                         cdm_journal_table_name);
+
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+    {
+      g_error ("Fail to create crash table. SQL error %s", query_error);
+    }
 
   return journal;
 }
@@ -62,37 +117,5 @@ cdm_journal_unref (CdmJournal *journal)
   if (g_ref_count_dec (&journal->rc) == TRUE)
     {
       g_free (journal);
-    }
-}
-
-CdmJournalEntry *
-cdm_journal_entry_new ()
-{
-  CdmJournalEntry *entry = g_new0 (CdmJournalEntry, 1);
-
-  g_assert (entry);
-
-  g_ref_count_init (&entry->rc);
-  g_ref_count_inc (&entry->rc);
-
-  return entry;
-}
-
-CdmJournalEntry *
-cdm_journal_entry_ref (CdmJournalEntry *entry)
-{
-  g_assert (entry);
-  g_ref_count_inc (&entry->rc);
-  return entry;
-}
-
-void
-cdm_journal_entry_unref (CdmJournalEntry *entry)
-{
-  g_assert (entry);
-
-  if (g_ref_count_dec (&entry->rc) == TRUE)
-    {
-      g_free (entry);
     }
 }

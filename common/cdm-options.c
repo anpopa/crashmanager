@@ -151,6 +151,18 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
             }
         }
       return g_strdup (CDM_RUN_DIR);
+    
+    case KEY_DATABASE_FILE:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "DatabaseFile", NULL);
+
+          if (tmp != NULL)
+            {
+              return tmp;
+            }
+        }
+      return g_strdup (CDM_DATABASE_FILE);
 
     case KEY_KDUMPSOURCE_DIR:
       if (opts->has_conf)
