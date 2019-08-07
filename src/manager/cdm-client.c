@@ -29,6 +29,7 @@
 
 #include "cdm-client.h"
 #include "cdm-utils.h"
+#include "cdm-transfer.h"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -40,6 +41,7 @@ static gboolean client_source_callback (gpointer data);
 static void client_source_destroy_notify (gpointer data);
 static void process_message (CdmClient *c, CdmMessage *msg);
 static gchar *get_pid_context_id (pid_t pid);
+static void archive_transfer_complete (gpointer cdmclient, const gchar *file_path);
 #ifdef WITH_LXC
 static gchar *get_container_name_for_context (const gchar *ctxid);
 #endif
@@ -106,10 +108,8 @@ client_source_callback (gpointer data)
       if ((type == CDM_CORE_COMPLETE) || (type == CDM_CORE_FAILED))
         {
           CdmMessageDataComplete *msg_data = (CdmMessageDataComplete *)msg.data;
-          g_autofree gchar *file_name = NULL;
 
-          file_name = g_strdup (msg_data->core_file);
-          cdm_transfer_file (client->transfer, file_name);
+          cdm_transfer_file (client->transfer, msg_data->core_file, archive_transfer_complete, cdm_client_ref (client));
         }
 
       cdm_message_free_data (&msg);
@@ -316,6 +316,15 @@ process_message (CdmClient *c, CdmMessage *msg)
     default:
       break;
     }
+}
+
+static void
+archive_transfer_complete (gpointer cdmclient, const gchar *file_path)
+{
+  CdmClient *client = (CdmClient *)cdmclient;
+
+  g_debug ("Archive transfer complete for %d : %s", client->sockfd, file_path);
+  cdm_client_unref (client);
 }
 
 CdmClient *

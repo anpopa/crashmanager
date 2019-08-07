@@ -38,7 +38,23 @@
  * @function CdmTransferCallback
  * @brief Custom callback used internally by CdmTransfer as source callback
  */
-typedef gboolean (*CdmTransferCallback) (gpointer cdmtrans, gchar *file_path);
+typedef gboolean (*CdmTransferCallback) (gpointer cdmtrans, gpointer entry);
+
+/**
+ * @function CdmTransferEntryCallback
+ * @brief Client callback to pass when requesting a file transfer
+ */
+typedef void (*CdmTransferEntryCallback) (gpointer user_data, const gchar *file_path);
+
+/**
+ * @struct CdmTransferEntry
+ * @brief The file transfer entry
+ */
+typedef struct _CdmTransferEntry {
+  gchar *file_path;
+  gpointer user_data;
+  CdmTransferEntryCallback callback;
+} CdmTransferEntry;
 
 /**
  * @struct CdmTransfer
@@ -75,7 +91,7 @@ void cdm_transfer_unref (CdmTransfer *transfer);
  * @param transfer Pointer to the transfer object
  * @param file_path A pointer to file_path string
  */
-CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path);
+CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path, CdmTransferEntryCallback callback, gpointer user_data);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmTransfer, cdm_transfer_unref);
 

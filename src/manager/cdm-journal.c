@@ -1,4 +1,4 @@
-/* cdm-bitstore.h
+/* cdm-journal.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,40 +27,68 @@
  * authorization.
  */
 
-#ifndef CDM_BITSTORE_H
-#define CDM_BITSTORE_H
+#include "cdm-journal.h"
 
-#include "cdm-types.h"
+CdmJournal *
+cdm_journal_new (const gchar *database_path)
+{
+  CdmJournal *journal = g_new0 (CdmJournal, 1);
 
-#include <glib.h>
+  g_assert (journal);
 
-/**
- * @struct CdmBitstore
- * @brief The CdmBitstore opaque data structure
- */
-typedef struct _CdmBitstore {
-  GSource *source;  /**< Event loop source */
-  grefcount rc;     /**< Reference counter variable  */
-} CdmBitstore;
+  g_ref_count_init (&journal->rc);
+  g_ref_count_inc (&journal->rc);
 
-/*
- * @brief Create a new bitstore object
- * @return On success return a new CdmBitstore object otherwise return NULL
- */
-CdmBitstore *cdm_bitstore_new (void);
+  return journal;
+}
 
-/*
- * @brief Aquire bitstore object
- * @return On success return a new CdmBitstore object otherwise return NULL
- */
-CdmBitstore *cdm_bitstore_ref (CdmBitstore *bitstore);
+CdmJournal *
+cdm_journal_ref (CdmJournal *journal)
+{
+  g_assert (journal);
+  g_ref_count_inc (&journal->rc);
+  return journal;
+}
 
-/**
- * @brief Release an bitstore object
- * @param c Pointer to the bitstore object
- */
-void cdm_bitstore_unref (CdmBitstore *bitstore);
+void
+cdm_journal_unref (CdmJournal *journal)
+{
+  g_assert (journal);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmBitstore, cdm_bitstore_unref);
+  if (g_ref_count_dec (&journal->rc) == TRUE)
+    {
+      g_free (journal);
+    }
+}
 
-#endif /* CDM_BITSTORE_H */
+CdmJournalEntry *
+cdm_journal_entry_new ()
+{
+  CdmJournalEntry *entry = g_new0 (CdmJournalEntry, 1);
+
+  g_assert (entry);
+
+  g_ref_count_init (&entry->rc);
+  g_ref_count_inc (&entry->rc);
+
+  return entry;
+}
+
+CdmJournalEntry *
+cdm_journal_entry_ref (CdmJournalEntry *entry)
+{
+  g_assert (entry);
+  g_ref_count_inc (&entry->rc);
+  return entry;
+}
+
+void
+cdm_journal_entry_unref (CdmJournalEntry *entry)
+{
+  g_assert (entry);
+
+  if (g_ref_count_dec (&journal->rc) == TRUE)
+    {
+      g_free (entry);
+    }
+}
