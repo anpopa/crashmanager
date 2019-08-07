@@ -4,9 +4,7 @@
 #
 ###############################################################################
 [Unit]
-Description=Coredump manager service
-Before=dlt-system.service
-Wants=dlt-system.service
+Description=Crasmanager service
 
 [Service]
 Type=simple

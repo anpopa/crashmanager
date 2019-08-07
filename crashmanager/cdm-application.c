@@ -48,7 +48,7 @@ cdm_application_new (const gchar *config)
 
   app->options = cdm_options_new (config);
   app->janitor = cdm_janitor_new ();
-  app->bitstore = cdm_bitstore_new ();
+  app->journal = cdm_journal_new ("/path");
   app->sdnotify = cdm_sdnotify_new ();
   app->transfer = cdm_transfer_new ();
   app->server = cdm_server_new (app->options, app->transfer);
@@ -72,7 +72,7 @@ cdm_application_unref (CdmApplication *app)
   g_assert (app->options);
   g_assert (app->server);
   g_assert (app->janitor);
-  g_assert (app->bitstore);
+  g_assert (app->journal);
   g_assert (app->sdnotify);
   g_assert (app->transfer);
 
@@ -80,7 +80,7 @@ cdm_application_unref (CdmApplication *app)
     {
       cdm_server_unref (app->server);
       cdm_janitor_unref (app->janitor);
-      cdm_bitstore_unref (app->bitstore);
+      cdm_journal_unref (app->journal);
       cdm_sdnotify_unref (app->sdnotify);
       cdm_transfer_unref (app->transfer);
       cdm_options_unref (app->options);

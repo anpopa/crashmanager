@@ -33,6 +33,7 @@
 #include "cdm-types.h"
 
 #include <glib.h>
+#include <sqlite3.h>
 
 /**
  * @enum CdmJournalEntryType

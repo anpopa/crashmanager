@@ -32,8 +32,12 @@
 CdmJournal *
 cdm_journal_new (const gchar *database_path)
 {
-  CdmJournal *journal = g_new0 (CdmJournal, 1);
+  CdmJournal *journal = NULL;
 
+  g_assert (database_path);
+  
+  journal = g_new0 (CdmJournal, 1);
+  
   g_assert (journal);
 
   g_ref_count_init (&journal->rc);
@@ -87,7 +91,7 @@ cdm_journal_entry_unref (CdmJournalEntry *entry)
 {
   g_assert (entry);
 
-  if (g_ref_count_dec (&journal->rc) == TRUE)
+  if (g_ref_count_dec (&entry->rc) == TRUE)
     {
       g_free (entry);
     }

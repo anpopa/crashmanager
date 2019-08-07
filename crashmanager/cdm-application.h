@@ -40,7 +40,7 @@ extern "C" {
 #include "cdm-options.h"
 #include "cdm-server.h"
 #include "cdm-janitor.h"
-#include "cdm-bitstore.h"
+#include "cdm-journal.h"
 #include "cdm-sdnotify.h"
 #include "cdm-transfer.h"
 
@@ -55,7 +55,7 @@ typedef struct _CdmApplication {
   CdmOptions *options;
   CdmServer *server;
   CdmJanitor *janitor;
-  CdmBitstore *bitstore;
+  CdmJournal *journal;
   CdmSDNotify *sdnotify;
   CdmTransfer *transfer;
   GMainLoop *mainloop;
