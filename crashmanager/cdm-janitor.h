@@ -32,6 +32,7 @@
 
 #include "cdm-types.h"
 #include "cdm-options.h"
+#include "cdm-journal.h"
 
 #include <glib.h>
 
@@ -40,15 +41,21 @@
  * @brief The CdmJanitor opaque data structure
  */
 typedef struct _CdmJanitor {
-  GSource *source;  /**< Event loop source */
+  GSource source;  /**< Event loop source */
   grefcount rc;     /**< Reference counter variable  */
+
+  glong max_dir_size; /**< Maximum allowed crash dir size */
+  glong min_dir_size; /**< Minimum space to preserve from quota */
+  glong max_file_cnt; /**< Maximum file count */
+
+  CdmJournal *journal; /**< Own a reference to journal object */
 } CdmJanitor;
 
 /*
  * @brief Create a new janitor object
  * @return On success return a new CdmJanitor object otherwise return NULL
  */
-CdmJanitor *cdm_janitor_new (void);
+CdmJanitor *cdm_janitor_new (CdmOptions *options, CdmJournal *journal);
 
 /**
  * @brief Aquire janitor object

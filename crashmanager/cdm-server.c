@@ -126,6 +126,7 @@ cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal)
 
   g_assert (options);
   g_assert (transfer);
+  g_assert (journal);
 
   server = (CdmServer *)g_source_new (&server_source_funcs, sizeof(CdmServer));
   g_assert (server);

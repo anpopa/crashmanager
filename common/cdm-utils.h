@@ -56,6 +56,13 @@ const gchar *cdm_utils_get_osversion (void);
  */
 guint64 cdm_utils_jenkins_hash (const gchar *key);
 
+/**
+ * @brief Get file size
+ * @param file_path The path to the file
+ * @return The long int as file size or -1 on error
+ */
+gint64 cdm_utils_get_filesize (const gchar *file_path);
+
 #ifdef __cplusplus
 }
 #endif

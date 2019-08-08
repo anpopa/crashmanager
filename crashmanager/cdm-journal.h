@@ -78,7 +78,6 @@ guint64 cdm_journal_add_crash (CdmJournal *journal,
                                gint64 sig,
                                guint64 tstamp,
                                GError **error);
-
 /**
  * @brief Set transfer state for an entry
  *
@@ -98,6 +97,38 @@ void cdm_journal_set_transfer (CdmJournal *journal, const gchar *file_path, gboo
  * @param error The GError object or NULL
  */
 void cdm_journal_set_removed (CdmJournal *journal, const gchar *file_path, gboolean removed, GError **error);
+
+/**
+ * @brief Get total file size for unremoved transfered entries
+ *
+ * @param journal The journal object
+ * @param error The GError object or NULL
+ *
+ * @return Return total file sizes from database. -1 on error
+ */
+gssize cdm_journal_get_data_size (CdmJournal *journal, GError **error);
+
+/**
+ * @brief Get number of unremoved transfered entries
+ *
+ * @param journal The journal object
+ * @param error The GError object or NULL
+ *
+ * @return Return total number of entries. -1 on error
+ */
+gssize cdm_journal_get_entry_count (CdmJournal *journal, GError **error);
+
+/**
+ * @brief Set archive removed state for an entry
+ *
+ * @param journal The journal object
+ * @param error The GError object or NULL
+ *
+ * @return If a victim is found a pointer to victim's file path is returned (new
+ * string to be released by the caller). If no vicitm available NULL is
+ * returned. If an error occured the error is set and NULL is returned.
+ */
+gchar* cdm_journal_get_victim (CdmJournal *journal, GError **error);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJournal, cdm_journal_unref);
 

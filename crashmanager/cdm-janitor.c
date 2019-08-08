@@ -29,28 +29,129 @@
 
 #include "cdm-janitor.h"
 
+#include <glib.h>
+#include <glib/gstdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+gboolean janitor_source_prepare (GSource *source, gint *timeout);
+gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor);
+static gboolean janitor_source_callback (gpointer cdmjanitor);
+static void janitor_source_destroy_notify (gpointer cdmjanitor);
+
 static GSourceFuncs janitor_source_funcs =
 {
+  janitor_source_prepare,
   NULL,
-  NULL,
-  NULL,
+  janitor_source_dispatch,
   NULL,
   NULL,
   NULL,
 };
 
-CdmJanitor *
-cdm_janitor_new (void)
+gboolean
+janitor_source_prepare (GSource *source, gint *timeout)
 {
-  CdmJanitor *janitor = g_new0 (CdmJanitor, 1);
+  CdmJanitor *janitor = (CdmJanitor *)source;
+  gssize crash_dir_size;
+  gssize entries_count;
+
+  CDM_UNUSED (timeout);
+
+  crash_dir_size = cdm_journal_get_data_size (janitor->journal, NULL);
+  entries_count = cdm_journal_get_entry_count (janitor->journal, NULL);
+
+  if ((crash_dir_size > janitor->max_dir_size) ||
+      ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size) ||
+      (entries_count > janitor->max_file_cnt))
+    {
+      g_info ("Database cleanup needed dirsize=%ld entcnt=%ld", crash_dir_size, entries_count);
+      return TRUE;
+    }
+
+  g_info ("Database cleanup not needed dirsize=%ld entcnt=%ld", crash_dir_size, entries_count);
+
+  return FALSE;
+}
+
+gboolean
+janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor)
+{
+  CDM_UNUSED (callback);
+  CDM_UNUSED (source);
+
+  return callback (cdmjanitor) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+}
+
+static gboolean
+janitor_source_callback (gpointer cdmjanitor)
+{
+  CdmJanitor *janitor = (CdmJanitor *)cdmjanitor;
+  GError *error = NULL;
+  g_autofree gchar *victim_path = NULL;
+
+  g_assert (janitor);
+
+  victim_path = cdm_journal_get_victim (janitor->journal, &error);
+
+  if (victim_path == NULL || error != NULL)
+    {
+      g_warning ("No victim available to be cleaned");
+      if (error != NULL)
+        {
+          g_warning ("Fail to get a victim from journal %s", error->message);
+          g_error_free (error);
+        }
+    }
+  else
+    {
+      if (g_remove (victim_path) == -1)
+        {
+          g_warning ("Fail to remove file %s", victim_path);
+        }
+
+      cdm_journal_set_removed (janitor->journal, victim_path, TRUE, &error);
+
+      if (error != NULL)
+        {
+          g_warning ("Fail to set remove flag for victim %s: Error %s", victim_path, error->message);
+          g_error_free (error);
+        }
+    }
+
+  return TRUE;
+}
+
+static void
+janitor_source_destroy_notify (gpointer cdmjanitor)
+{
+  CdmJanitor *janitor = (CdmJanitor *)cdmjanitor;
+
+  g_assert (janitor);
+  g_debug ("Janitor destroy notification");
+}
+
+
+CdmJanitor *
+cdm_janitor_new (CdmOptions *options, CdmJournal *journal)
+{
+  CdmJanitor *janitor = (CdmJanitor *)g_source_new (&janitor_source_funcs, sizeof(CdmJanitor));
 
   g_assert (janitor);
 
   g_ref_count_init (&janitor->rc);
   g_ref_count_inc (&janitor->rc);
 
-  janitor->source = g_source_new (&janitor_source_funcs, sizeof(GSource));
-  g_source_ref (janitor->source);
+  janitor->journal = cdm_journal_ref (journal);
+
+  janitor->max_dir_size = cdm_options_long_for (options, KEY_CRASHDUMP_DIR_MAX_SIZE) * 1024 * 1024;
+  janitor->min_dir_size = cdm_options_long_for (options, KEY_CRASHDUMP_DIR_MIN_SIZE) * 1024 * 1024;
+  janitor->max_file_cnt = cdm_options_long_for (options, KEY_CRASHFILES_MAX_COUNT);
+
+  g_source_set_callback (CDM_EVENT_SOURCE (janitor), G_SOURCE_FUNC (janitor_source_callback),
+                         janitor, janitor_source_destroy_notify);
+  g_source_attach (CDM_EVENT_SOURCE (janitor), NULL); /* attach the source to the default context */
 
   return janitor;
 }
@@ -70,7 +171,7 @@ cdm_janitor_unref (CdmJanitor *janitor)
 
   if (g_ref_count_dec (&janitor->rc) == TRUE)
     {
-      g_source_unref (janitor->source);
-      g_free (janitor);
+      cdm_journal_unref (janitor->journal);
+      g_source_unref (CDM_EVENT_SOURCE (janitor));
     }
 }

@@ -40,7 +40,6 @@ DLT_DECLARE_CONTEXT (cdm_transfer_ctx);
 #endif
 
 gboolean transfer_source_prepare (GSource *source, gint *timeout);
-gboolean transfer_source_check (GSource *source);
 gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans);
 static gboolean transfer_source_callback (gpointer cdmtrans, gpointer entry);
 static void transfer_source_destroy_notify (gpointer cdmtrans);
@@ -63,15 +62,7 @@ transfer_source_prepare (GSource *source, gint *timeout)
   CdmTransfer *transfer = (CdmTransfer *)source;
 
   CDM_UNUSED (timeout);
-
   return(g_async_queue_length (transfer->queue) > 0);
-}
-
-gboolean
-transfer_source_check (GSource *source)
-{
-  CDM_UNUSED (source);
-  return TRUE;
 }
 
 gboolean

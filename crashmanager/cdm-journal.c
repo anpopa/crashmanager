@@ -33,7 +33,11 @@
 typedef enum _JournalQueryType {
   QUERY_CREATE,
   QUERY_ADD_ENTRY,
-  QUERY_SET_TRANSFER
+  QUERY_SET_TRANSFER,
+  QUERY_SET_REMOVED,
+  QUERY_GET_VICTIM,
+  QUERY_GET_DATASIZE,
+  QUERY_GET_ENTRY_COUNT
 } JournalQueryType;
 
 typedef struct _JournalQueryData {
@@ -43,17 +47,56 @@ typedef struct _JournalQueryData {
 
 const gchar *cdm_journal_table_name = "CrashTable";
 
-static int sqlite_callback (void *data, int argc, char **argv, char **azColName);
+static int sqlite_callback (void *data, int argc, char **argv, char **colname);
 
 static int
-sqlite_callback (void *data, int argc, char **argv, char **azColName)
+sqlite_callback (void *data, int argc, char **argv, char **colname)
 {
-  CDM_UNUSED (data);
-  CDM_UNUSED (argc);
-  CDM_UNUSED (argv);
-  CDM_UNUSED (azColName);
+  JournalQueryData *querydata = (JournalQueryData *)data;
 
-  return 0;
+  switch (querydata->type)
+    {
+    case QUERY_CREATE:
+      break;
+
+    case QUERY_ADD_ENTRY:
+      break;
+
+    case QUERY_SET_TRANSFER:
+      break;
+
+    case QUERY_SET_REMOVED:
+      break;
+
+    case QUERY_GET_VICTIM:
+      for (gint i = 0; i < argc; i++)
+        {
+          if (g_strcmp0 (colname[i], "FILEPATH") == 0)
+            {
+              querydata->response = (gpointer)g_strdup (argv[i]);
+            }
+        }
+      break;
+
+    case QUERY_GET_DATASIZE:
+      for (gint i = 0; i < argc; i++)
+        {
+          if (g_strcmp0 (colname[i], "FILESIZE") == 0)
+            {
+              *((gssize *)(querydata->response)) += g_ascii_strtoll (argv[i], NULL, 10);
+            }
+        }
+      break;
+
+    case QUERY_GET_ENTRY_COUNT:
+      *((gssize *)(querydata->response)) += 1;
+      break;
+
+    default:
+      break;
+    }
+
+  return(0);
 }
 
 CdmJournal *
@@ -88,6 +131,7 @@ cdm_journal_new (CdmOptions *options)
                          "VECTORID        TEXT    NOT   NULL, "
                          "CONTEXTID       TEXT    NOT   NULL, "
                          "FILEPATH        TEXT    NOT   NULL, "
+                         "FILESIZE        INT     NOT   NULL, "
                          "PID             INT     NOT   NULL, "
                          "SIGNAL          INT     NOT   NULL, "
                          "TIMESTAMP       INT     NOT   NULL, "
@@ -137,6 +181,7 @@ cdm_journal_add_crash (CdmJournal *journal,
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
+  gint64 file_size;
   guint64 id;
   JournalQueryData data = {
     .type = QUERY_ADD_ENTRY,
@@ -151,13 +196,24 @@ cdm_journal_add_crash (CdmJournal *journal,
       return(0);
     }
 
+  file_size = cdm_utils_get_filesize (file_path);
+  if (file_size == -1)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "Cannot stat file for size");
+      return(0);
+    }
+
   id = cdm_utils_jenkins_hash (file_path);
 
   sql = g_strdup_printf ("INSERT INTO %s                                                                                 "
-                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,FILEPATH,PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) "
+                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,FILEPATH,FILESIZE,"
+                         "PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) "
                          "VALUES(                                                                                        "
-                         "%lu, '%s', '%s', '%s', '%s', '%s', %ld, %ld, %lu, '%s', %d, %d);", cdm_journal_table_name,
-                         id, proc_name, crash_id, vector_id, context_id, file_path, pid, sig, tstamp, cdm_utils_get_osversion (), 0, 0);
+                         "%lu, '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s', %d, %d);",
+                         cdm_journal_table_name,
+                         id, proc_name, crash_id, vector_id, context_id,
+                         file_path, file_size, pid, sig, tstamp,
+                         cdm_utils_get_osversion (), 0, 0);
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
@@ -193,12 +249,13 @@ cdm_journal_set_transfer (CdmJournal *journal,
 
       guint64 id = cdm_utils_jenkins_hash (file_path);
 
-      sql = g_strdup_printf ("UPDATE %s SET TSTATE = %d WHERE ID = %lu", cdm_journal_table_name, complete, id);
+      sql = g_strdup_printf ("UPDATE %s SET TSTATE = %d WHERE ID IS %lu",
+                             cdm_journal_table_name, complete, id);
 
       if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
         {
           g_set_error (error, g_quark_from_static_string ("JournalSetTransfer"), 1, "SQL query error");
-          g_warning ("Fail to add new entry. SQL error %s", query_error);
+          g_warning ("Fail to set transfer state. SQL error %s", query_error);
           sqlite3_free (query_error);
         }
     }
@@ -221,19 +278,102 @@ cdm_journal_set_removed (CdmJournal *journal,
       g_autofree gchar *sql = NULL;
       gchar *query_error = NULL;
       JournalQueryData data = {
-        .type = QUERY_SET_TRANSFER,
+        .type = QUERY_SET_REMOVED,
         .response = NULL
       };
 
       guint64 id = cdm_utils_jenkins_hash (file_path);
 
-      sql = g_strdup_printf ("UPDATE %s SET RSTATE = %d WHERE ID = %lu", cdm_journal_table_name, complete, id);
+      sql = g_strdup_printf ("UPDATE %s SET RSTATE = %d WHERE ID IS %lu",
+                             cdm_journal_table_name, complete, id);
 
       if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
         {
           g_set_error (error, g_quark_from_static_string ("JournalSetRemoved"), 1, "SQL query error");
-          g_warning ("Fail to add new entry. SQL error %s", query_error);
+          g_warning ("Fail to set removed state. SQL error %s", query_error);
           sqlite3_free (query_error);
         }
     }
 }
+
+gchar *
+cdm_journal_get_victim (CdmJournal *journal, GError **error)
+{
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  JournalQueryData data = {
+    .type = QUERY_GET_VICTIM,
+    .response = NULL
+  };
+
+  g_assert (journal);
+
+  sql = g_strdup_printf ("SELECT FILEPATH FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1 ORDER BY TIMESTAMP LIMIT 1",
+                         cdm_journal_table_name);
+
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalGetVictim"), 1, "SQL query error");
+      g_warning ("Fail to get victim. SQL error %s", query_error);
+      sqlite3_free (query_error);
+    }
+
+  return (gchar *)data.response;
+}
+
+gssize
+cdm_journal_get_data_size (CdmJournal *journal, GError **error)
+{
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  gssize crash_dir_size = 0;
+  JournalQueryData data = {
+    .type = QUERY_GET_DATASIZE,
+    .response = NULL
+  };
+
+  g_assert (journal);
+
+  data.response = (gpointer) & crash_dir_size;
+
+  sql = g_strdup_printf ("SELECT FILESIZE FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1",
+                         cdm_journal_table_name);
+
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalGetDatasize"), 1, "SQL query error");
+      g_warning ("Fail to get data size. SQL error %s", query_error);
+      sqlite3_free (query_error);
+    }
+
+  return crash_dir_size;
+}
+
+gssize
+cdm_journal_get_entry_count (CdmJournal *journal, GError **error)
+{
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  gssize crash_entries = 0;
+  JournalQueryData data = {
+    .type = QUERY_GET_ENTRY_COUNT,
+    .response = NULL
+  };
+
+  g_assert (journal);
+
+  data.response = (gpointer) & crash_entries;
+
+  sql = g_strdup_printf ("SELECT FILEPATH FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1",
+                         cdm_journal_table_name);
+
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalGetDatasize"), 1, "SQL query error");
+      g_warning ("Fail to get entry count. SQL error %s", query_error);
+      sqlite3_free (query_error);
+    }
+
+  return crash_entries;
+}
+

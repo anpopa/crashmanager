@@ -28,12 +28,15 @@
  */
 
 #include "cdm-utils.h"
+
+#include <glib/gstdio.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define TMP_BUFFER_SIZE (1024)
@@ -143,6 +146,25 @@ cdm_utils_get_osversion (void)
   if (retval == NULL)
     {
       retval = UNKNOWN_OS_VERSION;
+    }
+
+  return retval;
+}
+
+gint64
+cdm_utils_get_filesize (const gchar *file_path)
+{
+  GStatBuf file_stat;
+  gint64 retval = -1;
+
+  g_assert (file_path);
+
+  if (g_stat (file_path, &file_stat) == 0)
+    {
+      if (file_stat.st_size > 0)
+        {
+          retval = file_stat.st_size;
+        }
     }
 
   return retval;
