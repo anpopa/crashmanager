@@ -210,16 +210,15 @@ cdm_journal_add_crash (CdmJournal *journal,
                          "PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) "
                          "VALUES(                                                                                        "
                          "%lu, '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s', %d, %d);",
-                         cdm_journal_table_name,
-                         id, proc_name, crash_id, vector_id, context_id,
-                         file_path, file_size, pid, sig, tstamp,
-                         cdm_utils_get_osversion (), 0, 0);
+                         cdm_journal_table_name, id, proc_name, crash_id, vector_id, context_id,
+                         file_path, file_size, pid, sig, tstamp, cdm_utils_get_osversion (), 0, 0);
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "SQL query error");
       g_warning ("Fail to add new entry. SQL error %s", query_error);
       sqlite3_free (query_error);
+
       return(0);
     }
 

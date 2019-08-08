@@ -106,7 +106,6 @@ cdm_application_execute (CdmApplication *app)
   CdmStatus status = CDM_STATUS_OK;
 
   status = cdm_server_bind_and_listen (app->server);
-
   g_main_loop_run (app->mainloop);
 
   return status;

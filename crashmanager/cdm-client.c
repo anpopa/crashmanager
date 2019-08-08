@@ -250,8 +250,8 @@ get_container_name_for_context (const gchar *ctxid)
           pid_t pid;
 
           pid = container->init_pid (container);
-
           tmp_id = get_pid_context_id (pid);
+
           if (g_strcmp0 (tmp_id, ctxid) != 0)
             {
               container_name = g_strdup_printf ("%s", name);

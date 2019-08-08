@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 gboolean janitor_source_prepare (GSource *source, gint *timeout);
 gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor);
@@ -62,15 +63,15 @@ janitor_source_prepare (GSource *source, gint *timeout)
   crash_dir_size = cdm_journal_get_data_size (janitor->journal, NULL);
   entries_count = cdm_journal_get_entry_count (janitor->journal, NULL);
 
-  if ((crash_dir_size > janitor->max_dir_size) ||
-      ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size) ||
-      (entries_count > janitor->max_file_cnt))
+  if ((crash_dir_size > janitor->max_dir_size) || (entries_count > janitor->max_file_cnt) ||
+      ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size))
     {
-      g_info ("Database cleanup needed dirsize=%ld entcnt=%ld", crash_dir_size, entries_count);
+      g_info ("Cleaning database size=%ld (max=%ld min=%ld) count=%ld (max=%ld)", 
+              crash_dir_size, janitor->max_dir_size, janitor->min_dir_size, 
+              entries_count, janitor->max_file_cnt);
+
       return TRUE;
     }
-
-  g_info ("Database cleanup not needed dirsize=%ld entcnt=%ld", crash_dir_size, entries_count);
 
   return FALSE;
 }
@@ -80,7 +81,6 @@ janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjani
 {
   CDM_UNUSED (callback);
   CDM_UNUSED (source);
-
   return callback (cdmjanitor) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
@@ -88,13 +88,12 @@ static gboolean
 janitor_source_callback (gpointer cdmjanitor)
 {
   CdmJanitor *janitor = (CdmJanitor *)cdmjanitor;
-  GError *error = NULL;
   g_autofree gchar *victim_path = NULL;
+  GError *error = NULL;
 
   g_assert (janitor);
 
   victim_path = cdm_journal_get_victim (janitor->journal, &error);
-
   if (victim_path == NULL || error != NULL)
     {
       g_warning ("No victim available to be cleaned");
@@ -106,13 +105,16 @@ janitor_source_callback (gpointer cdmjanitor)
     }
   else
     {
+      g_info ("Remove old crashdump entry %s", victim_path);
       if (g_remove (victim_path) == -1)
         {
-          g_warning ("Fail to remove file %s", victim_path);
+          if (errno != ENOENT)
+            {
+              g_error ("Fail to remove file %s", victim_path);
+            }
         }
 
       cdm_journal_set_removed (janitor->journal, victim_path, TRUE, &error);
-
       if (error != NULL)
         {
           g_warning ("Fail to set remove flag for victim %s: Error %s", victim_path, error->message);

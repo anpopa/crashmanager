@@ -60,7 +60,6 @@ gboolean
 transfer_source_prepare (GSource *source, gint *timeout)
 {
   CdmTransfer *transfer = (CdmTransfer *)source;
-
   CDM_UNUSED (timeout);
   return(g_async_queue_length (transfer->queue) > 0);
 }
@@ -157,7 +156,7 @@ transfer_thread_func (gpointer data, gpointer user_data)
 
       if (success)
         {
-          dlt_user_log_file_end (&cdm_transfer_ctx, entry->file_path, 1);
+          dlt_user_log_file_end (&cdm_transfer_ctx, entry->file_path, 0);
         }
     }
 #endif
@@ -237,4 +236,3 @@ cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path, CdmTransferEnt
 
   return CDM_STATUS_OK;
 }
-
