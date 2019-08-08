@@ -33,6 +33,7 @@
 #include "cdm-types.h"
 #include "cdm-options.h"
 #include "cdm-transfer.h"
+#include "cdm-journal.h"
 
 #include <glib.h>
 
@@ -42,18 +43,19 @@
  */
 typedef struct _CdmServer {
   GSource source;  /**< Event loop source */
-  CdmOptions *options; /**< Own reference to global options */
   grefcount rc;     /**< Reference counter variable  */
   gpointer tag;     /**< Unix server socket tag  */
   gint sockfd;      /**< Module file descriptor (server listen fd) */
+  CdmOptions *options; /**< Own reference to global options */
   CdmTransfer *transfer; /**< Own a reference to transfer object */
+  CdmJournal *journal; /**< Own a reference to journal object */
 } CdmServer;
 
 /*
  * @brief Create a new server object
  * @return On success return a new CdmServer object otherwise return NULL
  */
-CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer);
+CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal);
 
 /**
  * @brief Aquire server object

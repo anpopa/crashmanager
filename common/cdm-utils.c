@@ -37,6 +37,9 @@
 #include <unistd.h>
 
 #define TMP_BUFFER_SIZE (1024)
+#define UNKNOWN_OS_VERSION "Unknown version"
+
+static gchar *os_version = NULL;
 
 gchar *
 cdm_utils_get_procname (gint64 pid)
@@ -93,4 +96,54 @@ cdm_utils_jenkins_hash (const gchar *key)
   hash += (hash << 15);
 
   return hash;
+}
+
+const gchar *
+cdm_utils_get_osversion (void)
+{
+  gchar *retval = NULL;
+
+  if (os_version != NULL)
+    {
+      return os_version;
+    }
+  else
+    {
+      gchar tmpbuf[TMP_BUFFER_SIZE];
+      gboolean done = FALSE;
+      FILE *fstm;
+
+      if ((fstm = fopen ("/etc/os-release", "r")) == NULL)
+        {
+          g_warning ("Fail to open /etc/os-release file. Error %s", strerror (errno));
+        }
+      else
+        {
+          while (fgets (tmpbuf, sizeof(tmpbuf), fstm) && !done)
+            {
+              gchar *version = g_strrstr (tmpbuf, "VERSION=");
+
+              if (version != NULL)
+                {
+                  retval = g_strdup (version + strlen ("VERSION=") + 1);
+                  if (retval != NULL)
+                    {
+                      g_strstrip (retval);
+                      g_strdelimit (retval, "\"", '\0');
+                    }
+
+                  done = TRUE;
+                }
+            }
+
+          fclose (fstm);
+        }
+    }
+
+  if (retval == NULL)
+    {
+      retval = UNKNOWN_OS_VERSION;
+    }
+
+  return retval;
 }

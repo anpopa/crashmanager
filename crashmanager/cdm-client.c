@@ -107,12 +107,38 @@ client_source_callback (gpointer data)
 
       if ((type == CDM_CORE_COMPLETE) || (type == CDM_CORE_FAILED))
         {
-          CdmMessageDataComplete *msg_data = (CdmMessageDataComplete *)msg.data;
+          GError *error = NULL;
+          guint64 dbid;
 
-          cdm_transfer_file (client->transfer, msg_data->core_file, archive_transfer_complete, cdm_client_ref (client));
+          if (!client->init_data || !client->update_data || !client->complete_data)
+            {
+              g_warning ("Client data from crashhandler incomplete for client %d", client->sockfd);
+              return FALSE;
+            }
+
+          dbid = cdm_journal_add_crash (client->journal,
+                                        client->init_data->pname,
+                                        client->update_data->crashid,
+                                        client->update_data->vectorid,
+                                        client->update_data->contextid,
+                                        client->complete_data->core_file,
+                                        client->init_data->pid,
+                                        client->init_data->coresig,
+                                        client->init_data->tstamp,
+                                        &error);
+
+          if (error != NULL)
+            {
+              g_warning ("Fail to add new crash entry in database %s", error->message);
+              g_error_free (error);
+            }
+          else
+            {
+              g_debug ("New crash entry added to database with id %016lX", dbid);
+            }
+
+          cdm_transfer_file (client->transfer, client->complete_data->core_file, archive_transfer_complete, cdm_client_ref (client));
         }
-
-      cdm_message_free_data (&msg);
     }
 
   return TRUE;
@@ -322,13 +348,22 @@ static void
 archive_transfer_complete (gpointer cdmclient, const gchar *file_path)
 {
   CdmClient *client = (CdmClient *)cdmclient;
+  GError *error = NULL;
 
   g_debug ("Archive transfer complete for %d : %s", client->sockfd, file_path);
+  cdm_journal_set_transfer (client->journal, file_path, TRUE, &error);
+
+  if (error != NULL)
+    {
+      g_warning ("Fail to set transfer complete for %s. Error %s", file_path, error->message);
+      g_error_free (error);
+    }
+
   cdm_client_unref (client);
 }
 
 CdmClient *
-cdm_client_new (gint clientfd, CdmTransfer *transfer)
+cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal)
 {
   CdmClient *client = (CdmClient *)g_source_new (&client_source_funcs, sizeof(CdmClient));
 
@@ -339,6 +374,7 @@ cdm_client_new (gint clientfd, CdmTransfer *transfer)
 
   client->sockfd = clientfd;
   client->transfer = cdm_transfer_ref (transfer);
+  client->journal = cdm_journal_ref (journal);
 
   g_source_set_callback (CDM_EVENT_SOURCE (client), G_SOURCE_FUNC (client_source_callback), client, client_source_destroy_notify);
   g_source_attach (CDM_EVENT_SOURCE (client), NULL); /* attach the source to the default context */
@@ -364,6 +400,12 @@ cdm_client_unref (CdmClient *client)
   if (g_ref_count_dec (&client->rc) == TRUE)
     {
       cdm_transfer_unref (client->transfer);
+      cdm_journal_unref (client->journal);
+
+      g_free (client->init_data);
+      g_free (client->update_data);
+      g_free (client->complete_data);
+
       g_source_unref (CDM_EVENT_SOURCE (client));
     }
 }

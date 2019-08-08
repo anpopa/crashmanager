@@ -31,6 +31,7 @@
 #define CDM_JANITOR_H
 
 #include "cdm-types.h"
+#include "cdm-options.h"
 
 #include <glib.h>
 

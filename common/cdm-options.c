@@ -151,7 +151,7 @@ cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
             }
         }
       return g_strdup (CDM_RUN_DIR);
-    
+
     case KEY_DATABASE_FILE:
       if (opts->has_conf)
         {

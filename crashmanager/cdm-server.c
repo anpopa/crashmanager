@@ -95,7 +95,7 @@ server_source_callback (gpointer cdmserver)
 
   if (clientfd >= 0)
     {
-      CdmClient *client = cdm_client_new (clientfd, server->transfer);
+      CdmClient *client = cdm_client_new (clientfd, server->transfer, server->journal);
 
       CDM_UNUSED (client);
 
@@ -118,7 +118,7 @@ server_source_destroy_notify (gpointer cdmserver)
 }
 
 CdmServer *
-cdm_server_new (CdmOptions *options, CdmTransfer *transfer)
+cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal)
 {
   CdmServer *server = NULL;
   struct timeval tout;
@@ -135,6 +135,7 @@ cdm_server_new (CdmOptions *options, CdmTransfer *transfer)
 
   server->options = cdm_options_ref (options);
   server->transfer = cdm_transfer_ref (transfer);
+  server->journal = cdm_journal_ref (journal);
 
   server->sockfd = socket (AF_UNIX, SOCK_STREAM, 0);
   if (server->sockfd < 0)
@@ -181,6 +182,7 @@ cdm_server_unref (CdmServer *server)
     {
       cdm_options_unref (server->options);
       cdm_transfer_unref (server->transfer);
+      cdm_journal_unref (server->journal);
       g_source_unref (CDM_EVENT_SOURCE (server));
     }
 }

@@ -38,15 +38,16 @@ extern "C" {
 
 /**
  * @brief Get process name for pid
- *
  * @param pid Process ID to lookup for
- * @param exec_name String buffer to write the name into
- * @param exec_name_maxsize Maximum size to write into exec_name buffer (truncated if proc name is
- * longer)
- *
- * @return CDM_STATUS_OK on success
+ * @return new allocated string with proc name or NULL if not found
  */
 gchar *cdm_utils_get_procname (gint64 pid);
+
+/**
+ * @brief Get process name for pid
+ * @return const string with current os version
+ */
+const gchar *cdm_utils_get_osversion (void);
 
 /**
  * @brief Calculate the jankins hash from a string

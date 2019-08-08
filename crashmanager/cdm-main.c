@@ -28,6 +28,7 @@
  */
 
 #include "cdm-application.h"
+#include "cdm-utils.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -94,7 +95,10 @@ main (gint argc, gchar *argv[])
   if (g_access (config_path, R_OK) == 0)
     {
       app = cdm_application_new (config_path);
+
+      g_info ("Crashmanager service started for OS version %s", cdm_utils_get_osversion ());
       g_mainloop = cdm_application_get_mainloop (app);
+
       status = cdm_application_execute (app);
     }
   else

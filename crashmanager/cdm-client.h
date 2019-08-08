@@ -33,6 +33,7 @@
 #include "cdm-types.h"
 #include "cdm-message.h"
 #include "cdm-transfer.h"
+#include "cdm-journal.h"
 
 #include <glib.h>
 
@@ -48,6 +49,7 @@ typedef struct _CdmClient {
   guint64 id;       /**< Client instance id */
 
   CdmTransfer *transfer; /**< Own a reference to transfer object */
+  CdmJournal *journal; /**< Own a reference to journal object */
 
   CdmMessageType last_msg_type; /**< Last processed message type */
   CdmMessageDataNew *init_data;          /**< Coredump initial data */
@@ -59,7 +61,7 @@ typedef struct _CdmClient {
  * @brief Create a new client object
  * @return On success return a new CdmClient object otherwise return NULL
  */
-CdmClient *cdm_client_new (gint clientfd, CdmTransfer *transfer);
+CdmClient *cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal);
 
 /**
  * @brief Aquire client object
