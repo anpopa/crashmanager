@@ -48,7 +48,7 @@ typedef struct _CdmJournal {
  * @brief Create a new journal object
  * @return On success return a new CdmJournal object otherwise return NULL
  */
-CdmJournal *cdm_journal_new (const gchar *database_path);
+CdmJournal *cdm_journal_new (const gchar *dbpath);
 
 /**
  * @brief Aquire journal object
@@ -76,7 +76,7 @@ guint64 cdm_journal_add_crash (CdmJournal *journal,
                               gint64 pid, 
                               gint64 sig, 
                               guint64 tstamp, 
-                              GError *error);
+                              GError **error);
 
 /**
  * @brief Get journal entry ID for a given archive path

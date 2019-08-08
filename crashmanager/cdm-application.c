@@ -40,7 +40,7 @@ CdmApplication *
 cdm_application_new (const gchar *config)
 {
   CdmApplication *app = g_new0 (CdmApplication, 1);
-  g_autofree gchar *database_path = NULL;
+  g_autofree gchar *dbpath = NULL;
 
   g_assert (app);
 
@@ -48,10 +48,10 @@ cdm_application_new (const gchar *config)
   g_ref_count_inc (&app->rc);
 
   app->options = cdm_options_new (config);
-  database_path = cdm_options_string_for (app->options, KEY_DATABASE_FILE);
+  dbpath = cdm_options_string_for (app->options, KEY_DATABASE_FILE);
   
   app->janitor = cdm_janitor_new ();
-  app->journal = cdm_journal_new (database_path);
+  app->journal = cdm_journal_new (dbpath);
   app->sdnotify = cdm_sdnotify_new ();
   app->transfer = cdm_transfer_new ();
   app->server = cdm_server_new (app->options, app->transfer);

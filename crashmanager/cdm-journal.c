@@ -28,6 +28,7 @@
  */
 
 #include "cdm-journal.h"
+#include "cdm-utils.h"
 
 typedef enum _JournalQueryType {
     QUERY_CREATE, 
@@ -55,7 +56,7 @@ sqlite_callback(void *data, int argc, char **argv, char **azColName)
 }
 
 CdmJournal *
-cdm_journal_new (const gchar *database_path)
+cdm_journal_new (const gchar *dbpath)
 {
   CdmJournal *journal = NULL;
   g_autofree gchar *sql = NULL;
@@ -65,7 +66,7 @@ cdm_journal_new (const gchar *database_path)
       .response = NULL
   };
 
-  g_assert (database_path);
+  g_assert (dbpath);
   
   journal = g_new0 (CdmJournal, 1);
   
@@ -74,9 +75,9 @@ cdm_journal_new (const gchar *database_path)
   g_ref_count_init (&journal->rc);
   g_ref_count_inc (&journal->rc);
 
-  if (sqlite3_open (database_path, &journal->database))
+  if (sqlite3_open (dbpath, &journal->database))
     {
-      g_error ("Cannot open journal database at path %s", database_path);
+      g_error ("Cannot open journal database at path %s", dbpath);
     }
 
   sql = g_strdup_printf ("CREATE TABLE IF NOT EXISTS %s       "
@@ -118,4 +119,51 @@ cdm_journal_unref (CdmJournal *journal)
     {
       g_free (journal);
     }
+}
+
+guint64 
+cdm_journal_add_crash (CdmJournal *journal, 
+                       const gchar *proc_name, 
+                       const gchar *crash_id, 
+                       const gchar *vector_id, 
+                       const gchar *context_id, 
+                       const gchar *file_path,
+                       gint64 pid, 
+                       gint64 sig, 
+                       guint64 tstamp, 
+                       GError **error)
+{
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  guint64 id;
+  JournalQueryData data = {
+      .type = QUERY_ADD_ENTRY, 
+      .response = NULL
+  };
+
+  g_assert (journal);
+
+  if (!proc_name || !crash_id || !vector_id || !context_id || !file_path)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "Invalid arguments");
+      return (0);
+    }
+
+  id = cdm_utils_jenkins_hash (file_path);
+
+  sql = g_strdup_printf ("INSERT INTO %s                                                                       "
+                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,FILEPATH,PID,SIGNAL,TIMESTAMP,TSTATE,RSTATE) "
+                         "VALUES(                                                                              "
+                         "%lu, '%s', '%s', '%s', '%s', '%s', %ld, %ld, %lu, %d, %d);", cdm_journal_table_name, 
+                         id, proc_name, crash_id, vector_id, context_id, file_path, pid, sig, tstamp, 0, 0);
+  
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "SQL query error");
+      g_warning ("Fail to add new entry. SQL error %s", query_error);
+      sqlite3_free (query_error);
+      return (0);
+    }
+
+  return (id);
 }
