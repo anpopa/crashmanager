@@ -49,7 +49,7 @@ extern "C" {
 
 /**
  * @struct CdmApplication
- * @brief The global cdm app object referencing main submodules and states
+ * @brief Crashmanager application object referencing main objects
  */
 typedef struct _CdmApplication {
   CdmOptions *options;
@@ -64,7 +64,7 @@ typedef struct _CdmApplication {
 
 /**
  * @brief Create a new CdmApplication object
- * @param conf_path Full path to the cdm configuration fole
+ * @param config Full path to the configuration file
  */
 CdmApplication *cdm_application_new (const gchar *config);
 
@@ -76,8 +76,8 @@ CdmApplication *cdm_application_new (const gchar *config);
 CdmApplication *cdm_application_ref (CdmApplication *app);
 
 /**
- * @brief Release a app object
- * @param app The cdm app object to release
+ * @brief Release a CdmApplication object
+ * @param app The cdm application object to release
  */
 void cdm_application_unref (CdmApplication *app);
 

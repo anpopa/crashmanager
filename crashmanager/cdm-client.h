@@ -48,8 +48,8 @@ typedef struct _CdmClient {
   gint sockfd;      /**< Module file descriptor (client fd) */
   guint64 id;       /**< Client instance id */
 
-  CdmTransfer *transfer; /**< Own a reference to transfer object */
-  CdmJournal *journal; /**< Own a reference to journal object */
+  CdmTransfer *transfer; /**< Own a reference to the transfer object */
+  CdmJournal *journal; /**< Own a reference to the journal object */
 
   CdmMessageType last_msg_type; /**< Last processed message type */
   CdmMessageDataNew *init_data;          /**< Coredump initial data */
@@ -59,19 +59,25 @@ typedef struct _CdmClient {
 
 /*
  * @brief Create a new client object
+ * @param clientfd Socket file descriptor accepted by the server
+ * @param transfer A pointer to the CdmTransfer object created by the main
+ * application
+ * @param journal A pointer to the CdmJournal object created by the main
+ * application
  * @return On success return a new CdmClient object otherwise return NULL
  */
 CdmClient *cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal);
 
 /**
  * @brief Aquire client object
- * @param c Pointer to the client object
+ * @param client Pointer to the client object
+ * @return The referenced client object
  */
 CdmClient *cdm_client_ref (CdmClient *client);
 
 /**
  * @brief Release client object
- * @param c Pointer to the client object
+ * @param client Pointer to the client object
  */
 void cdm_client_unref (CdmClient *client);
 

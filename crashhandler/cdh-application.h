@@ -64,7 +64,7 @@ typedef struct _CdhApplication {
 
 /**
  * @brief Create a new CdhApplication object
- * @param conf_path Full path to the cdh configuration fole
+ * @param config_path Full path to the cdh configuration fole
  */
 CdhApplication *cdh_application_new (const gchar *config_path);
 

@@ -51,13 +51,14 @@ CdmSDNotify *cdm_sdnotify_new (void);
 
 /**
  * @brief Aquire sdnotify object
- * @param c Pointer to the sdnotify object
+ * @param sdnotify Pointer to the sdnotify object
+ * @return The referenced sdnotify object
  */
 CdmSDNotify *cdm_sdnotify_ref (CdmSDNotify *sdnotify);
 
 /**
  * @brief Release sdnotify object
- * @param c Pointer to the sdnotify object
+ * @param sdnotify Pointer to the sdnotify object
  */
 void cdm_sdnotify_unref (CdmSDNotify *sdnotify);
 

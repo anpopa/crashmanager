@@ -41,30 +41,45 @@
  * @brief The CdmJournal opaque data structure
  */
 typedef struct _CdmJournal {
-  sqlite3 *database;
+  sqlite3 *database; /**< The sqlite3 database object */
   grefcount rc;     /**< Reference counter variable  */
 } CdmJournal;
 
 /**
  * @brief Create a new journal object
+ * @param options A pointer to the CdmOptions object created by the main
+ * application
  * @return On success return a new CdmJournal object otherwise return NULL
  */
 CdmJournal *cdm_journal_new (CdmOptions *options);
 
 /**
  * @brief Aquire journal object
- * @return On success return a new CdmJournal object otherwise return NULL
+ * @param journal Pointer to the journal object
+ * @return The referenced journal object
  */
 CdmJournal *cdm_journal_ref (CdmJournal *journal);
 
 /**
  * @brief Release an journal object
- * @param c Pointer to the journal object
+ * @param journal Pointer to the journal object
  */
 void cdm_journal_unref (CdmJournal *journal);
 
 /**
- * @brief Set journal entry as type new data
+ * @brief Add a new crash entry with default state into the journal
+ *
+ * @param journal Pointer to the journal object
+ * @param proc_name Process name
+ * @param crash_id Process crash id
+ * @param vector_id Process vector id
+ * @param context_id Process context id
+ * @param file_path Process file path
+ * @param pid Process id
+ * @param sig Process crash signal id
+ * @param tstamp Process crash timestamp
+ * @param error Optional GError object reference to set on error
+ *
  * @return Return the new journal entry ID. If error is not NULL and an error
  * occured the error is set and return value is 0
  */

@@ -53,25 +53,35 @@ typedef struct _CdmServer {
 
 /*
  * @brief Create a new server object
+ *
+ * @param options A pointer to the CdmOptions object created by the main
+ * application
+ * @param transfer A pointer to the CdmTransfer object created by the main
+ * application
+ * @param journal A pointer to the CdmJournal object created by the main
+ * application
+ *
  * @return On success return a new CdmServer object otherwise return NULL
  */
 CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal);
 
 /**
  * @brief Aquire server object
- * @param c Pointer to the server object
+ * @param server Pointer to the server object
+ * @return The referenced server object
  */
 CdmServer *cdm_server_ref (CdmServer *server);
 
 /**
  * @brief Start the server an listen for clients
- * @param c Pointer to the server object
+ * @param server Pointer to the server object
+ * @return If server starts listening the function return CDM_STATUS_OK
  */
 CdmStatus cdm_server_bind_and_listen (CdmServer *server);
 
 /**
  * @brief Release server object
- * @param c Pointer to the server object
+ * @param server Pointer to the server object
  */
 void cdm_server_unref (CdmServer *server);
 

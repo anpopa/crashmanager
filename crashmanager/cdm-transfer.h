@@ -77,6 +77,7 @@ CdmTransfer *cdm_transfer_new (void);
 /**
  * @brief Aquire transfer object
  * @param transfer Pointer to the transfer object
+ * @return The referenced transfer object
  */
 CdmTransfer *cdm_transfer_ref (CdmTransfer *transfer);
 
@@ -88,8 +89,13 @@ void cdm_transfer_unref (CdmTransfer *transfer);
 
 /**
  * @brief Transfer a file
+ *
  * @param transfer Pointer to the transfer object
  * @param file_path A pointer to file_path string
+ * @param callback The callback function to call when transfer finish
+ * @param user_data A pointer to provide as argument to the callback
+ *
+ * @return on succhess return CDM_STATUS_OK
  */
 CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path, CdmTransferEntryCallback callback, gpointer user_data);
 

@@ -53,19 +53,26 @@ typedef struct _CdmJanitor {
 
 /*
  * @brief Create a new janitor object
+ *
+ * @param options A pointer to the CdmOptions object created by the main
+ * application
+ * @param journal A pointer to the CdmJournal object created by the main
+ * application
+ *
  * @return On success return a new CdmJanitor object otherwise return NULL
  */
 CdmJanitor *cdm_janitor_new (CdmOptions *options, CdmJournal *journal);
 
 /**
  * @brief Aquire janitor object
- * @param c Pointer to the janitor object
+ * @param janitor Pointer to the janitor object
+ * @return The referenced janitor object
  */
 CdmJanitor *cdm_janitor_ref (CdmJanitor *janitor);
 
 /**
  * @brief Release janitor object
- * @param c Pointer to the janitor object
+ * @param janitor Pointer to the janitor object
  */
 void cdm_janitor_unref (CdmJanitor *janitor);
 
