@@ -114,8 +114,8 @@ cdm_journal_new (CdmOptions *options)
   journal = g_new0 (CdmJournal, 1);
 
   g_assert (journal);
+
   g_ref_count_init (&journal->rc);
-  g_ref_count_inc (&journal->rc);
 
   dbpath = cdm_options_string_for (options, KEY_DATABASE_FILE);
 

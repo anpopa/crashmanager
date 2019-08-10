@@ -47,7 +47,6 @@ cdm_lifecycle_new (void)
   g_assert (lifecycle);
 
   g_ref_count_init (&lifecycle->rc);
-  g_ref_count_inc (&lifecycle->rc);
 
   lifecycle->source = g_source_new (&lifecycle_source_funcs, sizeof(GSource));
   g_source_ref (lifecycle->source);

@@ -82,7 +82,6 @@ cdh_coredump_new (CdhContext *context, CdhArchive *archive)
 #endif
 
   g_ref_count_init (&cd->rc);
-  g_ref_count_inc (&cd->rc);
 
   cd->context = cdh_context_ref (context);
   cd->archive = cdh_archive_ref (archive);

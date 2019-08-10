@@ -57,8 +57,7 @@ cdh_application_new (const gchar *config_path)
   CdhApplication *app = g_new0 (CdhApplication, 1);
 
   g_ref_count_init (&app->rc);
-  g_ref_count_inc (&app->rc);
-
+  
   app->options = cdm_options_new (config_path);
   g_assert (app->options);
 

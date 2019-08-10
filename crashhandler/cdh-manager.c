@@ -41,7 +41,6 @@ cdh_manager_new (CdmOptions *opts)
   g_assert (opts);
 
   g_ref_count_init (&c->rc);
-  g_ref_count_inc (&c->rc);
 
   c->sfd = -1;
   c->connected = false;

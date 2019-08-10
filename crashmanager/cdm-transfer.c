@@ -178,7 +178,6 @@ cdm_transfer_new (void)
   g_assert (transfer);
 
   g_ref_count_init (&transfer->rc);
-  g_ref_count_inc (&transfer->rc);
 
 #ifdef WITH_GENIVI_DLT
   DLT_REGISTER_CONTEXT (cdm_transfer_ctx, "FLTR", "Crashmanager file transfer");

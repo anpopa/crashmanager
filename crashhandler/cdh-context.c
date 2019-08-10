@@ -68,7 +68,6 @@ cdh_context_new (CdmOptions *opts, CdhArchive *archive)
   g_assert (archive);
 
   g_ref_count_init (&ctx->rc);
-  g_ref_count_inc (&ctx->rc);
 
   ctx->opts = cdm_options_ref (opts);
   ctx->archive = cdh_archive_ref (archive);

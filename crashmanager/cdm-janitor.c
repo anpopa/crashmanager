@@ -143,7 +143,6 @@ cdm_janitor_new (CdmOptions *options, CdmJournal *journal)
   g_assert (janitor);
 
   g_ref_count_init (&janitor->rc);
-  g_ref_count_inc (&janitor->rc);
 
   janitor->journal = cdm_journal_ref (journal);
 

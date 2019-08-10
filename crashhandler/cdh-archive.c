@@ -50,7 +50,6 @@ cdh_archive_new (void)
   CdhArchive *ar = g_new0 (CdhArchive, 1);
 
   g_ref_count_init (&ar->rc);
-  g_ref_count_inc (&ar->rc);
 
   return ar;
 }
@@ -82,8 +81,6 @@ cdh_archive_open (CdhArchive *ar, const gchar *dst, time_t artime)
 
   g_assert (ar);
   g_assert (dst);
-
-  memset (ar, 0, sizeof(CdhArchive));
 
   ar->file_active = FALSE;
   ar->archive = archive_write_new ();

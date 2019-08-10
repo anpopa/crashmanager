@@ -132,8 +132,7 @@ cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal)
   g_assert (server);
 
   g_ref_count_init (&server->rc);
-  g_ref_count_inc (&server->rc);
-
+  
   server->options = cdm_options_ref (options);
   server->transfer = cdm_transfer_ref (transfer);
   server->journal = cdm_journal_ref (journal);

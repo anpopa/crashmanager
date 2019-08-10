@@ -62,7 +62,6 @@ cdm_options_new (const gchar *conf_path)
     }
 
   g_ref_count_init (&opts->rc);
-  g_ref_count_inc (&opts->rc);
 
   return opts;
 }
@@ -72,7 +71,6 @@ cdm_options_ref (CdmOptions *opts)
 {
   g_assert (opts);
   g_ref_count_inc (&opts->rc);
-
   return opts;
 }
 

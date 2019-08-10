@@ -44,7 +44,6 @@ cdm_application_new (const gchar *config)
   g_assert (app);
 
   g_ref_count_init (&app->rc);
-  g_ref_count_inc (&app->rc);
 
   app->sdnotify = cdm_sdnotify_new ();
   app->transfer = cdm_transfer_new ();
