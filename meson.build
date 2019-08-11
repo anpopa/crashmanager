@@ -147,12 +147,18 @@ if get_option('CRASHMANAGER')
     'crashmanager/cdm-client.c',
     'crashmanager/cdm-server.c',
     'crashmanager/cdm-janitor.c',
-    'crashmanager/cdm-lifecycle.c',
-    'crashmanager/cdm-sdnotify.c',
     'crashmanager/cdm-transfer.c',
     'crashmanager/cdm-journal.c',
     'crashmanager/cdm-application.c',
     ]
+
+if get_option('SYSTEMD')
+  crashmanager_sources += 'crashmanager/cdm-sdnotify.c'
+endif
+
+if get_option('GENIVI_NSM')
+  crashmanager_sources += 'crashmanager/cdm-lifecycle.c'
+endif
 
   crashmanager_deps = [
     dep_glib,

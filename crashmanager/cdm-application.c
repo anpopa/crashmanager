@@ -45,7 +45,12 @@ cdm_application_new (const gchar *config)
 
   g_ref_count_init (&app->rc);
 
+#ifdef WITH_SYSTEMD
   app->sdnotify = cdm_sdnotify_new ();
+#endif
+#ifdef WITH_GENIVI_NSM
+  app->lifecycle = cdm_lifecycle_new ();
+#endif
   app->transfer = cdm_transfer_new ();
 
   app->options = cdm_options_new (config);
@@ -74,7 +79,12 @@ cdm_application_unref (CdmApplication *app)
   g_assert (app->server);
   g_assert (app->janitor);
   g_assert (app->journal);
+#ifdef WITH_SYSTEMD
   g_assert (app->sdnotify);
+#endif
+#ifdef WITH_GENIVI_NSM
+  g_assert (app->lifecycle);
+#endif
   g_assert (app->transfer);
 
   if (g_ref_count_dec (&app->rc) == TRUE)
@@ -82,7 +92,12 @@ cdm_application_unref (CdmApplication *app)
       cdm_server_unref (app->server);
       cdm_janitor_unref (app->janitor);
       cdm_journal_unref (app->journal);
+#ifdef WITH_SYSTEMD
       cdm_sdnotify_unref (app->sdnotify);
+#endif
+#ifdef WITH_GENIVI_NSM
+      cdm_lifecycle_unref (app->lifecycle);
+#endif
       cdm_transfer_unref (app->transfer);
       cdm_options_unref (app->options);
 

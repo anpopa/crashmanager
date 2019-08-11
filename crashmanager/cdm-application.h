@@ -41,8 +41,13 @@ extern "C" {
 #include "cdm-server.h"
 #include "cdm-janitor.h"
 #include "cdm-journal.h"
-#include "cdm-sdnotify.h"
 #include "cdm-transfer.h"
+#ifdef WITH_SYSTEMD
+#include "cdm-sdnotify.h"
+#endif
+#ifdef WITH_GENIVI_NSM
+#include "cdm-lifecycle.h"
+#endif
 
 #include <glib.h>
 #include <stdlib.h>
@@ -56,7 +61,12 @@ typedef struct _CdmApplication {
   CdmServer *server;
   CdmJanitor *janitor;
   CdmJournal *journal;
+#ifdef WITH_SYSTEMD
   CdmSDNotify *sdnotify;
+#endif
+#ifdef WITH_GENIVI_NSM
+  CdmLifecycle *lifecycle;
+#endif
   CdmTransfer *transfer;
   GMainLoop *mainloop;
   grefcount rc;           /**< Reference counter variable  */
