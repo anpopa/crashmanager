@@ -163,7 +163,7 @@ cdm_utils_get_filesize (const gchar *file_path)
 
   if (g_stat (file_path, &file_stat) == 0)
     {
-      if (file_stat.st_size > 0)
+      if (file_stat.st_size >= 0)
         {
           retval = file_stat.st_size;
         }
