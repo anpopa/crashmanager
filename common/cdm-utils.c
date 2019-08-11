@@ -38,6 +38,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <grp.h>
+#include <pwd.h>
 
 #define TMP_BUFFER_SIZE (1024)
 #define UNKNOWN_OS_VERSION "Unknown version"
@@ -168,4 +170,87 @@ cdm_utils_get_filesize (const gchar *file_path)
     }
 
   return retval;
+}
+
+CdmStatus
+cdm_utils_chown (const gchar *file_path,
+                 const gchar *user_name,
+                 const gchar *group_name)
+{
+  CdmStatus status = CDM_STATUS_OK;
+  struct passwd *pwd;
+  struct group *grp;
+
+  g_assert (file_path);
+  g_assert (user_name);
+  g_assert (group_name);
+
+  pwd = getpwnam (user_name);
+  if (pwd == NULL)
+    {
+      status = CDM_STATUS_ERROR;
+    }
+  else
+    {
+      grp = getgrnam (group_name);
+      if (grp == NULL)
+        {
+          status = CDM_STATUS_ERROR;
+        }
+      else
+        {
+          if (chown (file_path, pwd->pw_uid, grp->gr_gid) == -1)
+            {
+              status = CDM_STATUS_ERROR;
+            }
+        }
+    }
+
+  return status;
+}
+
+pid_t
+cdm_utils_first_pid_for_process (const gchar *proc_name, GError **error)
+{
+  const gchar *nfile = NULL;
+  GDir *gdir = NULL;
+  pid_t pid = -1;
+
+  g_assert (proc_name);
+
+  gdir = g_dir_open ("/proc", 0, error);
+  if (error != NULL)
+    {
+      return -1;
+    }
+
+  while ((nfile = g_dir_read_name (gdir)) != NULL)
+    {
+      g_autofree gchar *fpath = NULL;
+      g_autofree gchar *lnexe = NULL;
+      glong pent = 0;
+
+      pent = g_ascii_strtoll (nfile, NULL, 10);
+      if (pent == 0)
+        {
+          continue;
+        }
+
+      fpath = g_strdup_printf ("/proc/%s/exe", nfile);
+      if (fpath == NULL)
+        {
+          continue;
+        }
+
+      lnexe = g_file_read_link (fpath, NULL);
+      if (g_strcmp0 (lnexe, proc_name) == 0)
+        {
+          pid = (pid_t)pent;
+          break;
+        }
+    }
+
+  g_dir_close (gdir);
+
+  return pid;
 }

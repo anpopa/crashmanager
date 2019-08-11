@@ -70,7 +70,7 @@ cdm_sdnotify_new (void)
   gulong usec = 0;
 
   g_assert (sdnotify);
-  
+
   g_ref_count_init (&sdnotify->rc);
 
   sdw_status = sd_watchdog_enabled (0, &usec);
@@ -116,7 +116,7 @@ cdm_sdnotify_unref (CdmSDNotify *sdnotify)
         {
           g_source_unref (sdnotify->source);
         }
-      
+
       g_free (sdnotify);
     }
 }

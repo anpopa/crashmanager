@@ -368,7 +368,7 @@ cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal)
   CdmClient *client = (CdmClient *)g_source_new (&client_source_funcs, sizeof(CdmClient));
 
   g_assert (client);
-  
+
   g_ref_count_init (&client->rc);
 
   client->sockfd = clientfd;

@@ -28,6 +28,7 @@
  */
 
 #include "cdm-application.h"
+#include "cdm-utils.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -35,6 +36,160 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
+static void
+wait_early_cdh_instances (long timeout)
+{
+  gboolean end = FALSE;
+  glong count = 0;
+
+  do
+    {
+      pid_t pid = cdm_utils_first_pid_for_process ("coredumper", NULL);
+
+      if (pid > 0)
+        {
+          g_info ("Crashhandler %d pending, wait to complete...", pid);
+          sleep (1);
+          count++;
+        }
+      else
+        {
+          end = TRUE;
+        }
+
+      if (!end && count >= timeout)
+        {
+          g_warning ("Crashhandler %d still running after initialization timeout", pid);
+          end = TRUE;
+        }
+    } while (!end);
+}
+
+static CdmStatus
+archive_early_crashes (CdmApplication *app, const gchar *crashdir, GError **error)
+{
+  const gchar *nfile = NULL;
+  GDir *gdir = NULL;
+
+  g_assert (app);
+  g_assert (crashdir);
+
+  gdir = g_dir_open (crashdir, 0, error);
+  if (error != NULL)
+    {
+      return CDM_STATUS_ERROR;
+    }
+
+  while ((nfile = g_dir_read_name (gdir)) != NULL)
+    {
+      g_autofree gchar *fpath = NULL;
+      gboolean entry_exist = FALSE;
+
+      fpath = g_build_filename (crashdir, nfile, NULL);
+      if (fpath == NULL)
+        {
+          continue;
+        }
+
+      entry_exist = cdm_journal_archive_exist (app->journal, fpath, error);
+      if (error != NULL)
+        {
+          g_warning ("Fail to check archive status for %s. Error %s", fpath, (*error)->message);
+          g_error_free (*error);
+          *error = NULL;
+          continue;
+        }
+
+      if (entry_exist == FALSE)
+        {
+          gboolean iskdump = FALSE;
+          guint64 dbid;
+
+          if (g_strrstr (fpath, "kdump_") != NULL)
+            {
+              iskdump = TRUE;
+            }
+
+          /*
+           * wait for any early crashhandler instance to avoid sending
+           * truncated archives
+           */
+          wait_early_cdh_instances (5);
+
+          dbid = cdm_journal_add_crash (app->journal,
+                                        iskdump ? "kdump" : "early",
+                                        iskdump ? "kdump" : "early",
+                                        iskdump ? "kdump" : "early",
+                                        iskdump ? "kdump" : "early",
+                                        fpath,
+                                        0,
+                                        0,
+                                        0,
+                                        error);
+
+          if (error != NULL)
+            {
+              g_warning ("Fail to add new crash entry in database %s", (*error)->message);
+            }
+          else
+            {
+              g_debug ("New crash entry added to database with id %016lX", dbid);
+            }
+
+          cdm_transfer_file (app->transfer, fpath, NULL, NULL);
+        }
+    }
+
+  g_dir_close (gdir);
+
+  return CDM_STATUS_OK;
+}
+
+static void
+archive_kdumps (CdmApplication *app, const gchar *crashdir)
+{
+  g_autofree gchar *opt_kdumpdir = NULL;
+  const gchar *nfile = NULL;
+  GDir *gdir = NULL;
+  GError *error = NULL;
+
+  g_assert (app);
+  g_assert (crashdir);
+
+  opt_kdumpdir = cdm_options_string_for (app->options, KEY_KDUMPSOURCE_DIR);
+
+  gdir = g_dir_open (opt_kdumpdir, 0, &error);
+  if (error != NULL)
+    {
+      g_error_free (error);
+    }
+  else
+    {
+      while ((nfile = g_dir_read_name (gdir)) != NULL)
+        {
+          g_autofree gchar *fpath = NULL;
+          g_autofree gchar *entry_path = NULL;
+
+          fpath = g_build_filename (opt_kdumpdir, nfile, NULL);
+          if (fpath == NULL)
+            {
+              g_error ("Cannot build file path");
+            }
+
+          entry_path = g_strdup_printf ("%s/kdump_%ld.gz", crashdir, g_get_real_time ());
+
+          if (g_rename (fpath, entry_path) == -1)
+            {
+              g_warning ("Fail to move kdump %s to %s", fpath, entry_path);
+            }
+        }
+
+      g_dir_close (gdir);
+    }
+}
 
 CdmApplication *
 cdm_application_new (const gchar *config)
@@ -117,10 +272,46 @@ cdm_application_get_mainloop (CdmApplication *app)
 CdmStatus
 cdm_application_execute (CdmApplication *app)
 {
-  CdmStatus status = CDM_STATUS_OK;
+  g_autofree gchar *opt_crashdir = NULL;
+  g_autofree gchar *opt_user = NULL;
+  g_autofree gchar *opt_group = NULL;
+  GError *error = NULL;
 
-  status = cdm_server_bind_and_listen (app->server);
+  opt_crashdir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
+  opt_user = cdm_options_string_for (app->options, KEY_USER_NAME);
+  opt_group = cdm_options_string_for (app->options, KEY_GROUP_NAME);
+
+  if (g_mkdir_with_parents (opt_crashdir, 0755) != 0)
+    {
+      return CDM_STATUS_ERROR;
+    }
+  else
+    {
+      if (cdm_utils_chown (opt_crashdir, opt_user, opt_group) == CDM_STATUS_ERROR)
+        {
+          g_warning ("Failed to set user and group owner");
+        }
+    }
+
+  if (cdm_server_bind_and_listen (app->server) != CDM_STATUS_OK)
+    {
+      return CDM_STATUS_ERROR;
+    }
+
+  /* we move the kdump archives if any */
+  archive_kdumps (app, opt_crashdir);
+
+  /* check and process early archives including kdumps */
+  archive_early_crashes (app, opt_crashdir, &error);
+  if (error != NULL)
+    {
+      g_warning ("Fail to add early crashes. Error %s", error->message);
+      g_error_free (error);
+      return CDM_STATUS_ERROR;
+    }
+
+  /* run the main event loop */
   g_main_loop_run (app->mainloop);
 
-  return status;
+  return CDM_STATUS_OK;
 }

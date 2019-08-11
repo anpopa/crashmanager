@@ -10,25 +10,25 @@
 #     This section contains options common to all components
 #
 ###############################################################################
+[common]
 # UserName defines the user name string which the crashmanager is running
 #     In case a crash happens before crashmanager is able to create the database
 #     the crashmanager will do this first and needs to set the correct chown for
 #     the database
+UserName = root
 # GroupName defines the group name string which the crashmanager is owned.
 #     See the reason above
+GroupName = root
 # CoredumpDirectory defines the relative path to FileSystemMountDir where the
 #     coredump arhives will be stored.
+CrashdumpDirectory = /var/lib/crashmanager/crashdumps
 # RunDirectory application runtime directory
+RunDirectory = /run/crashmanager
 # IpcSocketFile defines the path to the ipc unix domain socket file
 #     The crashmanager is responsible to create and listen on this socket
+IpcSocketFile = .cdmipc.sock
 # IpcSocketTimeout defines the number of seconds for an IO operation to block
 #     during IPC
-[common]
-UserName = root
-GroupName = root
-CrashdumpDirectory = /var/cache/crashmanager/crashdumps
-RunDirectory = /run/crashmanager
-IpcSocketFile = .cdmipc.sock
 IpcSocketTimeout = 15
 
 ###############################################################################
@@ -36,10 +36,10 @@ IpcSocketTimeout = 15
 # The crashmanager configuration option
 #
 ###############################################################################
-# FileSystemMinSize defines the minium filesystem size for CrashdumpDirectory
-# ElevatedNiceValue defines the nice value to set for crashhandler
 [crashhandler]
-FileSystemMinSize = 40
+# FileSystemMinSize defines the minium filesystem size for CrashdumpDirectory
+FileSystemMinSize = 64
+# ElevatedNiceValue defines the nice value to set for crashhandler
 ElevatedNiceValue = -19
 
 ###############################################################################
@@ -47,21 +47,21 @@ ElevatedNiceValue = -19
 # The crashmanager configuration option
 #
 ###############################################################################
-# StateDatabaseFile defines the path to coredump archives state database
+[crashmanager]
+# DatabaseFile defines the path to coredump archives state database
+DatabaseFile=/var/lib/crashmanager/.crashstate.db
 # MaxCrashDumpDirSize defines the maximum size in MB the crashdump directory
 #     should use to store old crashdump archives
+MaxCrashdumpDirSize=256
 # MinCrashdumpDirQuota defines the minimum size in MB to be free from the quota
 #     so any cdh instance can have space available for crashdump processing
+MinCrashdumpDirSize=64
 # MaxCrashdumpArchives defines the maximum number of archives to keep in
 #     coredump directory
+MaxCrashdumpArchives=4
 # KDumpSourceDir defines the source directory to read at start for previous
 #     kernel crashes.
-[crashmanager]
-DatabaseFile=/var/cache/crashmanager/cdm.db
-MaxCrashdumpDirSize=512
-MinCrashdumpDirSize=100
-MaxCrashdumpArchives=10
-KernelDumpSourceDir = /var/dumps
+KernelDumpSourceDir = /var/kdumps
 
 ###############################################################################
 #
@@ -77,71 +77,142 @@ KernelDumpSourceDir = /var/dumps
 # PostCore defines when to process the data
 #   If data holds only until process is release (eg. proc) then set 
 #   this to false.
+
+###############################################################################
+#
+# Crashcontext /etc/os-version
+#
+###############################################################################
 [crashcontext-osversion]
 ProcName = .*
 DataPath = /etc/os-release
 PostCore = true
 
+###############################################################################
+#
+# Crashcontext /proc/cmdline
+#
+###############################################################################
 [crashcontext-proc_cmdline]
 ProcName = .*
 DataPath = /proc/$$/cmdline
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/fd
+#
+###############################################################################
 [crashcontext-proc_fd]
 ProcName = .*
 DataPath = /proc/$$/fd
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/ns
+#
+###############################################################################
 [crashcontext-proc_ns]
 ProcName = .*
 DataPath = /proc/$$/ns
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/cgroup
+#
+###############################################################################
 [crashcontext-proc_cgroup]
 ProcName = .*
 DataPath = /proc/$$/cgroup
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/stack
+#
+###############################################################################
 [crashcontext-proc_stack]
 ProcName = .*
 DataPath = /proc/$$/cgroup
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/environ
+#
+###############################################################################
 [crashcontext-proc_environ]
 ProcName = .*
 DataPath = /proc/$$/environ
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/status
+#
+###############################################################################
 [crashcontext-proc_status]
 ProcName = .*
 DataPath = /proc/$$/status
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/sched
+#
+###############################################################################
 [crashcontext-proc_sched]
 ProcName = .*
 DataPath = /proc/$$/sched
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/maps
+#
+###############################################################################
 [crashcontext-proc_maps]
 ProcName = .*
 DataPath = /proc/$$/maps
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/stat
+#
+###############################################################################
 [crashcontext-proc_stat]
 ProcName = .*
 DataPath = /proc/$$/stat
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/pid/smaps
+#
+###############################################################################
 [crashcontext-proc_smaps]
 ProcName = .*
 DataPath = /proc/$$/smaps
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/loadavg
+#
+###############################################################################
 [crashcontext-proc_loadavg]
 ProcName = .*
 DataPath = /proc/loadavg
 PostCore = false
 
+###############################################################################
+#
+# Crashcontext /proc/version
+#
+###############################################################################
 [crashcontext-proc_version]
 ProcName = .*
 DataPath = /proc/version

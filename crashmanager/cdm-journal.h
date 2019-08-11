@@ -67,6 +67,17 @@ CdmJournal *cdm_journal_ref (CdmJournal *journal);
 void cdm_journal_unref (CdmJournal *journal);
 
 /**
+ * @brief Check if an entry for file_path exist in database
+ *
+ * @param journal The journal object
+ * @param file_path The archive file path
+ * @param error The GError object or NULL
+ *
+ * @return TRUE if entry exist
+ */
+gboolean cdm_journal_archive_exist (CdmJournal *journal, const gchar *file_path, GError **error);
+
+/**
  * @brief Add a new crash entry with default state into the journal
  *
  * @param journal Pointer to the journal object

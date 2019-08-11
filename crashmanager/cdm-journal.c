@@ -33,6 +33,7 @@
 typedef enum _JournalQueryType {
   QUERY_CREATE,
   QUERY_ADD_ENTRY,
+  QUERY_GET_ENTRY,
   QUERY_SET_TRANSFER,
   QUERY_SET_REMOVED,
   QUERY_GET_VICTIM,
@@ -60,6 +61,10 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
       break;
 
     case QUERY_ADD_ENTRY:
+      break;
+
+    case QUERY_GET_ENTRY:
+      *((gboolean *)(querydata->response)) = TRUE;
       break;
 
     case QUERY_SET_TRANSFER:
@@ -104,7 +109,9 @@ cdm_journal_new (CdmOptions *options)
 {
   CdmJournal *journal = NULL;
   g_autofree gchar *sql = NULL;
-  g_autofree gchar *dbpath = NULL;
+  g_autofree gchar *opt_dbpath = NULL;
+  g_autofree gchar *opt_user = NULL;
+  g_autofree gchar *opt_group = NULL;
   gchar *query_error = NULL;
   JournalQueryData data = {
     .type = QUERY_CREATE,
@@ -117,11 +124,13 @@ cdm_journal_new (CdmOptions *options)
 
   g_ref_count_init (&journal->rc);
 
-  dbpath = cdm_options_string_for (options, KEY_DATABASE_FILE);
+  opt_dbpath = cdm_options_string_for (options, KEY_DATABASE_FILE);
+  opt_user = cdm_options_string_for (options, KEY_USER_NAME);
+  opt_group = cdm_options_string_for (options, KEY_GROUP_NAME);
 
-  if (sqlite3_open (dbpath, &journal->database))
+  if (sqlite3_open (opt_dbpath, &journal->database))
     {
-      g_error ("Cannot open journal database at path %s", dbpath);
+      g_error ("Cannot open journal database at path %s", opt_dbpath);
     }
 
   sql = g_strdup_printf ("CREATE TABLE IF NOT EXISTS %s       "
@@ -143,6 +152,11 @@ cdm_journal_new (CdmOptions *options)
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_error ("Fail to create crash table. SQL error %s", query_error);
+    }
+
+  if (cdm_utils_chown (opt_dbpath, opt_user, opt_group) == CDM_STATUS_ERROR)
+    {
+      g_warning ("Failed to set user and group owner for database %s", opt_dbpath);
     }
 
   return journal;
@@ -223,6 +237,38 @@ cdm_journal_add_crash (CdmJournal *journal,
     }
 
   return(id);
+}
+
+gboolean
+cdm_journal_archive_exist (CdmJournal *journal,
+                           const gchar *file_path,
+                           GError **error)
+{
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  gboolean entry_exist = FALSE;
+  guint64 id;
+  JournalQueryData data = {
+    .type = QUERY_GET_ENTRY,
+    .response = NULL
+  };
+
+  g_assert (journal);
+
+  id = cdm_utils_jenkins_hash (file_path);
+  data.response = (gpointer) & entry_exist;
+
+  sql = g_strdup_printf ("SELECT ID FROM %s WHERE ID IS %lu",
+                         cdm_journal_table_name, id);
+
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+    {
+      g_set_error (error, g_quark_from_static_string ("JournalGetEntry"), 1, "SQL query error");
+      g_warning ("Fail to get victim. SQL error %s", query_error);
+      sqlite3_free (query_error);
+    }
+
+  return *(gboolean *)data.response;
 }
 
 void

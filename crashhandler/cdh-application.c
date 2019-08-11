@@ -47,9 +47,9 @@ static CdmStatus read_args (CdhApplication *app, gint argc, gchar **argv);
 
 static CdmStatus check_disk_space (const gchar *path, gsize min);
 
-static CdmStatus init_crashdump_archive (CdhApplication *app, const gchar *appirname);
+static CdmStatus init_crashdump_archive (CdhApplication *app, const gchar *dirname);
 
-static CdmStatus close_crashdump_archive (CdhApplication *app);
+static CdmStatus close_crashdump_archive (CdhApplication *app, const gchar *dirname);
 
 CdhApplication *
 cdh_application_new (const gchar *config_path)
@@ -57,7 +57,7 @@ cdh_application_new (const gchar *config_path)
   CdhApplication *app = g_new0 (CdhApplication, 1);
 
   g_ref_count_init (&app->rc);
-  
+
   app->options = cdm_options_new (config_path);
   g_assert (app->options);
 
@@ -216,13 +216,26 @@ init_crashdump_archive (CdhApplication *app, const gchar *dirname)
 }
 
 static CdmStatus
-close_crashdump_archive (CdhApplication *app)
+close_crashdump_archive (CdhApplication *app, const gchar *dirname)
 {
+  g_autofree gchar *aname = NULL;
+  g_autofree gchar *opt_user = NULL;
+  g_autofree gchar *opt_group = NULL;
+
   g_assert (app);
 
   if (cdh_archive_close (app->archive) != CDM_STATUS_OK)
     {
       return CDM_STATUS_ERROR;
+    }
+
+  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, app->context->name, app->context->pid, app->context->tstamp);
+  opt_user = cdm_options_string_for (app->options, KEY_USER_NAME);
+  opt_group = cdm_options_string_for (app->options, KEY_GROUP_NAME);
+
+  if (cdm_utils_chown (aname, opt_user, opt_group) == CDM_STATUS_ERROR)
+    {
+      g_warning ("Failed to set user and group owner for archive %s", aname);
     }
 
   return CDM_STATUS_OK;
@@ -233,6 +246,8 @@ cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
 {
   CdmStatus status = CDM_STATUS_OK;
   g_autofree gchar *opt_coredir = NULL;
+  g_autofree gchar *opt_user = NULL;
+  g_autofree gchar *opt_group = NULL;
   gchar *procname = NULL;
   gsize opt_fs_min_size;
   gint opt_nice_value;
@@ -286,6 +301,8 @@ cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
 
   /* get optionals */
   opt_coredir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
+  opt_user = cdm_options_string_for (app->options, KEY_USER_NAME);
+  opt_group = cdm_options_string_for (app->options, KEY_GROUP_NAME);
   opt_fs_min_size = (gsize)cdm_options_long_for (app->options, KEY_FILESYSTEM_MIN_SIZE);
   opt_nice_value = (gint)cdm_options_long_for (app->options, KEY_ELEVATED_NICE_VALUE);
 
@@ -300,6 +317,13 @@ cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
     {
       status = CDM_STATUS_ERROR;
       goto enter_cleanup;
+    }
+  else
+    {
+      if (cdm_utils_chown (opt_coredir, opt_user, opt_group) == CDM_STATUS_ERROR)
+        {
+          g_warning ("Failed to set suer and group owner");
+        }
     }
 
   if (check_disk_space (opt_coredir, opt_fs_min_size) != CDM_STATUS_OK)
@@ -332,7 +356,7 @@ cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
       g_warning ("Failed to generate the context file, continue with coredump");
     }
 
-  if (close_crashdump_archive (app) != CDM_STATUS_OK)
+  if (close_crashdump_archive (app, opt_coredir) != CDM_STATUS_OK)
     {
       g_warning ("Failed to close corectly the crashdump archive");
     }

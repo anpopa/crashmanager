@@ -34,6 +34,7 @@
 extern "C" {
 #endif
 
+#include "cdm-types.h"
 #include <glib.h>
 
 /**
@@ -62,6 +63,32 @@ guint64 cdm_utils_jenkins_hash (const gchar *key);
  * @return The long int as file size or -1 on error
  */
 gint64 cdm_utils_get_filesize (const gchar *file_path);
+
+/**
+ * @brief Get pid for process by name
+ *
+ * Note that this function only looks for pid by name once
+ * Will not provide the information if multiple instances are running
+ * Should be used only as info to check if a particular process has at least an instance running
+ *
+ * @param proc_name Process name
+ * @param error Set error status during call
+ *
+ * @return Pid value if found, -1 ottherwise
+ */
+pid_t cdm_utils_first_pid_for_process (const gchar *proc_name, GError **error);
+
+/**
+ * @brief Change owner for a filesystem entry
+ *
+ * @param file_path Filesystem entry to work on
+ * @param user_name The new owner user name
+ * @param group_name The new owner group name
+ *
+ * @return CDM_STATUS_ERROR on failure
+ *         CDM_STATUS_OK in success
+ */
+CdmStatus cdm_utils_chown (const gchar *file_path, const gchar *user_name, const gchar *group_name);
 
 #ifdef __cplusplus
 }
