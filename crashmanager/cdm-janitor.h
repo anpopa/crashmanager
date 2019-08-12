@@ -27,14 +27,15 @@
  * authorization.
  */
 
-#ifndef CDM_JANITOR_H
-#define CDM_JANITOR_H
+#pragma once
 
 #include "cdm-types.h"
 #include "cdm-options.h"
 #include "cdm-journal.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmJanitor
@@ -78,4 +79,4 @@ void cdm_janitor_unref (CdmJanitor *janitor);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJanitor, cdm_janitor_unref);
 
-#endif /* CDM_JANITOR_H */
+G_END_DECLS

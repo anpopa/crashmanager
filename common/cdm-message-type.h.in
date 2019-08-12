@@ -27,15 +27,13 @@
  * authorization.
  */
 
-#ifndef CDM_MESSAGE_TYPE_H
-#define CDM_MESSAGE_TYPE_H
+#pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include <glib.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+G_BEGIN_DECLS
 
 #define CDM_BUILDTIME_VERSION "@version@"
 #define CDM_MESSAGE_START_HASH (0xECDE)
@@ -97,8 +95,4 @@ typedef struct _CdmMessage {
   void *data;
 } CDM_MESSAGE_PACKED CdmMessage;
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDM_MESSAGE_TYPE_H */
+G_END_DECLS

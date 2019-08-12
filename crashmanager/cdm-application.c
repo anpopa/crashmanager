@@ -96,7 +96,7 @@ archive_early_crashes (CdmApplication *app, const gchar *crashdir)
 
       fpath = g_build_filename (crashdir, nfile, NULL);
       entry_exist = cdm_journal_archive_exist (app->journal, fpath, &journal_error);
-      
+
       if (journal_error != NULL)
         {
           g_warning ("Fail to check archive status for %s. Error %s", fpath, journal_error->message);

@@ -27,17 +27,14 @@
  * authorization.
  */
 
-#ifndef CDM_MESSAGE_H
-#define CDM_MESSAGE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-message-type.h"
 #include "cdm-types.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /*
  * @brief Initialize a pre-allocated mesage object
@@ -110,8 +107,4 @@ CdmStatus cdm_message_read (gint fd, CdmMessage *m);
  */
 CdmStatus cdm_message_write (gint fd, CdmMessage *m);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDM_MESSAGE_H */
+G_END_DECLS

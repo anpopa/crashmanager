@@ -27,12 +27,13 @@
  * authorization.
  */
 
-#ifndef CDM_SDNOTIFY_H
-#define CDM_SDNOTIFY_H
+#pragma once
 
 #include "cdm-types.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmSDNotify
@@ -64,4 +65,4 @@ void cdm_sdnotify_unref (CdmSDNotify *sdnotify);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmSDNotify, cdm_sdnotify_unref);
 
-#endif /* CDM_SDNOTIFY_H */
+G_END_DECLS

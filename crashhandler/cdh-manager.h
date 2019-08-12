@@ -27,12 +27,7 @@
  * authorization.
  */
 
-#ifndef CDH_MANAGER_H
-#define CDH_MANAGER_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-message.h"
 #include "cdm-options.h"
@@ -45,6 +40,8 @@ extern "C" {
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+
+G_BEGIN_DECLS
 
 #ifndef MANAGER_SELECT_TIMEOUT
 #define MANAGER_SELECT_TIMEOUT 3
@@ -112,8 +109,4 @@ gboolean cdh_manager_connected (CdhManager *c);
  */
 CdmStatus cdh_manager_send (CdhManager *c, CdmMessage *m);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDH_MANAGER_H */
+G_END_DECLS

@@ -27,15 +27,13 @@
  * authorization.
  */
 
-#ifndef CDM_UTILS_H
-#define CDM_UTILS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-types.h"
+
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @brief Get process name for pid
@@ -90,8 +88,4 @@ pid_t cdm_utils_first_pid_for_process (const gchar *proc_name, GError **error);
  */
 CdmStatus cdm_utils_chown (const gchar *file_path, const gchar *user_name, const gchar *group_name);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDM_UTILS_H */
+G_END_DECLS

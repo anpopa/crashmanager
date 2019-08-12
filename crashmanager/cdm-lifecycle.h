@@ -27,12 +27,13 @@
  * authorization.
  */
 
-#ifndef CDM_LIFECYCLE_H
-#define CDM_LIFECYCLE_H
+#pragma once
 
 #include "cdm-types.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmLifecycle
@@ -63,4 +64,4 @@ void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmLifecycle, cdm_lifecycle_unref);
 
-#endif /* CDM_LIFECYCLE_H */
+G_END_DECLS

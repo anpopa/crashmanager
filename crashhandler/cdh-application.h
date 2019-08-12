@@ -27,12 +27,7 @@
  * authorization.
  */
 
-#ifndef CDH_APPLICATION_H
-#define CDH_APPLICATION_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-defaults.h"
 #include "cdm-types.h"
@@ -46,6 +41,8 @@ extern "C" {
 #endif
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdhApplication
@@ -94,8 +91,4 @@ CdmStatus cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[]
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdhApplication, cdh_application_unref);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDH_APPLICATION_H */
+G_END_DECLS

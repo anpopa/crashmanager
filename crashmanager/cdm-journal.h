@@ -27,14 +27,15 @@
  * authorization.
  */
 
-#ifndef CDM_JOURNAL_H
-#define CDM_JOURNAL_H
+#pragma once
 
 #include "cdm-types.h"
 #include "cdm-options.h"
 
 #include <glib.h>
 #include <sqlite3.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmJournal
@@ -158,4 +159,4 @@ gchar* cdm_journal_get_victim (CdmJournal *journal, GError **error);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJournal, cdm_journal_unref);
 
-#endif /* CDM_JOURNAL_H */
+G_END_DECLS

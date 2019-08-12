@@ -27,8 +27,7 @@
  * authorization.
  */
 
-#ifndef CDM_CLIENT_H
-#define CDM_CLIENT_H
+#pragma once
 
 #include "cdm-types.h"
 #include "cdm-message.h"
@@ -36,6 +35,8 @@
 #include "cdm-journal.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmClient
@@ -83,4 +84,4 @@ void cdm_client_unref (CdmClient *client);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmClient, cdm_client_unref);
 
-#endif /* CDM_CLIENT_H */
+G_END_DECLS

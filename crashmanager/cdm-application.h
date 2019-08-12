@@ -27,12 +27,7 @@
  * authorization.
  */
 
-#ifndef CDM_APPLICATION_H
-#define CDM_APPLICATION_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-defaults.h"
 #include "cdm-types.h"
@@ -51,6 +46,8 @@ extern "C" {
 
 #include <glib.h>
 #include <stdlib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmApplication
@@ -107,8 +104,4 @@ GMainLoop *cdm_application_get_mainloop (CdmApplication *app);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmApplication, cdm_application_unref);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDM_APPLICATION_H */
+G_END_DECLS

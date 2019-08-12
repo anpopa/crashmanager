@@ -27,12 +27,7 @@
  * authorization.
  */
 
-#ifndef NSM_CONSUMER_H
-#define NSM_CONSUMER_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-types.h"
 
@@ -41,6 +36,8 @@ extern "C" {
 #include <memory.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+G_BEGIN_DECLS
 
 /**
  * @enum LCSessionState
@@ -216,8 +213,4 @@ CdmStatus nsm_consumer_register (NsmConsumer *n);
  */
 CdmStatus nsm_consumer_request_state (NsmConsumer *n, LCSessionState state);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* NSM_CONSUMER_H */
+G_END_DECLS

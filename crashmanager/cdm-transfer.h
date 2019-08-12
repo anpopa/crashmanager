@@ -27,12 +27,13 @@
  * authorization.
  */
 
-#ifndef CDM_TRANSFER_H
-#define CDM_TRANSFER_H
+#pragma once
 
 #include "cdm-types.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @function CdmTransferCallback
@@ -101,4 +102,4 @@ CdmStatus cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path, CdmT
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmTransfer, cdm_transfer_unref);
 
-#endif /* CDM_TRANSFER_H */
+G_END_DECLS

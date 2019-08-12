@@ -27,16 +27,14 @@
  * authorization.
  */
 
-#ifndef CDM_TYPES_H
-#define CDM_TYPES_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-message-type.h"
-#include <elf.h>
+
 #include <glib.h>
+#include <elf.h>
+
+G_BEGIN_DECLS
 
 #ifndef CDM_UNUSED
 #define CDM_UNUSED(x) (void)(x)
@@ -67,8 +65,4 @@ typedef struct _CdmRegisters {
 #endif
 } CdmRegisters;
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDM_TYPES_H */
+G_END_DECLS

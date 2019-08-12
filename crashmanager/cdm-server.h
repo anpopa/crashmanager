@@ -27,8 +27,7 @@
  * authorization.
  */
 
-#ifndef CDM_SERVER_H
-#define CDM_SERVER_H
+#pragma once
 
 #include "cdm-types.h"
 #include "cdm-options.h"
@@ -36,6 +35,8 @@
 #include "cdm-journal.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdmServer
@@ -87,4 +88,4 @@ void cdm_server_unref (CdmServer *server);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmServer, cdm_server_unref);
 
-#endif /* CDM_SERVER_H */
+G_END_DECLS

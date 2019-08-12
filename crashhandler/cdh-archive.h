@@ -27,12 +27,7 @@
  * authorization.
  */
 
-#ifndef CDH_ARCHIVE_H
-#define CDH_ARCHIVE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-types.h"
 
@@ -44,6 +39,8 @@ extern "C" {
 #include <archive.h>
 #include <archive_entry.h>
 #include <time.h>
+
+G_BEGIN_DECLS
 
 #ifndef ARCHIVE_READ_BUFFER_SZ
 #define ARCHIVE_READ_BUFFER_SZ 1024 * 128
@@ -221,8 +218,4 @@ CdmStatus cdh_archive_stream_close (CdhArchive *ar);
  */
 gboolean cdh_archive_is_file_active (CdhArchive *ar);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDH_ARCHIVE_H */
+G_END_DECLS

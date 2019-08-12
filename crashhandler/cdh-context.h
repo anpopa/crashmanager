@@ -27,17 +27,14 @@
  * authorization.
  */
 
-#ifndef CDH_CONTEXT_H
-#define CDH_CONTEXT_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdm-options.h"
 #include "cdh-archive.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdhContext
@@ -115,8 +112,4 @@ CdmStatus cdh_context_generate_prestream (CdhContext *ctx);
  */
 CdmStatus cdh_context_generate_poststream (CdhContext *ctx);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDH_CONTEXT_H */
+G_END_DECLS

@@ -27,8 +27,11 @@
  * authorization.
  */
 
-#ifndef CDM_DEFAULTS_H
-#define CDM_DEFAULTS_H
+#pragma once
+
+#include <glib.h>
+
+G_BEGIN_DECLS
 
 #define CDM_VERSION "@version@"
 #define CDM_CONFIG_DIRECTORY "@config_dir@"
@@ -93,4 +96,4 @@
 #define CDM_IPC_TIMEOUT_SEC (15)
 #endif
 
-#endif /* CDM_DEFAULTS_H */
+G_END_DECLS

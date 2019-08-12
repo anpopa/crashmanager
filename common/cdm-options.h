@@ -27,12 +27,13 @@
  * authorization.
  */
 
-#ifndef CDM_OPTIONS_H
-#define CDM_OPTIONS_H
+#pragma once
 
 #include "cdm-types.h"
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @enum CdmOptionsKey
@@ -110,4 +111,4 @@ gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key);
  */
 gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key);
 
-#endif /* CDM_OPTIONS_H */
+G_END_DECLS

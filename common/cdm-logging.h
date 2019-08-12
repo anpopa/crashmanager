@@ -27,14 +27,11 @@
  * authorization.
  */
 
-#ifndef CDM_LOGGING_H
-#define CDM_LOGGING_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @brief Open logging subsystem
@@ -54,8 +51,4 @@ void cdm_logging_open (const gchar *app_name,
  */
 void cdm_logging_close (void);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDM_LOGGING_H */
+G_END_DECLS

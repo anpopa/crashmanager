@@ -27,19 +27,17 @@
  * authorization.
  */
 
-#ifndef CDH_COREDUMP_H
-#define CDH_COREDUMP_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "cdh-context.h"
 #include "cdh-archive.h"
 #if defined(WITH_CRASHMANAGER)
 #include "cdh-manager.h"
 #endif
+
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * @struct CdhCoredump
@@ -83,8 +81,4 @@ void cdh_coredump_unref (CdhCoredump *cd);
  */
 CdmStatus cdh_coredump_generate (CdhCoredump *cd);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CDH_COREDUMP_H */
+G_END_DECLS
