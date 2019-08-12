@@ -57,7 +57,8 @@ static GSourceFuncs client_source_funcs =
 };
 
 gboolean
-client_source_prepare (GSource *source, gint *timeout)
+client_source_prepare (GSource *source,
+                       gint *timeout)
 {
   CDM_UNUSED (source);
   *timeout = -1;
@@ -72,7 +73,9 @@ client_source_check (GSource *source)
 }
 
 gboolean
-client_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
+client_source_dispatch (GSource *source,
+                        GSourceFunc callback,
+                        gpointer user_data)
 {
   CDM_UNUSED (source);
 
@@ -271,7 +274,8 @@ get_container_name_for_context (const gchar *ctxid)
 #endif
 
 static void
-process_message (CdmClient *c, CdmMessage *msg)
+process_message (CdmClient *c,
+                 CdmMessage *msg)
 {
   g_autofree gchar *tmp_id = NULL;
   g_autofree gchar *tmp_name = NULL;
@@ -345,7 +349,8 @@ process_message (CdmClient *c, CdmMessage *msg)
 }
 
 static void
-archive_transfer_complete (gpointer cdmclient, const gchar *file_path)
+archive_transfer_complete (gpointer cdmclient,
+                           const gchar *file_path)
 {
   CdmClient *client = (CdmClient *)cdmclient;
   GError *error = NULL;
@@ -363,7 +368,9 @@ archive_transfer_complete (gpointer cdmclient, const gchar *file_path)
 }
 
 CdmClient *
-cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal)
+cdm_client_new (gint clientfd,
+                CdmTransfer *transfer,
+                CdmJournal *journal)
 {
   CdmClient *client = (CdmClient *)g_source_new (&client_source_funcs, sizeof(CdmClient));
 

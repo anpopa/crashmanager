@@ -127,7 +127,9 @@ cdh_application_unref (CdhApplication *app)
 }
 
 static CdmStatus
-read_args (CdhApplication *app, gint argc, gchar **argv)
+read_args (CdhApplication *app,
+           gint argc,
+           gchar **argv)
 {
   g_assert (app);
 
@@ -172,7 +174,8 @@ read_args (CdhApplication *app, gint argc, gchar **argv)
 }
 
 static CdmStatus
-check_disk_space (const gchar *path, gsize min)
+check_disk_space (const gchar *path,
+                  gsize min)
 {
   struct statvfs stat;
   gsize free_sz = 0;
@@ -216,7 +219,8 @@ init_crashdump_archive (CdhApplication *app, const gchar *dirname)
 }
 
 static CdmStatus
-close_crashdump_archive (CdhApplication *app, const gchar *dirname)
+close_crashdump_archive (CdhApplication *app,
+                         const gchar *dirname)
 {
   g_autofree gchar *aname = NULL;
   g_autofree gchar *opt_user = NULL;
@@ -242,7 +246,9 @@ close_crashdump_archive (CdhApplication *app, const gchar *dirname)
 }
 
 CdmStatus
-cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
+cdh_application_execute (CdhApplication *app,
+                         gint argc,
+                         gchar *argv[])
 {
   CdmStatus status = CDM_STATUS_OK;
   g_autofree gchar *opt_coredir = NULL;
@@ -360,6 +366,7 @@ cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
     {
       g_warning ("Failed to close corectly the crashdump archive");
     }
+
 enter_cleanup:
 #if defined(WITH_CRASHMANAGER)
   if (cdh_manager_connected (app->manager))

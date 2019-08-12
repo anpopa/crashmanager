@@ -36,7 +36,9 @@
 #include <unistd.h>
 
 void
-cdm_message_init (CdmMessage *m, CdmMessageType type, uint16_t session)
+cdm_message_init (CdmMessage *m,
+                  CdmMessageType type,
+                  uint16_t session)
 {
   g_assert (m);
 
@@ -47,7 +49,9 @@ cdm_message_init (CdmMessage *m, CdmMessageType type, uint16_t session)
 }
 
 void
-cdm_message_set_data (CdmMessage *m, void *data, uint32_t size)
+cdm_message_set_data (CdmMessage *m,
+                      void *data,
+                      uint32_t size)
 {
   g_assert (m);
   g_assert (data);
@@ -91,7 +95,8 @@ cdm_message_get_type (CdmMessage *m)
 }
 
 CdmStatus
-cdm_message_set_version (CdmMessage *m, const gchar *version)
+cdm_message_set_version (CdmMessage *m,
+                         const gchar *version)
 {
   g_assert (m);
 
@@ -101,7 +106,8 @@ cdm_message_set_version (CdmMessage *m, const gchar *version)
 }
 
 CdmStatus
-cdm_message_read (gint fd, CdmMessage *m)
+cdm_message_read (gint fd,
+                  CdmMessage *m)
 {
   gssize sz;
 
@@ -126,7 +132,8 @@ cdm_message_read (gint fd, CdmMessage *m)
 }
 
 CdmStatus
-cdm_message_write (gint fd, CdmMessage *m)
+cdm_message_write (gint fd,
+                   CdmMessage *m)
 {
   gssize sz;
 

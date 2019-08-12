@@ -210,7 +210,8 @@ cdm_utils_chown (const gchar *file_path,
 }
 
 pid_t
-cdm_utils_first_pid_for_process (const gchar *proc_name, GError **error)
+cdm_utils_first_pid_for_process (const gchar *proc_name,
+                                 GError **error)
 {
   const gchar *nfile = NULL;
   GDir *gdir = NULL;

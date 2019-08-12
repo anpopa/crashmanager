@@ -70,7 +70,8 @@ wait_early_cdh_instances (long timeout)
 }
 
 static CdmStatus
-archive_early_crashes (CdmApplication *app, const gchar *crashdir)
+archive_early_crashes (CdmApplication *app,
+                       const gchar *crashdir)
 {
   CdmStatus status = CDM_STATUS_OK;
   const gchar *nfile = NULL;
@@ -151,7 +152,8 @@ archive_early_crashes (CdmApplication *app, const gchar *crashdir)
 }
 
 static CdmStatus
-archive_kdumps (CdmApplication *app, const gchar *crashdir)
+archive_kdumps (CdmApplication *app,
+                const gchar *crashdir)
 {
   g_autofree gchar *opt_kdumpdir = NULL;
   const gchar *nfile = NULL;

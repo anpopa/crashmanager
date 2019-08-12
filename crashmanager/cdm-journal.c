@@ -342,7 +342,8 @@ cdm_journal_set_removed (CdmJournal *journal,
 }
 
 gchar *
-cdm_journal_get_victim (CdmJournal *journal, GError **error)
+cdm_journal_get_victim (CdmJournal *journal,
+                        GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -367,7 +368,8 @@ cdm_journal_get_victim (CdmJournal *journal, GError **error)
 }
 
 gssize
-cdm_journal_get_data_size (CdmJournal *journal, GError **error)
+cdm_journal_get_data_size (CdmJournal *journal,
+                           GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -395,7 +397,8 @@ cdm_journal_get_data_size (CdmJournal *journal, GError **error)
 }
 
 gssize
-cdm_journal_get_entry_count (CdmJournal *journal, GError **error)
+cdm_journal_get_entry_count (CdmJournal *journal,
+                             GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;

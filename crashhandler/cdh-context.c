@@ -59,7 +59,8 @@ static void crash_context_dump (CdhContext *ctx, gboolean postcore);
 static CdmStatus create_crashid (CdhContext *ctx);
 
 CdhContext *
-cdh_context_new (CdmOptions *opts, CdhArchive *archive)
+cdh_context_new (CdmOptions *opts,
+                 CdhArchive *archive)
 {
   CdhContext *ctx = g_new0 (CdhContext, 1);
 
@@ -188,7 +189,8 @@ cdh_context_crashid_process (CdhContext *ctx)
 }
 
 static CdmStatus
-dump_file_to (CdhContext *ctx, const gchar *fname)
+dump_file_to (CdhContext *ctx,
+              const gchar *fname)
 {
   g_assert (ctx);
   g_assert (fname);
@@ -248,7 +250,8 @@ ftypelet (mode_t bits)
 }
 
 static void
-strmode (mode_t mode, gchar str[12])
+strmode (mode_t mode,
+         gchar str[12])
 {
   g_assert (str);
 
@@ -266,7 +269,8 @@ strmode (mode_t mode, gchar str[12])
   str[11] = '\0';
 }
 static CdmStatus
-list_dircontent_to (CdhContext *ctx, const gchar *dname)
+list_dircontent_to (CdhContext *ctx,
+                    const gchar *dname)
 {
   g_autofree gchar *output = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -473,7 +477,8 @@ update_context_info (CdhContext *ctx)
 }
 
 static void
-crash_context_dump (CdhContext *ctx, gboolean postcore)
+crash_context_dump (CdhContext *ctx,
+                    gboolean postcore)
 {
   GKeyFile *key_file = NULL;
   gchar **groups = NULL;

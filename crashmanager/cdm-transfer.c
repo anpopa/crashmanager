@@ -57,7 +57,8 @@ static GSourceFuncs transfer_source_funcs =
 };
 
 gboolean
-transfer_source_prepare (GSource *source, gint *timeout)
+transfer_source_prepare (GSource *source,
+                         gint *timeout)
 {
   CdmTransfer *transfer = (CdmTransfer *)source;
 
@@ -66,7 +67,9 @@ transfer_source_prepare (GSource *source, gint *timeout)
 }
 
 gboolean
-transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans)
+transfer_source_dispatch (GSource *source,
+                          GSourceFunc callback,
+                          gpointer cdmtrans)
 {
   CdmTransfer *transfer = (CdmTransfer *)source;
   gpointer entry = g_async_queue_try_pop (transfer->queue);
@@ -82,7 +85,8 @@ transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtra
 }
 
 static gboolean
-transfer_source_callback (gpointer cdmtrans, gpointer entry)
+transfer_source_callback (gpointer cdmtrans,
+                          gpointer entry)
 {
   CdmTransfer *transfer = (CdmTransfer *)cdmtrans;
   CdmTransferEntry *trans_entry = (CdmTransferEntry *)entry;
@@ -115,7 +119,8 @@ transfer_queue_destroy_notify (gpointer data)
 }
 
 static void
-transfer_thread_func (gpointer data, gpointer user_data)
+transfer_thread_func (gpointer data,
+                      gpointer user_data)
 {
   g_autofree gchar *file_name = NULL;
   CdmTransferEntry *entry = (CdmTransferEntry *)data;
@@ -219,7 +224,10 @@ cdm_transfer_unref (CdmTransfer *transfer)
 }
 
 CdmStatus
-cdm_transfer_file (CdmTransfer *transfer, const gchar *file_path, CdmTransferEntryCallback callback, gpointer user_data)
+cdm_transfer_file (CdmTransfer *transfer,
+                   const gchar *file_path,
+                   CdmTransferEntryCallback callback,
+                   gpointer user_data)
 {
   CdmTransferEntry *entry = NULL;
 

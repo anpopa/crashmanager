@@ -67,10 +67,13 @@ static CdmStatus get_coredump_registers (CdhCoredump *cd);
 
 #if defined(WITH_CRASHMANAGER)
 CdhCoredump *
-cdh_coredump_new (CdhContext *context, CdhArchive *archive, CdhManager *manager)
+cdh_coredump_new (CdhContext *context,
+                  CdhArchive *archive,
+                  CdhManager *manager)
 #else
 CdhCoredump *
-cdh_coredump_new (CdhContext *context, CdhArchive *archive)
+cdh_coredump_new (CdhContext *context,
+                  CdhArchive *archive)
 #endif
 {
   CdhCoredump *cd = g_new0 (CdhCoredump, 1);
@@ -199,7 +202,8 @@ get_coredump_registers (CdhCoredump *cd)
 }
 
 static gint
-get_virtual_memory_phdr_nr (CdhCoredump *cd, Elf64_Addr address)
+get_virtual_memory_phdr_nr (CdhCoredump *cd,
+                            Elf64_Addr address)
 {
   g_assert (cd);
 
@@ -216,7 +220,8 @@ get_virtual_memory_phdr_nr (CdhCoredump *cd, Elf64_Addr address)
 }
 
 static const gchar *
-get_nt_file_region_name (gchar *string_tab_start, gulong nr)
+get_nt_file_region_name (gchar *string_tab_start,
+                         gulong nr)
 {
   gchar *pos = string_tab_start;
 
@@ -229,8 +234,11 @@ get_nt_file_region_name (gchar *string_tab_start, gulong nr)
 }
 
 static CdmStatus
-get_nt_file_region (CdhCoredump *cd, Elf64_Addr address, Elf64_Addr *region_start,
-                    Elf64_Addr *region_end, Elf64_Off *file_start,
+get_nt_file_region (CdhCoredump *cd,
+                    Elf64_Addr address,
+                    Elf64_Addr *region_start,
+                    Elf64_Addr *region_end,
+                    Elf64_Off *file_start,
                     const gchar **region_name)
 {
   gsize offset = 0;
@@ -295,7 +303,9 @@ get_nt_file_region (CdhCoredump *cd, Elf64_Addr address, Elf64_Addr *region_star
 }
 
 static Elf64_Addr
-read_virtual_memory (CdhCoredump *cd, Elf64_Addr address, gint phdr_nr)
+read_virtual_memory (CdhCoredump *cd,
+                     Elf64_Addr address,
+                     gint phdr_nr)
 {
   Elf64_Addr read_data;
   Elf64_Off pos;

@@ -56,7 +56,8 @@ static GSourceFuncs server_source_funcs =
 };
 
 gboolean
-server_source_prepare (GSource *source, gint *timeout)
+server_source_prepare (GSource *source,
+                       gint *timeout)
 {
   CDM_UNUSED (source);
   *timeout = -1;
@@ -118,7 +119,9 @@ server_source_destroy_notify (gpointer cdmserver)
 }
 
 CdmServer *
-cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal)
+cdm_server_new (CdmOptions *options,
+                CdmTransfer *transfer,
+                CdmJournal *journal)
 {
   CdmServer *server = NULL;
   struct timeval tout;

@@ -52,7 +52,8 @@ static GSourceFuncs janitor_source_funcs =
 };
 
 gboolean
-janitor_source_prepare (GSource *source, gint *timeout)
+janitor_source_prepare (GSource *source,
+                        gint *timeout)
 {
   CdmJanitor *janitor = (CdmJanitor *)source;
   gssize crash_dir_size;
@@ -77,7 +78,9 @@ janitor_source_prepare (GSource *source, gint *timeout)
 }
 
 gboolean
-janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor)
+janitor_source_dispatch (GSource *source,
+                         GSourceFunc callback,
+                         gpointer cdmjanitor)
 {
   CDM_UNUSED (callback);
   CDM_UNUSED (source);
@@ -136,7 +139,8 @@ janitor_source_destroy_notify (gpointer cdmjanitor)
 
 
 CdmJanitor *
-cdm_janitor_new (CdmOptions *options, CdmJournal *journal)
+cdm_janitor_new (CdmOptions *options,
+                 CdmJournal *journal)
 {
   CdmJanitor *janitor = (CdmJanitor *)g_source_new (&janitor_source_funcs, sizeof(CdmJanitor));
 

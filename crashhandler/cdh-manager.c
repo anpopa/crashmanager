@@ -158,7 +158,8 @@ cdh_manager_connected (CdhManager *c)
 }
 
 CdmStatus
-cdh_manager_send (CdhManager *c, CdmMessage *m)
+cdh_manager_send (CdhManager *c,
+                  CdmMessage *m)
 {
   fd_set wfd;
   struct timeval tv;

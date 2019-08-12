@@ -75,7 +75,9 @@ cdh_archive_unref (CdhArchive *ar)
 }
 
 CdmStatus
-cdh_archive_open (CdhArchive *ar, const gchar *dst, time_t artime)
+cdh_archive_open (CdhArchive *ar,
+                  const gchar *dst,
+                  time_t artime)
 {
   CdmStatus status = CDM_STATUS_OK;
 
@@ -136,7 +138,9 @@ cdh_archive_close (CdhArchive *ar)
 }
 
 CdmStatus
-cdh_archive_create_file (CdhArchive *ar, const gchar *dst, gsize file_size)
+cdh_archive_create_file (CdhArchive *ar,
+                         const gchar *dst,
+                         gsize file_size)
 {
   CdmStatus status = CDM_STATUS_OK;
 
@@ -175,7 +179,9 @@ cdh_archive_create_file (CdhArchive *ar, const gchar *dst, gsize file_size)
 }
 
 CdmStatus
-cdh_archive_write_file (CdhArchive *ar, const void *buf, gsize size)
+cdh_archive_write_file (CdhArchive *ar,
+                        const void *buf,
+                        gsize size)
 {
   gssize sz;
 
@@ -219,7 +225,9 @@ cdh_archive_finish_file (CdhArchive *ar)
 }
 
 CdmStatus
-cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
+cdh_archive_add_system_file (CdhArchive *ar,
+                             const gchar *src,
+                             const gchar *dst)
 {
   CdmStatus status = CDM_STATUS_OK;
 
@@ -305,7 +313,10 @@ cdh_archive_add_system_file (CdhArchive *ar, const gchar *src, const gchar *dst)
 }
 
 CdmStatus
-cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar *dst, gsize split_size)
+cdh_archive_stream_open (CdhArchive *ar,
+                         const gchar *src,
+                         const gchar *dst,
+                         gsize split_size)
 {
   g_assert (ar);
   g_assert (dst);
@@ -341,7 +352,9 @@ cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar *dst, gsi
 }
 
 CdmStatus
-cdh_archive_stream_read (CdhArchive *ar, void *buf, gsize size)
+cdh_archive_stream_read (CdhArchive *ar,
+                         void *buf,
+                         gsize size)
 {
   gsize readsz;
 
@@ -389,7 +402,8 @@ cdh_archive_stream_read_all (CdhArchive *ar)
 }
 
 CdmStatus
-cdh_archive_stream_move_to_offset (CdhArchive *ar, gulong offset)
+cdh_archive_stream_move_to_offset (CdhArchive *ar,
+                                   gulong offset)
 {
   g_assert (ar);
   return cdh_archive_stream_move_ahead (ar, (offset - ar->in_stream_offset));
@@ -495,7 +509,9 @@ create_file_chunk (CdhArchive *ar)
 }
 
 static CdmStatus
-stream_chunk_write (CdhArchive *ar, void *buf, gssize size)
+stream_chunk_write (CdhArchive *ar,
+                    void *buf,
+                    gssize size)
 {
   gssize towrite;
   gssize writesz;
