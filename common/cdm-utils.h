@@ -69,12 +69,11 @@ gint64 cdm_utils_get_filesize (const gchar *file_path);
  * Will not provide the information if multiple instances are running
  * Should be used only as info to check if a particular process has at least an instance running
  *
- * @param proc_name Process name
- * @param error Set error status during call
+ * @param exepath Path to process executable
  *
  * @return Pid value if found, -1 ottherwise
  */
-pid_t cdm_utils_first_pid_for_process (const gchar *proc_name, GError **error);
+pid_t cdm_utils_first_pid_for_process (const gchar *exepath);
 
 /**
  * @brief Change owner for a filesystem entry

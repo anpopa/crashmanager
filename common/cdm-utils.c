@@ -210,18 +210,20 @@ cdm_utils_chown (const gchar *file_path,
 }
 
 pid_t
-cdm_utils_first_pid_for_process (const gchar *proc_name,
-                                 GError **error)
+cdm_utils_first_pid_for_process (const gchar *exepath)
 {
   const gchar *nfile = NULL;
+  GError *error = NULL;
   GDir *gdir = NULL;
   pid_t pid = -1;
 
-  g_assert (proc_name);
+  g_assert (exepath);
 
-  gdir = g_dir_open ("/proc", 0, error);
+  gdir = g_dir_open ("/proc", 0, &error);
   if (error != NULL)
     {
+      g_warning ("Fail to open proc directory. Error %s", error->message);
+      g_error_free (error);
       return -1;
     }
 
@@ -233,18 +235,14 @@ cdm_utils_first_pid_for_process (const gchar *proc_name,
 
       pent = g_ascii_strtoll (nfile, NULL, 10);
       if (pent == 0)
-        {
-          continue;
-        }
+        continue;
 
       fpath = g_strdup_printf ("/proc/%s/exe", nfile);
       if (fpath == NULL)
-        {
-          continue;
-        }
+        continue;
 
       lnexe = g_file_read_link (fpath, NULL);
-      if (g_strcmp0 (lnexe, proc_name) == 0)
+      if (g_strcmp0 (lnexe, exepath) == 0)
         {
           pid = (pid_t)pent;
           break;

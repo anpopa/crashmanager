@@ -44,13 +44,9 @@ source_timer_callback (gpointer data)
   CDM_UNUSED (data);
 
   if (sd_notify (0, "WATCHDOG=1") < 0)
-    {
-      g_warning ("Fail to send the heartbeet to systemd");
-    }
+    g_warning ("Fail to send the heartbeet to systemd");
   else
-    {
-      g_debug ("Watchdog heartbeat sent");
-    }
+    g_debug ("Watchdog heartbeat sent");
 
   return TRUE;
 }
@@ -82,16 +78,18 @@ cdm_sdnotify_new (void)
       sdnotify->source = g_timeout_source_new_seconds (USEC2SECHALF (usec));
       g_source_ref (sdnotify->source);
 
-      g_source_set_callback (sdnotify->source, G_SOURCE_FUNC (source_timer_callback), sdnotify, source_destroy_notify);
-      g_source_attach (sdnotify->source, NULL); /* attach the source to the default context */
-    }
-  else if (sdw_status == 0)
-    {
-      g_info ("Systemd watchdog disabled");
+      g_source_set_callback (sdnotify->source,
+                             G_SOURCE_FUNC (source_timer_callback),
+                             sdnotify,
+                             source_destroy_notify);
+      g_source_attach (sdnotify->source, NULL);
     }
   else
     {
-      g_warning ("Fail to get the systemd watchdog status");
+      if (sdw_status == 0)
+        g_info ("Systemd watchdog disabled");
+      else
+        g_warning ("Fail to get the systemd watchdog status");
     }
 
   return sdnotify;
@@ -113,9 +111,7 @@ cdm_sdnotify_unref (CdmSDNotify *sdnotify)
   if (g_ref_count_dec (&sdnotify->rc) == TRUE)
     {
       if (sdnotify->source != NULL)
-        {
-          g_source_unref (sdnotify->source);
-        }
+        g_source_unref (sdnotify->source);
 
       g_free (sdnotify);
     }

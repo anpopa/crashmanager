@@ -80,9 +80,7 @@ client_source_dispatch (GSource *source,
   CDM_UNUSED (source);
 
   if (callback == NULL)
-    {
-      return G_SOURCE_CONTINUE;
-    }
+    return G_SOURCE_CONTINUE;
 
   return callback (user_data) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
@@ -140,7 +138,10 @@ client_source_callback (gpointer data)
               g_debug ("New crash entry added to database with id %016lX", dbid);
             }
 
-          cdm_transfer_file (client->transfer, client->complete_data->core_file, archive_transfer_complete, cdm_client_ref (client));
+          cdm_transfer_file (client->transfer,
+                             client->complete_data->core_file,
+                             archive_transfer_complete,
+                             cdm_client_ref (client));
         }
     }
 
@@ -217,9 +218,7 @@ get_pid_context_id (pid_t pid)
     }
 
   if (ctx_str == NULL)
-    {
-      return NULL;
-    }
+    return NULL;
 
   return g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (ctx_str));
 }
@@ -243,9 +242,7 @@ get_container_name_for_context (const gchar *ctxid)
       gchar *name = names[i];
 
       if (name == NULL || container == NULL)
-        {
-          continue;
-        }
+        continue;
 
       if (container->is_running (container))
         {
@@ -284,9 +281,7 @@ process_message (CdmClient *c,
   g_assert (msg);
 
   if (strncmp ((char *)msg->hdr.version, CDM_BUILDTIME_VERSION, CDM_VERSION_STRING_LEN) != 0)
-    {
-      g_warning ("Using different cdh header than coredumper");
-    }
+    g_warning ("Using different cdh header than coredumper");
 
   switch (msg->hdr.type)
     {
@@ -326,7 +321,7 @@ process_message (CdmClient *c,
 #endif
         }
 
-      g_info ("Update crash id=%lx crashID=%s vectorID=%s contextID=%s contextName=\"%s\"",
+      g_info ("Update crash id=%lx crashID=%s vectorID=%s contextID=%s contextName=%s",
               c->id,
               c->update_data->crashid,
               c->update_data->vectorid,
@@ -384,10 +379,15 @@ cdm_client_new (gint clientfd,
   client->transfer = cdm_transfer_ref (transfer);
   client->journal = cdm_journal_ref (journal);
 
-  g_source_set_callback (CDM_EVENT_SOURCE (client), G_SOURCE_FUNC (client_source_callback), client, client_source_destroy_notify);
-  g_source_attach (CDM_EVENT_SOURCE (client), NULL); /* attach the source to the default context */
+  g_source_set_callback (CDM_EVENT_SOURCE (client),
+                         G_SOURCE_FUNC (client_source_callback),
+                         client,
+                         client_source_destroy_notify);
+  g_source_attach (CDM_EVENT_SOURCE (client), NULL);
 
-  client->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (client), client->sockfd, G_IO_IN | G_IO_PRI);
+  client->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (client),
+                                      client->sockfd,
+                                      G_IO_IN | G_IO_PRI);
 
   return client;
 }

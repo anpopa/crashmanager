@@ -43,12 +43,15 @@
 static void
 wait_early_cdh_instances (long timeout)
 {
+  g_autofree gchar *exepath = NULL;
   gboolean end = FALSE;
   glong count = 0;
 
+  exepath = g_build_filename (CDM_INSTALL_PREFIX, "bin", "crashhandler", NULL);
+
   do
     {
-      pid_t pid = cdm_utils_first_pid_for_process ("coredumper", NULL);
+      pid_t pid = cdm_utils_first_pid_for_process (exepath);
 
       if (pid > 0)
         {
@@ -100,20 +103,20 @@ archive_early_crashes (CdmApplication *app,
 
       if (journal_error != NULL)
         {
-          g_warning ("Fail to check archive status for %s. Error %s", fpath, journal_error->message);
+          g_warning ("Fail to check archive status for %s. Error %s",
+                     fpath,
+                     journal_error->message);
           g_error_free (journal_error);
           continue;
         }
 
-      if (entry_exist == FALSE)
+      if (!entry_exist)
         {
           gboolean iskdump = FALSE;
           guint64 dbid;
 
           if (g_strrstr (fpath, "vmlinux") != NULL)
-            {
-              iskdump = TRUE;
-            }
+            iskdump = TRUE;
 
           /*
            * wait for any early crashhandler instance to avoid sending
@@ -298,27 +301,19 @@ cdm_application_execute (CdmApplication *app)
   else
     {
       if (cdm_utils_chown (opt_crashdir, opt_user, opt_group) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Failed to set user and group owner");
-        }
+        g_warning ("Failed to set user and group owner");
     }
 
   if (cdm_server_bind_and_listen (app->server) != CDM_STATUS_OK)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   /* we move the kdump archives if any */
   if (archive_kdumps (app, opt_crashdir) != CDM_STATUS_OK)
-    {
-      g_warning ("Fail to add kdumps");
-    }
+    g_warning ("Fail to add kdumps");
 
   /* check and process early archives including kdumps */
   if (archive_early_crashes (app, opt_crashdir) != CDM_STATUS_OK)
-    {
-      g_warning ("Fail to add early crashes");
-    }
+    g_warning ("Fail to add early crashes");
 
   /* run the main event loop */
   g_main_loop_run (app->mainloop);

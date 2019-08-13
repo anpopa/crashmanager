@@ -64,8 +64,8 @@ janitor_source_prepare (GSource *source,
   crash_dir_size = cdm_journal_get_data_size (janitor->journal, NULL);
   entries_count = cdm_journal_get_entry_count (janitor->journal, NULL);
 
-  if ((crash_dir_size > janitor->max_dir_size) || (entries_count > janitor->max_file_cnt) ||
-      ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size))
+  if ((crash_dir_size > janitor->max_dir_size) || (entries_count > janitor->max_file_cnt)
+      || ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size))
     {
       g_info ("Cleaning database size=%ld (max=%ld min=%ld) count=%ld (max=%ld)",
               crash_dir_size, janitor->max_dir_size, janitor->min_dir_size,
@@ -112,15 +112,15 @@ janitor_source_callback (gpointer cdmjanitor)
       if (g_remove (victim_path) == -1)
         {
           if (errno != ENOENT)
-            {
-              g_error ("Fail to remove file %s", victim_path);
-            }
+            g_error ("Fail to remove file %s", victim_path);
         }
 
       cdm_journal_set_removed (janitor->journal, victim_path, TRUE, &error);
       if (error != NULL)
         {
-          g_warning ("Fail to set remove flag for victim %s: Error %s", victim_path, error->message);
+          g_warning ("Fail to set remove flag for victim %s: Error %s",
+                     victim_path,
+                     error->message);
           g_error_free (error);
         }
     }
@@ -156,7 +156,7 @@ cdm_janitor_new (CdmOptions *options,
 
   g_source_set_callback (CDM_EVENT_SOURCE (janitor), G_SOURCE_FUNC (janitor_source_callback),
                          janitor, janitor_source_destroy_notify);
-  g_source_attach (CDM_EVENT_SOURCE (janitor), NULL); /* attach the source to the default context */
+  g_source_attach (CDM_EVENT_SOURCE (janitor), NULL);
 
   return janitor;
 }

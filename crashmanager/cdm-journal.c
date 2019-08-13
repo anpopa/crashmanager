@@ -77,9 +77,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
       for (gint i = 0; i < argc; i++)
         {
           if (g_strcmp0 (colname[i], "FILEPATH") == 0)
-            {
-              querydata->response = (gpointer)g_strdup (argv[i]);
-            }
+            querydata->response = (gpointer)g_strdup (argv[i]);
         }
       break;
 
@@ -87,9 +85,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
       for (gint i = 0; i < argc; i++)
         {
           if (g_strcmp0 (colname[i], "FILESIZE") == 0)
-            {
-              *((gssize *)(querydata->response)) += g_ascii_strtoll (argv[i], NULL, 10);
-            }
+            *((gssize *)(querydata->response)) += g_ascii_strtoll (argv[i], NULL, 10);
         }
       break;
 
@@ -129,9 +125,7 @@ cdm_journal_new (CdmOptions *options)
   opt_group = cdm_options_string_for (options, KEY_GROUP_NAME);
 
   if (sqlite3_open (opt_dbpath, &journal->database))
-    {
-      g_error ("Cannot open journal database at path %s", opt_dbpath);
-    }
+    g_error ("Cannot open journal database at path %s", opt_dbpath);
 
   sql = g_strdup_printf ("CREATE TABLE IF NOT EXISTS %s       "
                          "(ID INT PRIMARY KEY     NOT   NULL, "
@@ -150,14 +144,10 @@ cdm_journal_new (CdmOptions *options)
                          cdm_journal_table_name);
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
-    {
-      g_error ("Fail to create crash table. SQL error %s", query_error);
-    }
+    g_error ("Fail to create crash table. SQL error %s", query_error);
 
   if (cdm_utils_chown (opt_dbpath, opt_user, opt_group) == CDM_STATUS_ERROR)
-    {
-      g_warning ("Failed to set user and group owner for database %s", opt_dbpath);
-    }
+    g_warning ("Failed to set user and group owner for database %s", opt_dbpath);
 
   return journal;
 }
@@ -176,9 +166,7 @@ cdm_journal_unref (CdmJournal *journal)
   g_assert (journal);
 
   if (g_ref_count_dec (&journal->rc) == TRUE)
-    {
-      g_free (journal);
-    }
+    g_free (journal);
 }
 
 guint64
@@ -206,26 +194,44 @@ cdm_journal_add_crash (CdmJournal *journal,
 
   if (!proc_name || !crash_id || !vector_id || !context_id || !file_path)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "Invalid arguments");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalAddCrash"),
+                   1,
+                   "Invalid arguments");
       return(0);
     }
 
   file_size = cdm_utils_get_filesize (file_path);
   if (file_size == -1)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "Cannot stat file for size");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalAddCrash"),
+                   1,
+                   "Cannot stat file for size");
       return(0);
     }
 
   id = cdm_utils_jenkins_hash (file_path);
 
-  sql = g_strdup_printf ("INSERT INTO %s                                                                                 "
+  sql = g_strdup_printf ("INSERT INTO %s "
                          "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,FILEPATH,FILESIZE,"
                          "PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) "
-                         "VALUES(                                                                                        "
+                         "VALUES(                                                               "
                          "%lu, '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s', %d, %d);",
-                         cdm_journal_table_name, id, proc_name, crash_id, vector_id, context_id,
-                         file_path, file_size, pid, sig, tstamp, cdm_utils_get_osversion (), 0, 0);
+                         cdm_journal_table_name,
+                         id,
+                         proc_name,
+                         crash_id,
+                         vector_id,
+                         context_id,
+                         file_path,
+                         file_size,
+                         pid,
+                         sig,
+                         tstamp,
+                         cdm_utils_get_osversion (),
+                         0,
+                         0);
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
@@ -281,7 +287,10 @@ cdm_journal_set_transfer (CdmJournal *journal,
 
   if (!file_path)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalSetTransfer"), 1, "Invalid arguments");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalSetTransfer"),
+                   1,
+                   "Invalid arguments");
     }
   else
     {
@@ -297,9 +306,13 @@ cdm_journal_set_transfer (CdmJournal *journal,
       sql = g_strdup_printf ("UPDATE %s SET TSTATE = %d WHERE ID IS %lu",
                              cdm_journal_table_name, complete, id);
 
-      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
+          != SQLITE_OK)
         {
-          g_set_error (error, g_quark_from_static_string ("JournalSetTransfer"), 1, "SQL query error");
+          g_set_error (error,
+                       g_quark_from_static_string ("JournalSetTransfer"),
+                       1,
+                       "SQL query error");
           g_warning ("Fail to set transfer state. SQL error %s", query_error);
           sqlite3_free (query_error);
         }
@@ -316,7 +329,10 @@ cdm_journal_set_removed (CdmJournal *journal,
 
   if (!file_path)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalSetRemoved"), 1, "Invalid arguments");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalSetRemoved"),
+                   1,
+                   "Invalid arguments");
     }
   else
     {
@@ -332,9 +348,13 @@ cdm_journal_set_removed (CdmJournal *journal,
       sql = g_strdup_printf ("UPDATE %s SET RSTATE = %d WHERE ID IS %lu",
                              cdm_journal_table_name, complete, id);
 
-      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
+          != SQLITE_OK)
         {
-          g_set_error (error, g_quark_from_static_string ("JournalSetRemoved"), 1, "SQL query error");
+          g_set_error (error,
+                       g_quark_from_static_string ("JournalSetRemoved"),
+                       1,
+                       "SQL query error");
           g_warning ("Fail to set removed state. SQL error %s", query_error);
           sqlite3_free (query_error);
         }
@@ -354,12 +374,17 @@ cdm_journal_get_victim (CdmJournal *journal,
 
   g_assert (journal);
 
-  sql = g_strdup_printf ("SELECT FILEPATH FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1 ORDER BY TIMESTAMP LIMIT 1",
+  sql = g_strdup_printf ("SELECT FILEPATH FROM %s "
+                         "WHERE RSTATE IS 0 AND TSTATE IS 1 ORDER BY TIMESTAMP LIMIT 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
+      != SQLITE_OK)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalGetVictim"), 1, "SQL query error");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalGetVictim"),
+                   1,
+                   "SQL query error");
       g_warning ("Fail to get victim. SQL error %s", query_error);
       sqlite3_free (query_error);
     }
@@ -386,9 +411,13 @@ cdm_journal_get_data_size (CdmJournal *journal,
   sql = g_strdup_printf ("SELECT FILESIZE FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
+      != SQLITE_OK)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalGetDatasize"), 1, "SQL query error");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalGetDatasize"),
+                   1,
+                   "SQL query error");
       g_warning ("Fail to get data size. SQL error %s", query_error);
       sqlite3_free (query_error);
     }
@@ -415,9 +444,13 @@ cdm_journal_get_entry_count (CdmJournal *journal,
   sql = g_strdup_printf ("SELECT FILEPATH FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
+      != SQLITE_OK)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalGetDatasize"), 1, "SQL query error");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalGetDatasize"),
+                   1,
+                   "SQL query error");
       g_warning ("Fail to get entry count. SQL error %s", query_error);
       sqlite3_free (query_error);
     }

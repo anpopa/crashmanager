@@ -127,9 +127,8 @@ cdh_archive_close (CdhArchive *ar)
   if (ar->archive)
     {
       if (archive_write_close (ar->archive) != ARCHIVE_OK)
-        {
-          status = CDM_STATUS_ERROR;
-        }
+        status = CDM_STATUS_ERROR;
+
       archive_write_free (ar->archive);
       ar->archive = NULL;
     }
@@ -156,9 +155,8 @@ cdh_archive_create_file (CdhArchive *ar,
       ar->file_active = TRUE;
       /* we don't need the file name */
       if (ar->file_name != NULL)
-        {
-          g_free (ar->file_name);
-        }
+        g_free (ar->file_name);
+
       ar->file_size = (gssize)file_size;
       ar->file_write_sz = 0;
     }
@@ -189,9 +187,7 @@ cdh_archive_write_file (CdhArchive *ar,
   g_assert (buf);
 
   if (!ar->file_active)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   sz = archive_write_data (ar->archive, buf, size);
   if (sz < 0)
@@ -213,13 +209,9 @@ cdh_archive_finish_file (CdhArchive *ar)
   g_assert (ar);
 
   if (!ar->file_active)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
   else
-    {
-      ar->file_active = FALSE;
-    }
+    ar->file_active = FALSE;
 
   return CDM_STATUS_OK;
 }
@@ -243,9 +235,8 @@ cdh_archive_add_system_file (CdhArchive *ar,
       ar->file_active = TRUE;
       /* we don't need the file name */
       if (ar->file_name != NULL)
-        {
-          g_free (ar->file_name);
-        }
+        g_free (ar->file_name);
+
       ar->file_size = real_file_size (src);
       ar->file_write_sz = 0;
     }
@@ -284,13 +275,9 @@ cdh_archive_add_system_file (CdhArchive *ar,
           while (readsz > 0)
             {
               if (archive_write_data (ar->archive, ar->in_read_buffer, (gsize)readsz) < 0)
-                {
-                  g_warning ("Fail to write archive");
-                }
+                g_warning ("Fail to write archive");
               else
-                {
-                  ar->file_write_sz += readsz;
-                }
+                ar->file_write_sz += readsz;
 
               readsz = read (fd, ar->in_read_buffer, sizeof(ar->in_read_buffer));
             }
@@ -322,9 +309,7 @@ cdh_archive_stream_open (CdhArchive *ar,
   g_assert (dst);
 
   if (ar->file_active)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   if (src == NULL)
     {
@@ -339,9 +324,8 @@ cdh_archive_stream_open (CdhArchive *ar,
   /* If no output is set we allow stream processing via stream read api anyway */
   ar->file_active = TRUE;
   if (ar->file_name != NULL)
-    {
-      g_free (ar->file_name);
-    }
+    g_free (ar->file_name);
+
   ar->file_name = g_strdup (dst);
   ar->file_size = 0;
   ar->file_chunk_sz = (gssize)split_size;
@@ -385,9 +369,7 @@ cdh_archive_stream_read_all (CdhArchive *ar)
       gsize readsz = fread (ar->in_read_buffer, 1, sizeof(ar->in_read_buffer), ar->in_stream);
 
       if (stream_chunk_write (ar, ar->in_read_buffer, (gssize)readsz) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Fail to write archive");
-        }
+        g_warning ("Fail to write archive");
 
       ar->in_stream_offset += readsz;
 
@@ -429,9 +411,7 @@ cdh_archive_stream_move_ahead (CdhArchive *ar, gulong nbbytes)
         }
 
       if (stream_chunk_write (ar, ar->in_read_buffer, (gssize)readsz) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Fail to write archive");
-        }
+        g_warning ("Fail to write archive");
 
       toread -= chunksz;
     }
@@ -454,9 +434,7 @@ cdh_archive_stream_close (CdhArchive *ar)
   g_assert (ar);
 
   if (ar->file_active == FALSE)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   if (ar->file_name != NULL)
     {
@@ -484,9 +462,7 @@ create_file_chunk (CdhArchive *ar)
   g_assert (ar);
 
   if (ar->file_active == FALSE)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   dname = g_strdup_printf ("%s.%04ld", ar->file_name, ar->file_chunk_cnt);
 
@@ -519,9 +495,7 @@ stream_chunk_write (CdhArchive *ar,
   g_assert (ar);
 
   if (ar->file_active == FALSE)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   towrite = ar->file_chunk_sz - ar->file_write_sz;
   writesz = archive_write_data (ar->archive, buf, (gsize)(size < towrite ? size : towrite));
@@ -541,9 +515,7 @@ stream_chunk_write (CdhArchive *ar,
       if (create_file_chunk (ar) == CDM_STATUS_OK)
         {
           if (size > 0)
-            {
-              writesz = archive_write_data (ar->archive, buf + writesz, (gsize)size);
-            }
+            writesz = archive_write_data (ar->archive, buf + writesz, (gsize)size);
 
           if (writesz < 0)
             {
@@ -562,9 +534,7 @@ stream_chunk_write (CdhArchive *ar,
     }
 
   if (size != 0)
-    {
-      g_warning ("Fail to write requiered size in chunk write");
-    }
+    g_warning ("Fail to write requiered size in chunk write");
 
   return CDM_STATUS_OK;
 }

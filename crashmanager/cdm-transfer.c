@@ -77,9 +77,7 @@ transfer_source_dispatch (GSource *source,
   CDM_UNUSED (callback);
 
   if (entry == NULL)
-    {
-      return G_SOURCE_CONTINUE;
-    }
+    return G_SOURCE_CONTINUE;
 
   return transfer->callback (cdmtrans, entry) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
@@ -153,7 +151,10 @@ transfer_thread_func (gpointer data,
 
           lastpkg++;
 
-          if (dlt_user_log_file_data (&cdm_transfer_ctx, entry->file_path, lastpkg, DLT_MIN_TIMEOUT) < 0)
+          if (dlt_user_log_file_data (&cdm_transfer_ctx,
+                                      entry->file_path,
+                                      lastpkg,
+                                      DLT_MIN_TIMEOUT) < 0)
             {
               success = 0;
               break;
@@ -161,16 +162,12 @@ transfer_thread_func (gpointer data,
         }
 
       if (success)
-        {
-          dlt_user_log_file_end (&cdm_transfer_ctx, entry->file_path, 0);
-        }
+        dlt_user_log_file_end (&cdm_transfer_ctx, entry->file_path, 0);
     }
 #endif
 
   if (entry->callback)
-    {
-      entry->callback (entry->user_data, entry->file_path);
-    }
+    entry->callback (entry->user_data, entry->file_path);
 
   g_free (entry->file_path);
   g_free (entry);
@@ -193,8 +190,11 @@ cdm_transfer_new (void)
   transfer->queue = g_async_queue_new_full (transfer_queue_destroy_notify);
   transfer->tpool = g_thread_pool_new (transfer_thread_func, transfer, 1, TRUE, NULL);
 
-  g_source_set_callback (CDM_EVENT_SOURCE (transfer), NULL, transfer, transfer_source_destroy_notify);
-  g_source_attach (CDM_EVENT_SOURCE (transfer), NULL); /* attach the source to the default context */
+  g_source_set_callback (CDM_EVENT_SOURCE (transfer),
+                         NULL,
+                         transfer,
+                         transfer_source_destroy_notify);
+  g_source_attach (CDM_EVENT_SOURCE (transfer), NULL);
 
   return transfer;
 }

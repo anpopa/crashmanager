@@ -217,3 +217,30 @@ PostCore = false
 ProcName = .*
 DataPath = /proc/version
 PostCore = false
+
+###############################################################################
+#
+# Crashaction sections
+#   Each section should have unique name matching pattern crashaction-<name>
+#
+###############################################################################
+# ProcName defines the process name to match to apply this crashaction rule
+#   This can be a process name or a regular expresion to match the process name
+# Victim defines the binary path of the victim. The first and only the first
+#   PID for process matching this exe name while enumerating procfs will receive the 
+#   signal from crashhandler.
+# Signal defines the signal number to be sent to process
+# PostCore defines when to process the data
+#   If data holds only until process is release (eg. proc) then set 
+#   this to false.
+
+###############################################################################
+#
+# Crashaction quit firefox
+#
+###############################################################################
+[crashaction-crashtest_quit_firefox]
+ProcName = crashtest
+Victim = /usr/lib/firefox/firefox
+Signal = 3
+PostCore = false

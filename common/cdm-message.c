@@ -66,23 +66,17 @@ cdm_message_free_data (CdmMessage *m)
   g_assert (m);
 
   if (m->data != NULL)
-    {
-      free (m->data);
-    }
+    free (m->data);
 }
 
 bool
 cdm_message_is_valid (CdmMessage *m)
 {
   if (m == NULL)
-    {
-      return false;
-    }
+    return false;
 
   if (m->hdr.hsh != CDM_MESSAGE_START_HASH)
-    {
-      return false;
-    }
+    return false;
 
   return true;
 }
@@ -116,15 +110,11 @@ cdm_message_read (gint fd,
   sz = read (fd, &m->hdr, sizeof(CdmMessageHdr));
 
   if (sz != sizeof(CdmMessageHdr) || !cdm_message_is_valid (m))
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   m->data = calloc (1, m->hdr.data_size);
   if (m->data == NULL)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   sz = read (fd, m->data, m->hdr.data_size);
 
@@ -140,16 +130,12 @@ cdm_message_write (gint fd,
   g_assert (m);
 
   if (!cdm_message_is_valid (m))
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   sz = write (fd, &m->hdr, sizeof(CdmMessageHdr));
 
   if (sz != sizeof(CdmMessageHdr))
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   sz = write (fd, m->data, m->hdr.data_size);
 

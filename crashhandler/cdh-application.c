@@ -97,30 +97,20 @@ cdh_application_unref (CdhApplication *app)
   if (g_ref_count_dec (&app->rc) == TRUE)
     {
       if (app->context)
-        {
-          cdh_context_unref (app->context);
-        }
+        cdh_context_unref (app->context);
 
       if (app->archive)
-        {
-          cdh_archive_unref (app->archive);
-        }
+        cdh_archive_unref (app->archive);
 
       if (app->options)
-        {
-          cdm_options_unref (app->options);
-        }
+        cdm_options_unref (app->options);
 
 #if defined(WITH_CRASHMANAGER)
       if (app->manager)
-        {
-          cdh_manager_unref (app->manager);
-        }
+        cdh_manager_unref (app->manager);
 #endif
       if (app->coredump)
-        {
-          cdh_coredump_unref (app->coredump);
-        }
+        cdh_coredump_unref (app->coredump);
 
       g_free (app);
     }
@@ -208,12 +198,14 @@ init_crashdump_archive (CdhApplication *app, const gchar *dirname)
   g_assert (app);
   g_assert (dirname);
 
-  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, app->context->name, app->context->pid, app->context->tstamp);
+  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN,
+                           dirname,
+                           app->context->name,
+                           app->context->pid,
+                           app->context->tstamp);
 
   if (cdh_archive_open (app->archive, aname, (time_t)app->context->tstamp) != CDM_STATUS_OK)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   return CDM_STATUS_OK;
 }
@@ -229,20 +221,105 @@ close_crashdump_archive (CdhApplication *app,
   g_assert (app);
 
   if (cdh_archive_close (app->archive) != CDM_STATUS_OK)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
-  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN, dirname, app->context->name, app->context->pid, app->context->tstamp);
+  aname = g_strdup_printf (ARCHIVE_NAME_PATTERN,
+                           dirname,
+                           app->context->name,
+                           app->context->pid,
+                           app->context->tstamp);
+
   opt_user = cdm_options_string_for (app->options, KEY_USER_NAME);
   opt_group = cdm_options_string_for (app->options, KEY_GROUP_NAME);
 
   if (cdm_utils_chown (aname, opt_user, opt_group) == CDM_STATUS_ERROR)
-    {
-      g_warning ("Failed to set user and group owner for archive %s", aname);
-    }
+    g_warning ("Failed to set user and group owner for archive %s", aname);
 
   return CDM_STATUS_OK;
+}
+
+static void
+do_crash_actions (CdmOptions *options,
+                  const gchar *proc_name,
+                  gboolean postcore)
+{
+  GKeyFile *key_file = NULL;
+  gchar **groups = NULL;
+
+  g_assert (options);
+
+  key_file = cdm_options_get_key_file (options);
+  groups = g_key_file_get_groups (key_file, NULL);
+
+  for (gint i = 0; groups[i] != NULL; i++)
+    {
+      g_autofree gchar *proc_key = NULL;
+      g_autofree gchar *victim_key = NULL;
+      gboolean key_postcore = TRUE;
+      gchar *gname = groups[i];
+      GError *error = NULL;
+      pid_t victim_pid;
+      gint signal_key;
+
+      if (g_regex_match_simple ("crashaction-*", gname, 0, 0) == FALSE)
+        continue;
+
+      proc_key = g_key_file_get_string (key_file, gname, "ProcName", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      if (g_regex_match_simple (proc_key, proc_name, 0, 0) == FALSE)
+        continue;
+
+      key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      if (key_postcore != postcore)
+        continue;
+
+      victim_key = g_key_file_get_string (key_file, gname, "Victim", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      signal_key = g_key_file_get_integer (key_file, gname, "Signal", &error);
+      if (error != NULL)
+        {
+          g_error_free (error);
+          continue;
+        }
+
+      victim_pid = cdm_utils_first_pid_for_process (victim_key);
+      if (victim_pid < 1)
+        {
+          g_info ("No victim '%s' found for crash action", victim_key);
+          continue;
+        }
+      else
+        {
+          g_info ("Victim '%s' found with pid %d, for crash action", victim_key, victim_pid);
+        }
+
+      if (kill (victim_pid, signal_key) == -1)
+        {
+          g_warning ("Fail to send signal %d to process %d (%s). Error %s",
+                     signal_key,
+                     victim_pid,
+                     victim_key,
+                     strerror (errno));
+        }
+    }
+
+  g_strfreev (groups);
 }
 
 CdmStatus
@@ -276,7 +353,10 @@ cdh_application_execute (CdhApplication *app,
   g_strdelimit (app->context->name, ":/\\!*", '_');
 
   g_info ("New process crash: name=%s pid=%ld signal=%ld timestamp=%lu",
-          app->context->name, app->context->pid, app->context->sig, app->context->tstamp);
+          app->context->name,
+          app->context->pid,
+          app->context->sig,
+          app->context->tstamp);
 
 #if defined(WITH_CRASHMANAGER)
   if (cdh_manager_connect (app->manager) != CDM_STATUS_OK)
@@ -288,7 +368,9 @@ cdh_application_execute (CdhApplication *app,
       CdmMessage msg;
       CdmMessageDataNew msg_data;
 
-      cdm_message_init (&msg, CDM_CORE_NEW, (guint16)((gulong)app->context->pid | app->context->tstamp));
+      cdm_message_init (&msg,
+                        CDM_CORE_NEW,
+                        (guint16)((gulong)app->context->pid | app->context->tstamp));
 
       msg_data.pid = app->context->pid;
       msg_data.coresig = app->context->sig;
@@ -297,11 +379,8 @@ cdh_application_execute (CdhApplication *app,
       memcpy (msg_data.pname, app->context->name, strlen (app->context->name) + 1);
 
       cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
-
       if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Failed to send new message to manager");
-        }
+        g_warning ("Failed to send new message to manager");
     }
 #endif
 
@@ -315,9 +394,7 @@ cdh_application_execute (CdhApplication *app,
   g_debug ("Coredump appbase path %s", opt_coredir);
 
   if (nice (opt_nice_value) != opt_nice_value)
-    {
-      g_warning ("Failed to change crashhandler priority");
-    }
+    g_warning ("Failed to change crashhandler priority");
 
   if (g_mkdir_with_parents (opt_coredir, 0755) != 0)
     {
@@ -327,9 +404,7 @@ cdh_application_execute (CdhApplication *app,
   else
     {
       if (cdm_utils_chown (opt_coredir, opt_user, opt_group) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Failed to set suer and group owner");
-        }
+        g_warning ("Failed to set suer and group owner");
     }
 
   if (check_disk_space (opt_coredir, opt_fs_min_size) != CDM_STATUS_OK)
@@ -345,10 +420,10 @@ cdh_application_execute (CdhApplication *app,
       goto enter_cleanup;
     }
 
+  do_crash_actions (app->options, app->context->name, FALSE);
+
   if (cdh_context_generate_prestream (app->context) != CDM_STATUS_OK)
-    {
-      g_warning ("Failed to generate the context file, continue with coredump");
-    }
+    g_warning ("Failed to generate the context file, continue with coredump");
 
   if (cdh_coredump_generate (app->coredump) != CDM_STATUS_OK)
     {
@@ -358,14 +433,12 @@ cdh_application_execute (CdhApplication *app,
     }
 
   if (cdh_context_generate_poststream (app->context) != CDM_STATUS_OK)
-    {
-      g_warning ("Failed to generate the context file, continue with coredump");
-    }
+    g_warning ("Failed to generate the context file, continue with coredump");
+
+  do_crash_actions (app->options, app->context->name, FALSE);
 
   if (close_crashdump_archive (app, opt_coredir) != CDM_STATUS_OK)
-    {
-      g_warning ("Failed to close corectly the crashdump archive");
-    }
+    g_warning ("Failed to close corectly the crashdump archive");
 
 enter_cleanup:
 #if defined(WITH_CRASHMANAGER)
@@ -382,28 +455,24 @@ enter_cleanup:
       cdm_message_init (&msg, type, (guint16)((gulong)app->context->pid | app->context->tstamp));
 
       memset (&msg_data, 0, sizeof(CdmMessageDataComplete));
-      file_path = g_strdup_printf (ARCHIVE_NAME_PATTERN, opt_coredir, app->context->name, app->context->pid, app->context->tstamp);
+      file_path = g_strdup_printf (ARCHIVE_NAME_PATTERN,
+                                   opt_coredir,
+                                   app->context->name,
+                                   app->context->pid,
+                                   app->context->tstamp);
 
       sz = snprintf (msg_data.core_file, CDM_MESSAGE_FILENAME_LEN, "%s", file_path);
 
       if (sz > 0 && sz < CDM_MESSAGE_FILENAME_LEN)
-        {
-          cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
-        }
+        cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
       else
-        {
-          g_warning ("Fail to set the complete file name. Name too long!");
-        }
+        g_warning ("Fail to set the complete file name. Name too long!");
 
       if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Failed to send status message to manager");
-        }
+        g_warning ("Failed to send status message to manager");
 
       if (cdh_manager_disconnect (app->manager) != CDM_STATUS_OK)
-        {
-          g_warning ("Fail to disconnect to manager socket");
-        }
+        g_warning ("Fail to disconnect to manager socket");
     }
 #endif
 

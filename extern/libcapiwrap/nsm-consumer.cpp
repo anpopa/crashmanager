@@ -130,9 +130,7 @@ nsm_consumer_new (const gchar *session_name, const gchar *session_owner)
 
   n = (NsmConsumer*)calloc (1, sizeof(NsmConsumer));
   if (n == nullptr)
-    {
-      return nullptr;
-    }
+    return nullptr;
 
   /* The LCData is a C++ private object to this module
    * so we will use new/delete operators for this object
@@ -431,9 +429,7 @@ deinit_lifecycled_data (LCData *d)
           if (call_status == CommonAPI::CallStatus::SUCCESS)
             {
               if (error_status != NSMTypes::NsmErrorStatus_e::NsmErrorStatus_Ok)
-                {
-                  status = CDM_STATUS_ERROR;
-                }
+                status = CDM_STATUS_ERROR;
             }
           else
             {
@@ -496,13 +492,9 @@ register_session_listener (NsmConsumer *n, const CommonAPI::CallStatus &call_sta
   if (call_status == CommonAPI::CallStatus::SUCCESS)
     {
       if (error_status != NSMTypes::NsmErrorStatus_e::NsmErrorStatus_Ok)
-        {
-          state = LC_UNREGISTERED;
-        }
+        state = LC_UNREGISTERED;
       else
-        {
-          state = LC_REGISTERED;
-        }
+        state = LC_REGISTERED;
     }
   else
     {
@@ -510,9 +502,7 @@ register_session_listener (NsmConsumer *n, const CommonAPI::CallStatus &call_sta
     }
 
   if (n->registration_state_cb != NULL)
-    {
-      n->registration_state_cb (n->client, state, error);
-    }
+    n->registration_state_cb (n->client, state, error);
 }
 
 static void
@@ -536,7 +526,5 @@ proxy_availability_listener (NsmConsumer *n, CommonAPI::AvailabilityStatus statu
     }
 
   if (n->proxy_availability_cb != NULL)
-    {
-      n->proxy_availability_cb (n->client, state, CDM_STATUS_OK);
-    }
+    n->proxy_availability_cb (n->client, state, CDM_STATUS_OK);
 }

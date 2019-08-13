@@ -45,9 +45,7 @@ terminate (int signum)
 {
   g_info ("Crashmanager terminate with signal %d", signum);
   if (g_mainloop != NULL)
-    {
-      g_main_loop_quit (g_mainloop);
-    }
+    g_main_loop_quit (g_mainloop);
 }
 
 gint
@@ -70,7 +68,8 @@ main (gint argc, gchar *argv[])
   signal (SIGTERM, terminate);
 
   context = g_option_context_new ("- Crash manager service daemon");
-  g_option_context_set_summary (context, "The service listen for Crashhandler events and manage its output");
+  g_option_context_set_summary (context,
+                                "The service listen for Crashhandler events and manage its output");
   g_option_context_add_main_entries (context, main_entries, NULL);
 
   if (!g_option_context_parse (context, &argc, &argv, &error))
@@ -88,9 +87,7 @@ main (gint argc, gchar *argv[])
   cdm_logging_open ("CDM", "Crashmanager service", "CDM", "Default context");
 
   if (config_path == NULL)
-    {
-      config_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-    }
+    config_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
 
   if (g_access (config_path, R_OK) == 0)
     {

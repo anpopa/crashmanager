@@ -65,9 +65,7 @@ cdh_manager_unref (CdhManager *c)
   if (g_ref_count_dec (&c->rc) == TRUE)
     {
       if (cdh_manager_connected (c) == TRUE)
-        {
-          (void)cdh_manager_disconnect (c);
-        }
+        (void)cdh_manager_disconnect (c);
 
       cdm_options_unref (c->opts);
       g_free (c);
@@ -85,9 +83,7 @@ cdh_manager_connect (CdhManager *c)
   g_assert (c);
 
   if (c->connected)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   c->sfd = socket (AF_UNIX, SOCK_STREAM, 0);
   if (c->sfd < 0)
@@ -117,14 +113,10 @@ cdh_manager_connect (CdhManager *c)
   tout.tv_usec = 0;
 
   if (setsockopt (c->sfd, SOL_SOCKET, SO_RCVTIMEO, (gchar*)&tout, sizeof(tout)) == -1)
-    {
-      g_warning ("Failed to set the socket receiving timeout: %s", strerror (errno));
-    }
+    g_warning ("Failed to set the socket receiving timeout: %s", strerror (errno));
 
   if (setsockopt (c->sfd, SOL_SOCKET, SO_SNDTIMEO, (gchar*)&tout, sizeof(tout)) == -1)
-    {
-      g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
-    }
+    g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
 
   c->connected = true;
 
@@ -135,9 +127,7 @@ CdmStatus
 cdh_manager_disconnect (CdhManager *c)
 {
   if (!c->connected)
-    {
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   if (c->sfd > 0)
     {
@@ -187,9 +177,10 @@ cdh_manager_send (CdhManager *c,
     {
       g_warning ("Server socket select failed");
     }
-  else if (status > 0)
+  else
     {
-      status = cdm_message_write (c->sfd, m);
+      if (status > 0)
+        status = cdm_message_write (c->sfd, m);
     }
 
   return status;

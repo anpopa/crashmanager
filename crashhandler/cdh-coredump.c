@@ -50,8 +50,12 @@ static gint get_virtual_memory_phdr_nr (CdhCoredump *cd, Elf64_Addr address);
 
 static const gchar *get_nt_file_region_name (gchar *string_tab_start, gulong nr);
 
-static gint get_nt_file_region (CdhCoredump *cd, Elf64_Addr address, Elf64_Addr *region_start,
-                                Elf64_Addr *region_end, Elf64_Off *file_start, const gchar **region_name);
+static gint get_nt_file_region (CdhCoredump *cd,
+                                Elf64_Addr address,
+                                Elf64_Addr *region_start,
+                                Elf64_Addr *region_end,
+                                Elf64_Off *file_start,
+                                const gchar **region_name);
 
 static Elf64_Addr read_virtual_memory (CdhCoredump *cd, Elf64_Addr address, gint phdr_nr);
 
@@ -127,14 +131,16 @@ read_elf_headers (CdhCoredump *cd)
   g_assert (cd);
 
   /* Read ELF header */
-  if (cdh_archive_stream_read (cd->archive, &cd->context->ehdr, sizeof(cd->context->ehdr)) != CDM_STATUS_OK)
+  if (cdh_archive_stream_read (cd->archive, &cd->context->ehdr, sizeof(cd->context->ehdr))
+      != CDM_STATUS_OK)
     {
       g_warning ("read_elf_headers: We have failed to read the ELF header !");
       return CDM_STATUS_ERROR;
     }
 
   /* Read until PROG position */
-  if (cdh_archive_stream_move_to_offset (cd->archive, cd->context->ehdr.e_phoff) != CDM_STATUS_OK)
+  if (cdh_archive_stream_move_to_offset (cd->archive, cd->context->ehdr.e_phoff)
+      != CDM_STATUS_OK)
     {
       g_warning ("cdh_stream_move_to_offset: We have failed to seek to the beginning of the "
                  "segment headers !");
@@ -181,15 +187,16 @@ get_coredump_registers (CdhCoredump *cd)
           struct user_regs_struct *ptr_reg;
           prstatus_t *prstatus;
 
-          prstatus = (prstatus_t*)((gchar*)pnote + sizeof(Elf64_Nhdr) + ALIGN (pnote->n_namesz, 4));
+          prstatus = (prstatus_t*)((gchar*)pnote + sizeof(Elf64_Nhdr)
+                                   + ALIGN (pnote->n_namesz, 4));
           ptr_reg = (struct user_regs_struct *)prstatus->pr_reg;
 
 #ifdef __x86_64__
-          cd->context->regs.rip = ptr_reg->rip;               /* REG_IP_REGISTER */
-          cd->context->regs.rbp = ptr_reg->rbp;               /* REG_FRAME_REGISTER */
+          cd->context->regs.rip = ptr_reg->rip;             /* REG_IP_REGISTER */
+          cd->context->regs.rbp = ptr_reg->rbp;             /* REG_FRAME_REGISTER */
 #elif __aarch64__
-          cd->context->regs.pc = ptr_reg->pc;                             /* REG_PROG_COUNTER */
-          cd->context->regs.lr = ptr_reg->context->regs[30];               /* REG_LINK_REGISTER */
+          cd->context->regs.pc = ptr_reg->pc;               /* REG_PROG_COUNTER */
+          cd->context->regs.lr = ptr_reg->context->regs[30];/* REG_LINK_REGISTER */
 #endif
 
           found = CDM_STATUS_OK;
@@ -209,8 +216,8 @@ get_virtual_memory_phdr_nr (CdhCoredump *cd,
 
   for (gsize i = 0; i < cd->context->ehdr.e_phnum; i++)
     {
-      if ((address >= cd->context->pphdr[i].p_vaddr) &&
-          (address < cd->context->pphdr[i].p_vaddr + cd->context->pphdr[i].p_memsz))
+      if ((address >= cd->context->pphdr[i].p_vaddr)
+          && (address < cd->context->pphdr[i].p_vaddr + cd->context->pphdr[i].p_memsz))
         {
           return (gint)i;
         }
@@ -226,9 +233,7 @@ get_nt_file_region_name (gchar *string_tab_start,
   gchar *pos = string_tab_start;
 
   for (gsize i = 0; i < nr; i++)
-    {
-      pos += strlen (pos) + 1;
-    }
+    pos += strlen (pos) + 1;
 
   return pos;
 }
@@ -315,14 +320,10 @@ read_virtual_memory (CdhCoredump *cd,
   pos = cd->context->pphdr[phdr_nr].p_offset + (address - cd->context->pphdr[phdr_nr].p_vaddr);
 
   if (cdh_archive_stream_move_to_offset (cd->archive, pos) != CDM_STATUS_OK)
-    {
-      g_warning ("cdh_archive_stream_move_to_offset has failed to seek");
-    }
+    g_warning ("cdh_archive_stream_move_to_offset has failed to seek");
 
   if (cdh_archive_stream_read (cd->archive, &read_data, sizeof(Elf64_Addr)) != CDM_STATUS_OK)
-    {
-      g_warning ("cdh_archive_stream_read has failed to read %lu bytes!", sizeof(Elf64_Addr));
-    }
+    g_warning ("cdh_archive_stream_read has failed to read %lu bytes!", sizeof(Elf64_Addr));
 
   return read_data;
 }
@@ -338,13 +339,14 @@ get_note_page_index (CdhCoredump *cd)
   for (i = 0; i < cd->context->ehdr.e_phnum; i++)
     {
       g_debug ("Note section prog_note:%d type:0x%X offset:0x%zX size:0x%zX (%lu bytes)",
-               i, cd->context->pphdr[i].p_type, cd->context->pphdr[i].p_offset, cd->context->pphdr[i].p_filesz,
+               i,
+               cd->context->pphdr[i].p_type,
+               cd->context->pphdr[i].p_offset,
+               cd->context->pphdr[i].p_filesz,
                cd->context->pphdr[i].p_filesz);
 
       if (cd->context->pphdr[i].p_type == PT_NOTE)
-        {
-          break;
-        }
+        break;
     }
 
   return i == cd->context->ehdr.e_phnum ? CDM_STATUS_ERROR : i;
@@ -368,7 +370,8 @@ read_notes (CdhCoredump *cd)
     }
 
   /* Move to NOTE header position */
-  if (cdh_archive_stream_move_to_offset (cd->archive, cd->context->pphdr[prog_note].p_offset) != CDM_STATUS_OK)
+  if (cdh_archive_stream_move_to_offset (cd->archive, cd->context->pphdr[prog_note].p_offset)
+      != CDM_STATUS_OK)
     {
       g_warning ("Cannot move to note header");
       return CDM_STATUS_ERROR;
@@ -381,7 +384,8 @@ read_notes (CdhCoredump *cd)
       return CDM_STATUS_ERROR;
     }
 
-  if (cdh_archive_stream_read (cd->archive, cd->context->nhdr, cd->context->pphdr[prog_note].p_filesz) != CDM_STATUS_OK)
+  if (cdh_archive_stream_read (cd->archive, cd->context->nhdr, cd->context->pphdr[prog_note].p_filesz)
+      != CDM_STATUS_OK)
     {
       g_warning ("Cannot read note header");
       return CDM_STATUS_ERROR;
@@ -401,7 +405,8 @@ init_coredump (CdhCoredump *cd)
 
   dst = g_strdup_printf ("core.%s.%ld", cd->context->name, cd->context->pid);
 
-  if (cdh_archive_stream_open (cd->archive, 0, (dst != NULL ? dst : "coredump"), CDM_CRASHDUMP_SPLIT_SIZE) == CDM_STATUS_OK)
+  if (cdh_archive_stream_open (cd->archive, 0, (dst != NULL ? dst : "coredump"), CDM_CRASHDUMP_SPLIT_SIZE)
+      == CDM_STATUS_OK)
     {
       g_info ("Coredump compression started for %s with pid %ld", cd->context->name, cd->context->pid);
     }
@@ -466,15 +471,21 @@ cdh_coredump_generate (CdhCoredump *cd)
       else
         {
 #ifdef __x86_64__
-          cd->context->ra = read_virtual_memory (cd, cd->context->regs.rbp + return_addr_add, phdr);
+          cd->context->ra = read_virtual_memory (cd,
+                                                 cd->context->regs.rbp + return_addr_add, phdr);
 #elif __aarch64__
-          cd->context->ra = cd->context->regs.lr;               /* The link register holds our return address */
+          /* The link register holds our return address */
+          cd->context->ra = cd->context->regs.lr;
 #endif
           cd->context->crashid_info |= CID_RETURN_ADDRESS;
 
           /* Get the ELF file offset of the return address */
-          region_found = get_nt_file_region (cd, cd->context->ra, &region_start, &region_end,
-                                             &region_file_offset, &region_name);
+          region_found = get_nt_file_region (cd,
+                                             cd->context->ra,
+                                             &region_start,
+                                             &region_end,
+                                             &region_file_offset,
+                                             &region_name);
 
           if (region_found == CDM_STATUS_ERROR)
             {
@@ -482,8 +493,8 @@ cdh_coredump_generate (CdhCoredump *cd)
             }
           else
             {
-              cd->context->ra_file_offset =
-                cd->context->ra - region_start + (region_file_offset * cd->context->elf_vma_page_size);
+              cd->context->ra_file_offset = cd->context->ra - region_start
+                                            + (region_file_offset * cd->context->elf_vma_page_size);
               cd->context->ra_module_name = region_name;
               cd->context->crashid_info |= CID_RA_FILE_OFFSET;
             }
@@ -491,11 +502,19 @@ cdh_coredump_generate (CdhCoredump *cd)
 
       /* Get the ELF file offset of the ip/pc */
 #ifdef __x86_64__
-      region_found = get_nt_file_region (cd, cd->context->regs.rip, &region_start, &region_end,
-                                         &region_file_offset, &region_name);
+      region_found = get_nt_file_region (cd,
+                                         cd->context->regs.rip,
+                                         &region_start,
+                                         &region_end,
+                                         &region_file_offset,
+                                         &region_name);
 #elif __aarch64__
-      region_found = get_nt_file_region (cd, cd->context->regs.pc, &region_start, &region_end,
-                                         &region_file_offset, &region_name);
+      region_found = get_nt_file_region (cd,
+                                         cd->context->regs.pc,
+                                         &region_start,
+                                         &region_end,
+                                         &region_file_offset,
+                                         &region_name);
 #endif
 
       if (region_found == CDM_STATUS_ERROR)
@@ -505,11 +524,11 @@ cdh_coredump_generate (CdhCoredump *cd)
       else
         {
 #ifdef __x86_64__
-          cd->context->ip_file_offset =
-            cd->context->regs.rip - region_start + (region_file_offset * cd->context->elf_vma_page_size);
+          cd->context->ip_file_offset = cd->context->regs.rip - region_start
+                                        + (region_file_offset * cd->context->elf_vma_page_size);
 #elif __aarch64__
-          cd->context->ip_file_offset =
-            cd->context->regs.pc - region_start + (region_file_offset * cd->context->elf_vma_page_size);
+          cd->context->ip_file_offset = cd->context->regs.pc - region_start
+                                        + (region_file_offset * cd->context->elf_vma_page_size);
 #endif
           cd->context->ip_module_name = region_name;
           cd->context->crashid_info |= CID_IP_FILE_OFFSET;
@@ -529,7 +548,9 @@ cdh_coredump_generate (CdhCoredump *cd)
           CdmMessage msg;
           CdmMessageDataUpdate data;
 
-          cdm_message_init (&msg, CDM_CORE_UPDATE, (guint16)((gulong)cd->context->pid | cd->context->tstamp));
+          cdm_message_init (&msg,
+                            CDM_CORE_UPDATE,
+                            (guint16)((gulong)cd->context->pid | cd->context->tstamp));
 
           memcpy (data.crashid, cd->context->crashid, strlen (cd->context->crashid) + 1);
           memcpy (data.vectorid, cd->context->vectorid, strlen (cd->context->vectorid) + 1);
@@ -538,9 +559,7 @@ cdh_coredump_generate (CdhCoredump *cd)
           cdm_message_set_data (&msg, &data, sizeof(data));
 
           if (cdh_manager_send (cd->manager, &msg) == CDM_STATUS_ERROR)
-            {
-              g_warning ("Failed to send update message to manager");
-            }
+            g_warning ("Failed to send update message to manager");
         }
 #endif
     }
@@ -566,7 +585,10 @@ finished:
   else
     {
       cd->context->cdsize = cdh_archive_stream_get_offset (cd->archive);
-      g_info ("Coredump compression finished for %s with pid %ld cdsize %lu", cd->context->name, cd->context->pid, cd->context->cdsize);
+      g_info ("Coredump compression finished for %s with pid %ld cdsize %lu",
+              cd->context->name,
+              cd->context->pid,
+              cd->context->cdsize);
     }
 
   /* In all cases, let's close the files */

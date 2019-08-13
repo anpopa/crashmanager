@@ -142,9 +142,7 @@ cdm_server_new (CdmOptions *options,
 
   server->sockfd = socket (AF_UNIX, SOCK_STREAM, 0);
   if (server->sockfd < 0)
-    {
-      g_error ("Cannot create server socket");
-    }
+    g_error ("Cannot create server socket");
 
   timeout = cdm_options_long_for (options, KEY_IPC_TIMEOUT_SEC);
 
@@ -152,18 +150,14 @@ cdm_server_new (CdmOptions *options,
   tout.tv_usec = 0;
 
   if (setsockopt (server->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, sizeof(tout)) == -1)
-    {
-      g_warning ("Failed to set the socket receiving timeout: %s", strerror (errno));
-    }
+    g_warning ("Failed to set the socket receiving timeout: %s", strerror (errno));
 
   if (setsockopt (server->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tout, sizeof(tout)) == -1)
-    {
-      g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
-    }
+    g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
 
   g_source_set_callback (CDM_EVENT_SOURCE (server), G_SOURCE_FUNC (server_source_callback),
                          server, server_source_destroy_notify);
-  g_source_attach (CDM_EVENT_SOURCE (server), NULL); /* attach the source to the default context */
+  g_source_attach (CDM_EVENT_SOURCE (server), NULL);
 
   return server;
 }
@@ -230,14 +224,15 @@ cdm_server_bind_and_listen (CdmServer *server)
   if (status == CDM_STATUS_ERROR)
     {
       if (server->sockfd > 0)
-        {
-          close (server->sockfd);
-        }
+        close (server->sockfd);
+
       server->sockfd = -1;
     }
   else
     {
-      server->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (server), server->sockfd, G_IO_IN | G_IO_PRI);
+      server->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (server),
+                                          server->sockfd,
+                                          G_IO_IN | G_IO_PRI);
     }
 
   return status;

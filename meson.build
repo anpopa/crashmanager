@@ -43,6 +43,7 @@ cdm_c_compiler_args = [
 cdm_defaults_data = configuration_data()
 cdm_defaults_data.set('version', meson.project_version())
 cdm_defaults_data.set('config_dir', get_option('CONFDIR'))
+cdm_defaults_data.set('install_prefix', get_option('prefix'))
 configure_file(input : 'common/cdm-defaults.h.in',
   output : 'cdm-defaults.h',
   configuration : cdm_defaults_data)

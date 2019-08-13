@@ -119,11 +119,18 @@ create_crashid (CdhContext *ctx)
     {
       if (ctx->crashid_info & CID_RA_FILE_OFFSET)
         {
-          cid_str = g_strdup_printf ("%s%lx%s%s", ctx->name, ctx->ip_file_offset, ctx->ip_module_name, ctx->ra_module_name);
+          cid_str = g_strdup_printf ("%s%lx%s%s",
+                                     ctx->name,
+                                     ctx->ip_file_offset,
+                                     ctx->ip_module_name,
+                                     ctx->ra_module_name);
         }
       else
         {
-          cid_str = g_strdup_printf ("%s%lx%s", ctx->name, ctx->ip_file_offset, ctx->ip_module_name);
+          cid_str = g_strdup_printf ("%s%lx%s",
+                                     ctx->name,
+                                     ctx->ip_file_offset,
+                                     ctx->ip_module_name);
         }
     }
   else
@@ -140,7 +147,10 @@ create_crashid (CdhContext *ctx)
 
   if (ctx->crashid_info & CID_RA_FILE_OFFSET)
     {
-      vid_str = g_strdup_printf ("%s%lx%s", ctx->name, ctx->ip_file_offset, ctx->ra_module_name);
+      vid_str = g_strdup_printf ("%s%lx%s",
+                                 ctx->name,
+                                 ctx->ip_file_offset,
+                                 ctx->ra_module_name);
 
       ctx->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (vid_str));
     }
@@ -196,14 +206,10 @@ dump_file_to (CdhContext *ctx,
   g_assert (fname);
 
   if (g_file_test (fname, G_FILE_TEST_IS_REGULAR) == TRUE)
-    {
-      return cdh_archive_add_system_file (ctx->archive, fname, NULL);
-    }
+    return cdh_archive_add_system_file (ctx->archive, fname, NULL);
 
   if (g_file_test (fname, G_FILE_TEST_IS_DIR) == TRUE)
-    {
-      return list_dircontent_to (ctx, fname);
-    }
+    return list_dircontent_to (ctx, fname);
 
   return CDM_STATUS_ERROR;
 }
@@ -212,39 +218,25 @@ static gchar
 ftypelet (mode_t bits)
 {
   if (S_ISREG (bits))
-    {
-      return '-';
-    }
+    return '-';
 
   if (S_ISDIR (bits))
-    {
-      return 'd';
-    }
+    return 'd';
 
   if (S_ISBLK (bits))
-    {
-      return 'b';
-    }
+    return 'b';
 
   if (S_ISCHR (bits))
-    {
-      return 'c';
-    }
+    return 'c';
 
   if (S_ISLNK (bits))
-    {
-      return 'l';
-    }
+    return 'l';
 
   if (S_ISFIFO (bits))
-    {
-      return 'p';
-    }
+    return 'p';
 
   if (S_ISSOCK (bits))
-    {
-      return 's';
-    }
+    return 's';
 
   return '?';
 }
@@ -299,9 +291,7 @@ list_dircontent_to (CdhContext *ctx,
 
       fpath = g_build_filename (dname, nfile, NULL);
       if (lstat (fpath, &fstat) < 0)
-        {
-          continue;
-        }
+        continue;
 
       strmode (fstat.st_mode, mbuf);
 
@@ -373,14 +363,11 @@ list_dircontent_to (CdhContext *ctx,
 
       g_strdelimit (outfile, "/ ", '.');
 
-      if (cdh_archive_create_file (ctx->archive, outfile, strlen (output) + 1) == CDM_STATUS_OK)
+      if (cdh_archive_create_file (ctx->archive, outfile, strlen (output)) == CDM_STATUS_OK)
         {
-          status = cdh_archive_write_file (ctx->archive, (const void*)output, strlen (output) + 1);
-
+          status = cdh_archive_write_file (ctx->archive, (const void*)output, strlen (output));
           if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
-            {
-              status = CDM_STATUS_ERROR;
-            }
+            status = CDM_STATUS_ERROR;
         }
       else
         {
@@ -455,9 +442,7 @@ update_context_info (CdhContext *ctx)
       proc_ns_buf = g_file_read_link (tmp_proc_path, NULL);
 
       if (g_strcmp0 (host_ns_buf, proc_ns_buf) != 0)
-        {
-          ctx->onhost = false;
-        }
+        ctx->onhost = false;
 
       if (ctx_str != NULL)
         {
@@ -475,6 +460,7 @@ update_context_info (CdhContext *ctx)
 
   return ctx->contextid != NULL ? CDM_STATUS_OK : CDM_STATUS_ERROR;
 }
+
 
 static void
 crash_context_dump (CdhContext *ctx,
@@ -500,9 +486,7 @@ crash_context_dump (CdhContext *ctx,
       gboolean key_postcore = TRUE;
 
       if (g_regex_match_simple ("crashcontext-*", gname, 0, 0) == FALSE)
-        {
-          continue;
-        }
+        continue;
 
       proc_key = g_key_file_get_string (key_file, gname, "ProcName", &error);
       if (error != NULL)
@@ -512,9 +496,7 @@ crash_context_dump (CdhContext *ctx,
         }
 
       if (g_regex_match_simple (proc_key, ctx->name, 0, 0) == FALSE)
-        {
-          continue;
-        }
+        continue;
 
       key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
       if (error != NULL)
@@ -524,9 +506,7 @@ crash_context_dump (CdhContext *ctx,
         }
 
       if (key_postcore != postcore)
-        {
-          continue;
-        }
+        continue;
 
       data_key = g_key_file_get_string (key_file, gname, "DataPath", &error);
       if (error != NULL)
@@ -536,9 +516,7 @@ crash_context_dump (CdhContext *ctx,
         }
 
       if (g_access (data_key, R_OK) == 0)
-        {
-          continue;
-        }
+        continue;
 
       path_tokens = g_strsplit (data_key, "$$", 3);
       str_pid = g_strdup_printf ("%ld", ctx->pid);
@@ -546,9 +524,7 @@ crash_context_dump (CdhContext *ctx,
       g_strfreev (path_tokens);
 
       if (dump_file_to (ctx, data_path) == CDM_STATUS_ERROR)
-        {
-          g_warning ("Fail to dump file %s", data_path);
-        }
+        g_warning ("Fail to dump file %s", data_path);
     }
 
   g_strfreev (groups);
@@ -562,9 +538,7 @@ cdh_context_generate_prestream (CdhContext *ctx)
   g_assert (ctx);
 
   if (update_context_info (ctx) == CDM_STATUS_ERROR)
-    {
-      g_warning ("Fail to parse namespace information");
-    }
+    g_warning ("Fail to parse namespace information");
 
   crash_context_dump (ctx, FALSE);
 
@@ -623,14 +597,15 @@ cdh_context_generate_poststream (CdhContext *ctx)
     ctx->cdsize
     );
 
-  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data)) == CDM_STATUS_OK)
+  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data))
+      == CDM_STATUS_OK)
     {
-      status = cdh_archive_write_file (ctx->archive, (const void*)file_data, strlen (file_data));
+      status = cdh_archive_write_file (ctx->archive,
+                                       (const void*)file_data,
+                                       strlen (file_data));
 
       if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
-        {
-          status = CDM_STATUS_ERROR;
-        }
+        status = CDM_STATUS_ERROR;
     }
   else
     {

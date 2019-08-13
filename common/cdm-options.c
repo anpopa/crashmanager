@@ -85,9 +85,7 @@ cdm_options_unref (CdmOptions *opts)
   if (g_ref_count_dec (&opts->rc) == TRUE)
     {
       if (opts->conf)
-        {
-          g_key_file_unref (opts->conf);
-        }
+        g_key_file_unref (opts->conf);
 
       g_free (opts);
     }
@@ -112,9 +110,7 @@ cdm_options_string_for (CdmOptions *opts,
           char *tmp = g_key_file_get_string (opts->conf, "common", "UserName", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_USER_NAME);
 
@@ -124,9 +120,7 @@ cdm_options_string_for (CdmOptions *opts,
           gchar *tmp = g_key_file_get_string (opts->conf, "common", "GroupName", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_GROUP_NAME);
 
@@ -136,9 +130,7 @@ cdm_options_string_for (CdmOptions *opts,
           gchar *tmp = g_key_file_get_string (opts->conf, "common", "CrashdumpDirectory", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_CRASHDUMP_DIR);
 
@@ -148,9 +140,7 @@ cdm_options_string_for (CdmOptions *opts,
           gchar *tmp = g_key_file_get_string (opts->conf, "common", "RunDirectory", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_RUN_DIR);
 
@@ -160,9 +150,7 @@ cdm_options_string_for (CdmOptions *opts,
           gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "DatabaseFile", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_DATABASE_FILE);
 
@@ -172,9 +160,7 @@ cdm_options_string_for (CdmOptions *opts,
           gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "KernelDumpSourceDir", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_KDUMPSOURCE_DIR);
 
@@ -184,9 +170,7 @@ cdm_options_string_for (CdmOptions *opts,
           gchar *tmp = g_key_file_get_string (opts->conf, "common", "IpcSocketFile", NULL);
 
           if (tmp != NULL)
-            {
-              return tmp;
-            }
+            return tmp;
         }
       return g_strdup (CDM_IPC_SOCK_ADDR);
 
@@ -221,9 +205,7 @@ get_long_option (CdmOptions *opts,
           ret = g_ascii_strtoll (tmp, &c, 10);
 
           if (*c != tmp[0])
-            {
-              return ret;
-            }
+            return ret;
         }
     }
 

@@ -51,13 +51,9 @@ allocate_buffer (size_t sz, bool rdz)
   for (size_t i = 0; i < TEST_BUFFER_MB (sz); i++)
     {
       if (rdz == true)
-        {
-          buf[i] = (uint8_t)(rand () & 0xFF);
-        }
+        buf[i] = (uint8_t)(rand () & 0xFF);
       else
-        {
-          buf[i] = val++;
-        }
+        buf[i] = val++;
     }
 
   for (size_t i = 0; i < TEST_BUFFER_MB (sz); i++)
@@ -120,29 +116,19 @@ main (int argc, char *argv[])
     }
 
   if (randomize == true)
-    {
-      srand ((unsigned int)time (0));
-    }
+    srand ((unsigned int)time (0));
 
   if (size > 0)
-    {
-      test_buffer = allocate_buffer (size, randomize);
-    }
+    test_buffer = allocate_buffer (size, randomize);
 
   if (type == crash_abrt)
-    {
-      goto crashpos0;
-    }
+    goto crashpos0;
 
   if (type == crash_segv1)
-    {
-      goto crashpos1;
-    }
+    goto crashpos1;
 
   if (type == crash_segv2)
-    {
-      goto crashpos2;
-    }
+    goto crashpos2;
 
   if (test_buffer)
     free (test_buffer);
