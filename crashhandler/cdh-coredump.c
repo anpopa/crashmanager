@@ -260,8 +260,8 @@ get_nt_file_region (CdhCoredump *cd,
           gchar *ntpos, *note_end;
           Elf64_Off num_regions, page_size;
 
-          ntpos = ((gchar*)pnote + sizeof(Elf64_Nhdr) + ALIGN (pnote->n_namesz, 4));
-          note_end = (gchar*)pnote + NOTE_SIZE (*pnote);
+          ntpos = ((gchar *)pnote + sizeof(Elf64_Nhdr) + ALIGN (pnote->n_namesz, 4));
+          note_end = (void *)pnote + NOTE_SIZE (*pnote);
 
           num_regions = *((Elf64_Off*)ntpos);
           ntpos += sizeof(Elf64_Off);

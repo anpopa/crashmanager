@@ -576,21 +576,56 @@ cdh_context_generate_poststream (CdhContext *ctx)
 {
   g_autofree gchar *file_data = NULL;
   CdmStatus status = CDM_STATUS_OK;
+  uint64_t ip, ra;
 
   g_assert (ctx);
 
+#ifdef __aarch64__
+  ip = ctx->regs.pc;
+  ra = ctx->regs.lr;
+#else
+  ip = ctx->regs.rip;
+  ra = ctx->regs.rbp;
+#endif
+
   file_data = g_strdup_printf (
-    "ProcessName = %s\nProcessThread = %s\nCrashTimestamp = %lu\n"
-    "ProcessHostID = %ld\nProcessContainerID = %ld\nCrashSignal = %ld\n"
-    "CrashID = %s\nVectorID = %s\nContextID = %s\n"
+    "ProcessName = %s\n"
+    "ProcessThread = %s\n"
+    "CrashTimestamp = %lu\n"
+    "ProcessHostID = %ld\n"
+    "ProcessContainerID = %ld\n"
+    "CrashSignal = %ld\n"
+    "CrashID = %s\n"
+    "VectorID = %s\n"
+    "ContextID = %s\n"
+    "IP = 0x%016lx\n"
+    "RA = 0x%016lx\n"
+    "IPFileOffset = 0x%016lx\n"
+    "RAFileOffset = 0x%016lx\n"
+    "IPModuleName = %s\n"
+    "RAModuleName = %s\n"
     "CoredumpSize = %lu\n",
-    ctx->name, ctx->tname, ctx->tstamp, ctx->pid, ctx->cpid,
-    ctx->sig, ctx->crashid, ctx->vectorid, ctx->contextid, ctx->cdsize
+    ctx->name,
+    ctx->tname,
+    ctx->tstamp,
+    ctx->pid,
+    ctx->cpid,
+    ctx->sig,
+    ctx->crashid,
+    ctx->vectorid,
+    ctx->contextid,
+    ip,
+    ra,
+    ctx->ip_file_offset,
+    ctx->ra_file_offset,
+    ctx->ip_module_name,
+    ctx->ra_module_name,
+    ctx->cdsize
     );
 
-  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data) + 1) == CDM_STATUS_OK)
+  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data)) == CDM_STATUS_OK)
     {
-      status = cdh_archive_write_file (ctx->archive, (const void*)file_data, strlen (file_data) + 1);
+      status = cdh_archive_write_file (ctx->archive, (const void*)file_data, strlen (file_data));
 
       if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
         {

@@ -313,7 +313,7 @@ process_message (CdmClient *c,
       /* Crashhandler is running in host context so use current pid */
       tmp_id = get_pid_context_id (getpid ());
 
-      if (g_strcmp0 (tmp_id, c->update_data->contextid) != 0)
+      if (g_strcmp0 (tmp_id, c->update_data->contextid) == 0)
         {
           tmp_name = g_strdup_printf ("Host");
         }
@@ -321,6 +321,8 @@ process_message (CdmClient *c,
         {
 #ifdef WITH_LXC
           tmp_name = get_container_name_for_context (c->update_data->contextid);
+#else
+          tmp_name = "Container";
 #endif
         }
 
