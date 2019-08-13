@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 #endif
 
 #ifndef ARCHIVE_NAME_PATTERN
-#define ARCHIVE_NAME_PATTERN "%s/%s_%ld_%lu.cdh.tar.gz"
+#define ARCHIVE_NAME_PATTERN "%s/%s.%ld.%lu.cdh.tar.gz"
 #endif
 
 #define CDM_EVENT_SOURCE(x) (GSource *)(x)
