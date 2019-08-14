@@ -172,7 +172,7 @@ archive_kdumps (CdmApplication *app,
   gdir = g_dir_open (opt_kdumpdir, 0, &error);
   if (error != NULL)
     {
-      g_info ("Kernel coredump directory %s not available", opt_kdumpdir);
+      g_debug ("Kernel coredump directory %s not available", opt_kdumpdir);
       status = CDM_STATUS_OK;
       g_error_free (error);
     }

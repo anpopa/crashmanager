@@ -39,11 +39,16 @@ DLT_DECLARE_CONTEXT (cdm_transfer_ctx);
 #define DLT_MIN_TIMEOUT 1
 #endif
 
-gboolean transfer_source_prepare (GSource *source, gint *timeout);
-gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans);
+static gboolean transfer_source_prepare (GSource *source, gint *timeout);
+
+static gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans);
+
 static gboolean transfer_source_callback (gpointer cdmtrans, gpointer entry);
+
 static void transfer_source_destroy_notify (gpointer cdmtrans);
+
 static void transfer_queue_destroy_notify (gpointer cdmtrans);
+
 static void transfer_thread_func (gpointer data, gpointer user_data);
 
 static GSourceFuncs transfer_source_funcs =
@@ -56,7 +61,7 @@ static GSourceFuncs transfer_source_funcs =
   NULL,
 };
 
-gboolean
+static gboolean
 transfer_source_prepare (GSource *source,
                          gint *timeout)
 {
@@ -66,7 +71,7 @@ transfer_source_prepare (GSource *source,
   return(g_async_queue_length (transfer->queue) > 0);
 }
 
-gboolean
+static gboolean
 transfer_source_dispatch (GSource *source,
                           GSourceFunc callback,
                           gpointer cdmtrans)

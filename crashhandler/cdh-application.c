@@ -301,7 +301,7 @@ do_crash_actions (CdmOptions *options,
       victim_pid = cdm_utils_first_pid_for_process (victim_key);
       if (victim_pid < 1)
         {
-          g_info ("No victim '%s' found for crash action", victim_key);
+          g_debug ("No victim '%s' found for crash action", victim_key);
           continue;
         }
       else

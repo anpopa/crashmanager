@@ -348,8 +348,7 @@ cdh_archive_stream_read (CdhArchive *ar,
 
   if ((readsz = fread (buf, 1, size, ar->in_stream)) != size)
     {
-      g_warning ("Cannot read %lu bytes from archive input stream %s", size,
-                 strerror (errno));
+      g_warning ("Cannot read %lu bytes from archive input stream %s", size, strerror (errno));
       return CDM_STATUS_ERROR;
     }
 

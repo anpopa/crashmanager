@@ -34,14 +34,22 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-gboolean client_source_prepare (GSource *source, gint *timeout);
-gboolean client_source_check (GSource *source);
-gboolean client_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data);
+static gboolean client_source_prepare (GSource *source, gint *timeout);
+
+static gboolean client_source_check (GSource *source);
+
+static gboolean client_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data);
+
 static gboolean client_source_callback (gpointer data);
+
 static void client_source_destroy_notify (gpointer data);
+
 static void process_message (CdmClient *c, CdmMessage *msg);
+
 static gchar *get_pid_context_id (pid_t pid);
+
 static void archive_transfer_complete (gpointer cdmclient, const gchar *file_path);
+
 #ifdef WITH_LXC
 static gchar *get_container_name_for_context (const gchar *ctxid);
 #endif
@@ -56,7 +64,7 @@ static GSourceFuncs client_source_funcs =
   NULL,
 };
 
-gboolean
+static gboolean
 client_source_prepare (GSource *source,
                        gint *timeout)
 {
@@ -65,14 +73,14 @@ client_source_prepare (GSource *source,
   return FALSE;
 }
 
-gboolean
+static gboolean
 client_source_check (GSource *source)
 {
   CDM_UNUSED (source);
   return TRUE;
 }
 
-gboolean
+static gboolean
 client_source_dispatch (GSource *source,
                         GSourceFunc callback,
                         gpointer user_data)

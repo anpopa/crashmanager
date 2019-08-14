@@ -93,7 +93,7 @@ main (gint argc, gchar *argv[])
     {
       app = cdm_application_new (config_path);
 
-      g_info ("Crashmanager service started for OS version %s", cdm_utils_get_osversion ());
+      g_info ("Crashmanager service started for OS version '%s'", cdm_utils_get_osversion ());
       g_mainloop = cdm_application_get_mainloop (app);
 
       status = cdm_application_execute (app);

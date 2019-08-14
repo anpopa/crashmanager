@@ -70,11 +70,9 @@ cdm_utils_get_procname (gint64 pid)
       if (name != NULL)
         {
           retval = g_strdup (name + strlen ("Name:") + 1);
-
           if (retval != NULL)
-            {
-              g_strstrip (retval);
-            }
+            g_strstrip (retval);
+
           done = TRUE;
         }
     }
@@ -146,9 +144,7 @@ cdm_utils_get_osversion (void)
     }
 
   if (retval == NULL)
-    {
-      retval = UNKNOWN_OS_VERSION;
-    }
+    retval = UNKNOWN_OS_VERSION;
 
   return retval;
 }
@@ -164,9 +160,7 @@ cdm_utils_get_filesize (const gchar *file_path)
   if (g_stat (file_path, &file_stat) == 0)
     {
       if (file_stat.st_size >= 0)
-        {
-          retval = file_stat.st_size;
-        }
+        retval = file_stat.st_size;
     }
 
   return retval;
@@ -200,9 +194,7 @@ cdm_utils_chown (const gchar *file_path,
       else
         {
           if (chown (file_path, pwd->pw_uid, grp->gr_gid) == -1)
-            {
-              status = CDM_STATUS_ERROR;
-            }
+            status = CDM_STATUS_ERROR;
         }
     }
 

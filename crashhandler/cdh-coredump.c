@@ -572,9 +572,7 @@ cdh_coredump_generate (CdhCoredump *cd)
 
 finished:
   if (ret == CDM_STATUS_ERROR)
-    {
-      g_warning ("Errors in preprocessing coredump stream");
-    }
+    g_warning ("Errors in preprocessing coredump stream");
 
   /* In all cases, we try to finish to read/compress the coredump until the end */
   if (cdh_archive_stream_read_all (cd->archive) != CDM_STATUS_OK)

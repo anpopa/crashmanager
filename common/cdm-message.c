@@ -93,9 +93,7 @@ cdm_message_set_version (CdmMessage *m,
                          const gchar *version)
 {
   g_assert (m);
-
   snprintf ((gchar*)m->hdr.version, CDM_VERSION_STRING_LEN, "%s", version);
-
   return CDM_STATUS_OK;
 }
 
@@ -108,7 +106,6 @@ cdm_message_read (gint fd,
   g_assert (m);
 
   sz = read (fd, &m->hdr, sizeof(CdmMessageHdr));
-
   if (sz != sizeof(CdmMessageHdr) || !cdm_message_is_valid (m))
     return CDM_STATUS_ERROR;
 
@@ -133,7 +130,6 @@ cdm_message_write (gint fd,
     return CDM_STATUS_ERROR;
 
   sz = write (fd, &m->hdr, sizeof(CdmMessageHdr));
-
   if (sz != sizeof(CdmMessageHdr))
     return CDM_STATUS_ERROR;
 

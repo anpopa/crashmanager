@@ -36,6 +36,7 @@
 #define USEC2SECHALF(x) (guint)(x / 1000000 / 2)
 
 static gboolean source_timer_callback (gpointer data);
+
 static void source_destroy_notify (gpointer data);
 
 static gboolean

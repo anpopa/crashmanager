@@ -213,15 +213,15 @@ if get_option('CRASHHANDLER')
     )
 endif
 
-if get_option('CRASHDECODER')
-  crashdecoder_sources = [
-    'crashdecoder/cdd-main.c',
+if get_option('CRASHINFO')
+  crashinfo_sources = [
+    'crashinfo/cdi-main.c',
     ]
 
-  crashdecoder_deps = [dep_glib]
+  crashinfo_deps = [dep_glib]
 
-  executable('crashdecoder', crashdecoder_sources,
-    dependencies: crashdecoder_deps,
+  executable('crashinfo', crashinfo_sources,
+    dependencies: crashinfo_deps,
     include_directories : include_directories(cdm_c_include_dirs), 
     c_args: cdm_c_compiler_args,
     install: true,

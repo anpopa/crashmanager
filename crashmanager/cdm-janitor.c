@@ -36,9 +36,12 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-gboolean janitor_source_prepare (GSource *source, gint *timeout);
-gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor);
+static gboolean janitor_source_prepare (GSource *source, gint *timeout);
+
+static gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor);
+
 static gboolean janitor_source_callback (gpointer cdmjanitor);
+
 static void janitor_source_destroy_notify (gpointer cdmjanitor);
 
 static GSourceFuncs janitor_source_funcs =
@@ -51,7 +54,7 @@ static GSourceFuncs janitor_source_funcs =
   NULL,
 };
 
-gboolean
+static gboolean
 janitor_source_prepare (GSource *source,
                         gint *timeout)
 {
@@ -77,7 +80,7 @@ janitor_source_prepare (GSource *source,
   return FALSE;
 }
 
-gboolean
+static gboolean
 janitor_source_dispatch (GSource *source,
                          GSourceFunc callback,
                          gpointer cdmjanitor)
@@ -108,7 +111,9 @@ janitor_source_callback (gpointer cdmjanitor)
     }
   else
     {
-      g_info ("Remove old crashdump entry %s", victim_path);
+      g_autofree gchar *victim_basename = g_path_get_basename (victim_path);
+
+      g_info ("Remove old crashdump entry %s", victim_basename);
       if (g_remove (victim_path) == -1)
         {
           if (errno != ENOENT)
@@ -119,7 +124,7 @@ janitor_source_callback (gpointer cdmjanitor)
       if (error != NULL)
         {
           g_warning ("Fail to set remove flag for victim %s: Error %s",
-                     victim_path,
+                     victim_basename,
                      error->message);
           g_error_free (error);
         }

@@ -8,4 +8,4 @@ option('TESTS', type : 'boolean', value : false, description : 'Build unit tests
 option('CRASHTEST', type : 'boolean', value : true, description : 'Build crashtest application')
 option('CRASHMANAGER', type : 'boolean', value : true, description : 'Build crashmanager daemon')
 option('CRASHHANDLER', type : 'boolean', value : true, description : 'Build crashhandler application')
-option('CRASHDECODER', type : 'boolean', value : true, description : 'Build crashdecoder application')
+option('CRASHINFO', type : 'boolean', value : true, description : 'Build crashinfo application')

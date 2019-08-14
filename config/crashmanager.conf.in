@@ -233,14 +233,3 @@ PostCore = false
 # PostCore defines when to process the data
 #   If data holds only until process is release (eg. proc) then set 
 #   this to false.
-
-###############################################################################
-#
-# Crashaction quit firefox
-#
-###############################################################################
-[crashaction-crashtest_quit_firefox]
-ProcName = crashtest
-Victim = /usr/lib/firefox/firefox
-Signal = 3
-PostCore = false

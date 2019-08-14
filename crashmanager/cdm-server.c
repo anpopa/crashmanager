@@ -39,9 +39,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-gboolean server_source_prepare (GSource *source, gint *timeout);
-gboolean server_source_check (GSource *source);
-gboolean server_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmserver);
+static gboolean server_source_prepare (GSource *source, gint *timeout);
+static gboolean server_source_check (GSource *source);
+static gboolean server_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmserver);
 static gboolean server_source_callback (gpointer cdmserver);
 static void server_source_destroy_notify (gpointer cdmserver);
 
@@ -55,7 +55,7 @@ static GSourceFuncs server_source_funcs =
   NULL,
 };
 
-gboolean
+static gboolean
 server_source_prepare (GSource *source,
                        gint *timeout)
 {
@@ -64,14 +64,14 @@ server_source_prepare (GSource *source,
   return FALSE;
 }
 
-gboolean
+static gboolean
 server_source_check (GSource *source)
 {
   CDM_UNUSED (source);
   return TRUE;
 }
 
-gboolean
+static gboolean
 server_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmserver)
 {
   CDM_UNUSED (source);
@@ -205,19 +205,19 @@ cdm_server_bind_and_listen (CdmServer *server)
   saddr.sun_family = AF_UNIX;
   strncpy (saddr.sun_path, udspath, sizeof(saddr.sun_path) - 1);
 
-  g_info ("Server socket path %s", saddr.sun_path);
+  g_debug ("Server socket path %s", saddr.sun_path);
 
   if (bind (server->sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_un)) != -1)
     {
       if (listen (server->sockfd, 10) == -1)
         {
-          g_warning ("Server listen failed");
+          g_warning ("Server listen failed for path %s", saddr.sun_path);
           status = CDM_STATUS_ERROR;
         }
     }
   else
     {
-      g_warning ("Server bind failed");
+      g_warning ("Server bind failed for path %s", saddr.sun_path);
       status = CDM_STATUS_ERROR;
     }
 
