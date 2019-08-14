@@ -135,7 +135,7 @@ PostCore = false
 ###############################################################################
 [crashcontext-proc_stack]
 ProcName = .*
-DataPath = /proc/$$/cgroup
+DataPath = /proc/$$/stack
 PostCore = false
 
 ###############################################################################
