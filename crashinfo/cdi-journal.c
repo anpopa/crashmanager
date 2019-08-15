@@ -30,7 +30,10 @@
 #include "cdi-journal.h"
 #include "cdm-utils.h"
 
+#include <glib/gprintf.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 typedef enum _JournalQueryType {
   QUERY_LIST_ENTRIES
@@ -45,12 +48,121 @@ const gchar *cdi_journal_table_name = "CrashTable";
 
 static int sqlite_callback (void *data, int argc, char **argv, char **colname);
 
+static gchar *
+get_pid_context_id (pid_t pid)
+{
+  g_autofree gchar *ctx_str = NULL;
+
+  for (gint i = 0; i < 7; i++)
+    {
+      g_autofree gchar *proc_ns_buf = NULL;
+      g_autofree gchar *tmp_proc_path = NULL;
+
+      switch (i)
+        {
+        case 0: /* cgroup */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/cgroup", pid);
+          break;
+
+        case 1: /* ipc */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/ipc", pid);
+          break;
+
+        case 2: /* mnt */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/mnt", pid);
+          break;
+
+        case 3: /* net */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/net", pid);
+          break;
+
+        case 4: /* pid */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/pid", pid);
+          break;
+
+        case 5: /* user */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/user", pid);
+          break;
+
+        case 6: /* uts */
+          tmp_proc_path = g_strdup_printf ("/proc/%d/ns/uts", pid);
+          break;
+
+        default: /* never reached */
+          break;
+        }
+
+      proc_ns_buf = g_file_read_link (tmp_proc_path, NULL);
+
+      if (ctx_str != NULL)
+        {
+          gchar *ctx_tmp = g_strconcat (ctx_str, proc_ns_buf, NULL);
+          g_free (ctx_str);
+          ctx_str = ctx_tmp;
+        }
+      else
+        {
+          ctx_str = g_strdup (proc_ns_buf);
+        }
+    }
+
+  if (ctx_str == NULL)
+    return NULL;
+
+  return g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (ctx_str));
+}
+
+#ifdef WITH_LXC
+static gchar *
+get_container_name_for_context (const gchar *ctxid)
+{
+  struct lxc_container **active_containers = NULL;
+  gchar *container_name = NULL;
+  gboolean found = false;
+  gchar **names = NULL;
+  gint count = 0;
+
+  count = list_active_containers ("/var/lib/lxc", &names, &active_containers);
+
+  for (gint i = 0; i < count && !found; i++)
+    {
+      struct lxc_container *container = active_containers[i];
+      gchar *name = names[i];
+
+      if (name == NULL || container == NULL)
+        continue;
+
+      if (container->is_running (container))
+        {
+          g_autofree gchar *tmp_id = NULL;
+          pid_t pid;
+
+          pid = container->init_pid (container);
+          tmp_id = get_pid_context_id (pid);
+
+          if (g_strcmp0 (tmp_id, ctxid) != 0)
+            {
+              container_name = g_strdup_printf ("%s", name);
+              found = true;
+            }
+        }
+    }
+
+  for (int i = 0; i < count; i++)
+    {
+      free (names[i]);
+      free (active_containers[i]);
+    }
+
+  return container_name;
+}
+#endif
+
 static int
 sqlite_callback (void *data, int argc, char **argv, char **colname)
 {
   JournalQueryData *querydata = (JournalQueryData *)data;
 
-  CDM_UNUSED (querydata);
   CDM_UNUSED (colname);
 
   switch (querydata->type)
@@ -58,14 +170,41 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
     case QUERY_LIST_ENTRIES:
       if (argc == 13)
         {
-          printf ("%-20s%20s%20s%20s%10s%5s%5s\n",
+          g_autoptr (GDateTime) dtime = NULL;
+          g_autofree gchar *host_id = NULL;
+          g_autofree gchar *context_name = NULL;
+          g_autofree gchar *fname = NULL;
+
+          dtime = g_date_time_new_from_unix_utc (g_ascii_strtoll (argv[9], NULL, 10));
+          fname = g_path_get_basename (argv[5]);
+          host_id = get_pid_context_id (getpid ());
+
+          if (g_strcmp0 (host_id, argv[4]) == 0)
+            {
+              context_name = g_strdup (g_get_host_name ());
+            }
+          else
+            {
+#ifdef WITH_LXC
+              context_name = get_container_name_for_context (argv[4]);
+#else
+              context_name = "Container";
+#endif
+            }
+
+          printf ("%-4u %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
+                  *(guint *)(querydata->response),
                   argv[1],
+                  (dtime != NULL) ? g_date_time_format (dtime, "%H:%M:%S %Y-%m-%d") : argv[9],
                   argv[2],
                   argv[3],
-                  argv[4],
+                  context_name,
                   argv[7],
                   argv[11],
-                  argv[12]);
+                  argv[12],
+                  fname);
+
+          *((guint *)(querydata->response)) += 1;
         }
       break;
 
@@ -112,10 +251,11 @@ cdi_journal_unref (CdiJournal *journal)
 
 void
 cdi_journal_list_entries (CdiJournal *journal,
-                             GError **error)
+                          GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
+  guint index = 1;
   JournalQueryData data = {
     .type = QUERY_LIST_ENTRIES,
     .response = NULL
@@ -123,19 +263,20 @@ cdi_journal_list_entries (CdiJournal *journal,
 
   g_assert (journal);
 
+  data.response = &index;
   sql = g_strdup_printf ("SELECT * FROM %s ;", cdi_journal_table_name);
 
-  printf ("%-20s%20s%20s%20s%10s%5s%5s\n",
-                  "Procname",
-                  "CrashID",
-                  "VectorID",
-                  "ContextID",
-                  "PID",
-                  "TRAN",
-                  "REMV");
-
-  printf ("-------------------------------------------------------------"
-          "----------------------------------------\n");
+  printf ("%-4s %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
+          "Idx",
+          "Procname",
+          "Timestamp",
+          "CrashID",
+          "VectorID",
+          "Context",
+          "PID",
+          "TRS",
+          "REM",
+          "FILE");
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
       != SQLITE_OK)

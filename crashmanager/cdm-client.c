@@ -318,7 +318,7 @@ process_message (CdmClient *c,
 
       if (g_strcmp0 (tmp_id, c->update_data->contextid) == 0)
         {
-          tmp_name = g_strdup_printf ("Host");
+          tmp_name = g_strdup (g_get_host_name ());
         }
       else
         {

@@ -64,7 +64,7 @@ cdi_archive_unref (CdiArchive *ar)
   if (g_ref_count_dec (&ar->rc) == TRUE)
     {
       if (ar->archive != NULL)
-        (void) archive_read_free (ar->archive);
+        (void)archive_read_free (ar->archive);
 
       g_free (ar);
     }
@@ -79,10 +79,10 @@ cdi_archive_read_open (CdiArchive *ar, const gchar *fname)
   if (ar->archive != NULL)
     return CDM_STATUS_ERROR;
 
-  ar->archive = archive_read_new();
+  ar->archive = archive_read_new ();
 
-  archive_read_support_filter_all(ar->archive);
-  archive_read_support_format_all(ar->archive);
+  archive_read_support_filter_all (ar->archive);
+  archive_read_support_format_all (ar->archive);
 
   if (archive_read_open_filename (ar->archive, fname, 10240) != ARCHIVE_OK)
     return CDM_STATUS_ERROR;
@@ -100,10 +100,31 @@ cdi_archive_list_stdout (CdiArchive *ar)
   if (ar->archive == NULL)
     return CDM_STATUS_ERROR;
 
-  while (archive_read_next_header(ar->archive, &entry) == ARCHIVE_OK)
+  while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
     {
-      printf("%s\n",archive_entry_pathname(entry));
-      archive_read_data_skip(ar->archive);
+      printf ("%s\n", archive_entry_pathname (entry));
+      archive_read_data_skip (ar->archive);
+    }
+
+  return CDM_STATUS_OK;
+}
+
+CdmStatus
+cdi_archive_print_info (CdiArchive *ar)
+{
+  struct archive_entry *entry;
+
+  g_assert (ar);
+
+  if (ar->archive == NULL)
+    return CDM_STATUS_ERROR;
+
+  while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
+    {
+      if (g_strcmp0 (archive_entry_pathname (entry), "info.crashdata") == 0)
+        archive_read_data_into_fd (ar->archive, STDOUT_FILENO);
+      else
+        archive_read_data_skip (ar->archive);
     }
 
   return CDM_STATUS_OK;

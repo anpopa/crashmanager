@@ -44,15 +44,19 @@ main (gint argc, gchar *argv[])
   g_autoptr (GOptionContext) context = NULL;
   g_autoptr (GError) error = NULL;
   g_autoptr (CdiApplication) app = NULL;
+  g_autofree gchar *config_path = NULL;
+  g_autofree gchar *input_file = NULL;
   gboolean version = FALSE;
   gboolean list_entries = FALSE;
-  gchar *config_path = NULL;
+  gboolean print_info = FALSE;
   CdmStatus status = CDM_STATUS_OK;
 
   GOptionEntry main_entries[] = {
-    { "version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
-    { "config", 'c', 0, G_OPTION_ARG_FILENAME, config_path, "Override configuration file", "" },
-    { "list", 'l', 0, G_OPTION_ARG_NONE, &list_entries, "List crashes", "" },
+    { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
+    { "config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", "" },
+    { "list", 'l', 0, G_OPTION_ARG_NONE, &list_entries, "List recorded crashes", "" },
+    { "files", 'f', 0, G_OPTION_ARG_FILENAME, &input_file, "List content for a crash archive", "" },
+    { "info", 'i', 0, G_OPTION_ARG_NONE, &print_info, "Print crash info from a crash archive", "" },
     { NULL }
   };
 
@@ -86,6 +90,17 @@ main (gint argc, gchar *argv[])
       if (list_entries)
         {
           cdi_application_list_entries (app);
+        }
+      else if (input_file != NULL)
+        {
+          if (print_info)
+            {
+              cdi_application_print_info (app, input_file);
+            }
+          else
+            {
+              cdi_application_list_content (app, input_file);
+            }
         }
     }
   else

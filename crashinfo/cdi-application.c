@@ -30,6 +30,13 @@
 #include "cdi-application.h"
 #include "cdm-utils.h"
 
+#include <glib/gstdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 CdiApplication *
 cdi_application_new (const gchar *config)
 {
@@ -71,5 +78,78 @@ cdi_application_unref (CdiApplication *app)
 void
 cdi_application_list_entries (CdiApplication *app)
 {
+  g_assert (app);
   cdi_journal_list_entries (app->journal, NULL);
+}
+
+void
+cdi_application_list_content (CdiApplication *app, const gchar *fpath)
+{
+  g_autoptr (CdiArchive) archive = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+
+  g_assert (app);
+  g_assert (fpath);
+
+  archive = cdi_archive_new();
+
+  if (g_access (fpath, R_OK) == 0)
+    {
+      status = cdi_archive_read_open (archive, fpath);
+    }
+  else
+    {
+      g_autofree gchar *opt_coredir = NULL;
+      g_autofree gchar *dbpath = NULL;
+
+      opt_coredir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
+      dbpath = g_build_filename (opt_coredir, fpath, NULL);
+
+      status = cdi_archive_read_open (archive, dbpath);
+    }
+
+  if (status == CDM_STATUS_OK)
+    {
+      (void) cdi_archive_list_stdout (archive);
+    }
+  else
+    {
+      printf ("Cannot open file: %s\n", fpath);
+    }
+}
+
+void
+cdi_application_print_info (CdiApplication *app, const gchar *fpath)
+{
+  g_autoptr (CdiArchive) archive = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+
+  g_assert (app);
+  g_assert (fpath);
+
+  archive = cdi_archive_new();
+
+  if (g_access (fpath, R_OK) == 0)
+    {
+      status = cdi_archive_read_open (archive, fpath);
+    }
+  else
+    {
+      g_autofree gchar *opt_coredir = NULL;
+      g_autofree gchar *dbpath = NULL;
+
+      opt_coredir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
+      dbpath = g_build_filename (opt_coredir, fpath, NULL);
+
+      status = cdi_archive_read_open (archive, dbpath);
+    }
+
+  if (status == CDM_STATUS_OK)
+    {
+      (void) cdi_archive_print_info (archive);
+    }
+  else
+    {
+      printf ("Cannot open file: %s\n", fpath);
+    }
 }

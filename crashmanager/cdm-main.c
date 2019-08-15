@@ -54,13 +54,13 @@ main (gint argc, gchar *argv[])
   g_autoptr (GOptionContext) context = NULL;
   g_autoptr (GError) error = NULL;
   g_autoptr (CdmApplication) app = NULL;
+  g_autofree gchar *config_path = NULL;
   gboolean version = FALSE;
-  gchar *config_path = NULL;
   CdmStatus status = CDM_STATUS_OK;
 
   GOptionEntry main_entries[] = {
     { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
-    { "config", 'c', 0, G_OPTION_ARG_FILENAME, config_path, "Override configuration file", "" },
+    { "config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", "" },
     { NULL }
   };
 

@@ -563,22 +563,22 @@ cdh_context_generate_poststream (CdhContext *ctx)
 #endif
 
   file_data = g_strdup_printf (
-    "ProcessName = %s\n"
-    "ProcessThread = %s\n"
+    "ProcessName    = %s\n"
+    "ProcessThread  = %s\n"
     "CrashTimestamp = %lu\n"
-    "ProcessHostID = %ld\n"
-    "ProcessContainerID = %ld\n"
-    "CrashSignal = %ld\n"
-    "CrashID = %s\n"
-    "VectorID = %s\n"
-    "ContextID = %s\n"
-    "IP = 0x%016lx\n"
-    "RA = 0x%016lx\n"
-    "IPFileOffset = 0x%016lx\n"
-    "RAFileOffset = 0x%016lx\n"
-    "IPModuleName = %s\n"
-    "RAModuleName = %s\n"
-    "CoredumpSize = %lu\n",
+    "ProcessID      = %ld\n"
+    "ResidentID     = %ld\n"
+    "CrashSignal    = %ld\n"
+    "CrashID        = %s\n"
+    "VectorID       = %s\n"
+    "ContextID      = %s\n"
+    "IP             = 0x%016lx\n"
+    "RA             = 0x%016lx\n"
+    "IPFileOffset   = 0x%016lx\n"
+    "RAFileOffset   = 0x%016lx\n"
+    "IPModuleName   = %s\n"
+    "RAModuleName   = %s\n"
+    "CoredumpSize   = %lu\n",
     ctx->name,
     ctx->tname,
     ctx->tstamp,

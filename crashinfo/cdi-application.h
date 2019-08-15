@@ -76,6 +76,20 @@ void cdi_application_unref (CdiApplication *app);
  */
 void cdi_application_list_entries (CdiApplication *app);
 
+/**
+ * @brief List crash archive content
+ * @param app The cdi application
+ * @param fpath Input file path
+ */
+void cdi_application_list_content (CdiApplication *app, const gchar *fpath);
+
+/**
+ * @brief List crash archive content
+ * @param app The cdi application
+ * @param fpath Input file path
+ */
+void cdi_application_print_info (CdiApplication *app, const gchar *fpath);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiApplication, cdi_application_unref);
 
 G_END_DECLS

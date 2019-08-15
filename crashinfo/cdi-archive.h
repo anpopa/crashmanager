@@ -79,6 +79,13 @@ CdmStatus cdi_archive_read_open (CdiArchive *ar, const gchar *fname);
  */
 CdmStatus cdi_archive_list_stdout (CdiArchive *ar);
 
+/**
+ * @brief Print information about crash archive
+ *        The archive has to be opened first
+ * @return CDM_STATUS_OK on success
+ */
+CdmStatus cdi_archive_print_info (CdiArchive *ar);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiArchive, cdi_archive_unref);
 
 G_END_DECLS

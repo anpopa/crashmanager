@@ -15,10 +15,10 @@
 #     In case a crash happens before crashmanager is able to create the database
 #     the crashmanager will do this first and needs to set the correct chown for
 #     the database
-UserName = root
+UserName = alinp
 # GroupName defines the group name string which the crashmanager is owned.
 #     See the reason above
-GroupName = root
+GroupName = users
 # CoredumpDirectory defines the relative path to FileSystemMountDir where the
 #     coredump arhives will be stored.
 CrashdumpDirectory = /var/lib/crashmanager/crashdumps
