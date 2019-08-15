@@ -1,4 +1,4 @@
-/* cdd_main.c
+/* cdi-main.c
  *
  * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
  *
@@ -27,22 +27,38 @@
  * authorization.
  */
 
-#include "cdm-defaults.h"
+#include "cdi-application.h"
+#include "cdm-utils.h"
 
 #include <glib.h>
 #include <stdlib.h>
+#include <glib/gstdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 gint
 main (gint argc, gchar *argv[])
 {
   g_autoptr (GOptionContext) context = NULL;
   g_autoptr (GError) error = NULL;
+  g_autoptr (CdiApplication) app = NULL;
   gboolean version = FALSE;
+  gboolean list_entries = FALSE;
+  gchar *config_path = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+
   GOptionEntry main_entries[] = {
-    { "version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", NULL }
+    { "version", 0, 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
+    { "config", 'c', 0, G_OPTION_ARG_FILENAME, config_path, "Override configuration file", "" },
+    { "list", 'l', 0, G_OPTION_ARG_NONE, &list_entries, "List crashes", "" },
+    { NULL }
   };
 
-  context = g_option_context_new ("- my command line tool");
+  context = g_option_context_new ("- Crash information tool");
+  g_option_context_set_summary (context,
+                                "The tool extract information from cdh archives and cdh database");
   g_option_context_add_main_entries (context, main_entries, NULL);
 
   if (!g_option_context_parse (context, &argc, &argv, &error))
@@ -57,5 +73,27 @@ main (gint argc, gchar *argv[])
       return EXIT_SUCCESS;
     }
 
-  return EXIT_SUCCESS;
+  cdm_logging_open ("CDI", "Crashinfo tool", "CDI", "Default context");
+
+  if (config_path == NULL)
+    config_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
+
+  if (g_access (config_path, R_OK) == 0)
+    {
+      app = cdi_application_new (config_path);
+      g_info ("Crashinfo tool started for OS version '%s'", cdm_utils_get_osversion ());
+
+      if (list_entries)
+        {
+          cdi_application_list_entries (app);
+        }
+    }
+  else
+    {
+      g_warning ("Cannot open configuration file %s", config_path);
+    }
+
+  cdm_logging_close ();
+
+  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 }

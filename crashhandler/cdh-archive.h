@@ -47,7 +47,7 @@ G_BEGIN_DECLS
 #endif
 
 /**
- * @struct CdhArchiverchive
+ * @struct CdhArchive
  * @brief The archive object
  */
 typedef struct _CdhArchive {

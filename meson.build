@@ -215,10 +215,21 @@ endif
 
 if get_option('CRASHINFO')
   crashinfo_sources = [
+    'common/cdm-options.c',
+    'common/cdm-logging.c',
+    'common/cdm-utils.c',
     'crashinfo/cdi-main.c',
+    'crashinfo/cdi-application.c',
+    'crashinfo/cdi-archive.c',
+    'crashinfo/cdi-journal.c',
     ]
 
-  crashinfo_deps = [dep_glib]
+  crashinfo_deps = [
+    dep_glib, 
+    dep_libarchive, 
+    dep_sqlite,
+    dep_genivi_dlt
+    ]
 
   executable('crashinfo', crashinfo_sources,
     dependencies: crashinfo_deps,
