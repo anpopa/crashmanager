@@ -68,6 +68,7 @@ transfer_source_prepare (GSource *source,
   CdmTransfer *transfer = (CdmTransfer *)source;
 
   CDM_UNUSED (timeout);
+
   return(g_async_queue_length (transfer->queue) > 0);
 }
 

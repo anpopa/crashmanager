@@ -141,11 +141,20 @@ client_source_callback (gpointer data)
           else
             g_debug ("New crash entry added to database with id %016lX", dbid);
 
+          /* TODO: Set lifecycle state */
+
           /* even if we fail to add to the database we try to transfer the file */
           cdm_transfer_file (client->transfer,
                              client->complete_data->core_file,
                              archive_transfer_complete,
                              cdm_client_ref (client));
+        }
+      else
+        {
+          if (type == CDM_CORE_NEW)
+            {
+              /* TODO: Set lifecycle state */
+            }
         }
     }
 

@@ -30,17 +30,44 @@
 #pragma once
 
 #include "cdm-types.h"
+#include "nsm-consumer.h"
 
 #include <glib.h>
 
 G_BEGIN_DECLS
 
 /**
+ * @enum lifecycle_event_data
+ * @brief Lifecycle event data type
+ */
+typedef union _LCEventData {
+  LCSessionState session_state;
+  LCProxyState proxy_state;
+  LCRegistrationState reg_state;
+} LCEventData;
+
+/**
+ * @function CdmLifecycleCallback
+ * @brief Custom callback used internally by CdmLifecycle as source callback
+ */
+typedef gboolean (*CdmLifecycleCallback) (gpointer cdmlifecycle, gpointer event);
+
+/**
+ * @struct CdmLifecycleEvent
+ * @brief The file transfer event
+ */
+typedef struct _CdmLifecycleEvent {
+  LCEventType type;     /**< The event type the element holds */
+  LCEventData data;     /**< The event payload data */
+} CdmLifecycleEvent;
+/**
  * @struct CdmLifecycle
  * @brief The CdmLifecycle opaque data structure
  */
 typedef struct _CdmLifecycle {
-  GSource *source;  /**< Event loop source */
+  GSource source;  /**< Event loop source */
+  NsmConsumer *consumer; /**< NSM consumer object */
+  GAsyncQueue    *queue;  /**< Async queue */
   grefcount rc;     /**< Reference counter variable  */
 } CdmLifecycle;
 
@@ -61,6 +88,20 @@ CdmLifecycle *cdm_lifecycle_ref (CdmLifecycle *lifecycle);
  * @param c Pointer to the lifecycle object
  */
 void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
+
+/**
+ * @brief The main interface to change the coredump lifecycle session
+ *
+ * Internally cdm_lifecycle module uses a reference counter for lifecycle coredump session state
+ * When a caller requests a new state this affects the counter but not necessary the state.
+ *
+ * @param l A pointer to the lifecycle object allocated with cdm_lifecycle_new().
+ *        If NULL the function will return CDM_STATUS_ERROR
+ * @param state The requested new state
+ *
+ * @return CDM_STATUS_OK on success and CDH_STATUS_ERROR on failure
+ */
+CdmStatus cdm_lifecycle_set_session_state (CdmLifecycle *lifecycle, LCSessionState state)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmLifecycle, cdm_lifecycle_unref);
 

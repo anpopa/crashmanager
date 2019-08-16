@@ -142,7 +142,7 @@ nsm_consumer_new (const gchar *session_name, const gchar *session_owner)
       return nullptr;
     }
 
-  if (init_LCData (static_cast<LCData *>(n->private_data), session_name,
+  if (init_lifecycle_data (static_cast<LCData *>(n->private_data), session_name,
                    session_owner) != CDM_STATUS_OK)
     {
       delete static_cast<LCData *>(n->private_data);
@@ -160,7 +160,7 @@ nsm_consumer_free (NsmConsumer *n)
   g_assert (n);
   g_assert (n->private_data);
 
-  (void)deinit_LCData (static_cast<LCData *>(n->private_data));
+  (void)deinit_lifecycle_data (static_cast<LCData *>(n->private_data));
 
   delete static_cast<LCData *>(n->private_data);
   free (n);
@@ -407,7 +407,7 @@ init_lifecycle_data (LCData *d, const gchar *session_name,
 }
 
 static CdmStatus
-deinit_lifecycled_data (LCData *d)
+deinit_lifecycle_data (LCData *d)
 {
   CdmStatus status = CDM_STATUS_OK;
 
