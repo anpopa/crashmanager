@@ -224,7 +224,7 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
     return CDM_STATUS_ERROR;
 
   memset (buffer, 0, ARCHIVE_READ_BUFFER_SIZE);
-  output_fd = open (file_name, O_CREAT | O_WRONLY | O_TRUNC);
+  output_fd = open (file_name, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 
   while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
     {
@@ -306,8 +306,10 @@ cdi_archive_print_backtrace (CdiArchive *ar, gboolean all)
 {
   g_autofree gchar *tmpdir = NULL;
   g_autofree gchar *exepth = NULL;
+  g_autofree gchar *rmcmd = NULL;
   g_autoptr (GError) error = NULL;
   CdmStatus status = CDM_STATUS_OK;
+  gint exit_status;
 
   g_assert (ar);
 
@@ -323,23 +325,26 @@ cdi_archive_print_backtrace (CdiArchive *ar, gboolean all)
       if (exepth != NULL)
         {
           g_autofree gchar *standard_output = NULL;
-          gint exit_status;
+          g_autoptr (GError) cmd_error = NULL;
 
-          command_line = g_strdup_printf ("sh -c \"gdb -ex '%s' -ex quit %s %s/*.core\"",
+          command_line = g_strdup_printf ("sh -c \"gdb -q -ex '%s' -ex quit %s %s/*.core\"",
                                           all == FALSE ? "bt" : "thread apply all bt",
                                           exepth,
                                           tmpdir);
 
-          g_spawn_command_line_sync (command_line, &standard_output, NULL, &exit_status, &error);
+          g_spawn_command_line_sync (command_line, &standard_output, NULL, &exit_status, &cmd_error);
 
-          if (error != NULL)
-            g_warning ("Fail to spawn process. Error %s", error->message);
+          if (cmd_error != NULL)
+            g_warning ("Fail to spawn process. Error %s", cmd_error->message);
           else
             g_print ("%s", standard_output);
         }
     }
 
-  if (g_remove (tmpdir) == -1)
+  rmcmd = g_strdup_printf ("rm -rf %s", tmpdir);
+  g_spawn_command_line_sync (rmcmd, NULL, NULL, &exit_status, &error);
+
+  if (error != NULL || exit_status != 0)
     g_warning ("Fail to remove tmp dir %s", tmpdir);
 
   return status;
