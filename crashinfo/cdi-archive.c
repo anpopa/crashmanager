@@ -30,6 +30,7 @@
 #include "cdi-archive.h"
 #include "cdm-defaults.h"
 
+#include <glib/gstdio.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -141,6 +142,7 @@ cdi_archive_print_file (CdiArchive *ar, const gchar *fname)
   struct archive_entry *entry;
 
   g_assert (ar);
+  g_assert (fname);
 
   if (ar->archive == NULL)
     return CDM_STATUS_ERROR;
@@ -157,7 +159,7 @@ cdi_archive_print_file (CdiArchive *ar, const gchar *fname)
 }
 
 CdmStatus
-cdi_archive_extract_coredump (CdiArchive *ar)
+cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
 {
   g_autoptr (GKeyFile) keyfile = g_key_file_new ();
   g_autofree gchar *buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
@@ -172,6 +174,7 @@ cdi_archive_extract_coredump (CdiArchive *ar)
   gint output_fd;
 
   g_assert (ar);
+  g_assert (dpath);
 
   if (ar->archive == NULL)
     return CDM_STATUS_ERROR;
@@ -206,7 +209,7 @@ cdi_archive_extract_coredump (CdiArchive *ar)
   if (error != NULL)
     return CDM_STATUS_ERROR;
 
-  file_name = g_strdup_printf ("%s.%ld.%ld.core", proc_name, proc_pid, proc_tstamp);
+  file_name = g_strdup_printf ("%s/%s.%ld.%ld.core", dpath, proc_name, proc_pid, proc_tstamp);
 
   g_print ("Extracting coredump with size %ld ... ", towrite);
 
@@ -227,7 +230,7 @@ cdi_archive_extract_coredump (CdiArchive *ar)
     {
       if (g_strrstr (archive_entry_pathname (entry), "core.") != NULL)
         {
-          if (towrite / CDM_CRASHDUMP_SPLIT_SIZE > 0)
+          if ((towrite / CDM_CRASHDUMP_SPLIT_SIZE) > 0)
             {
               archive_read_data_into_fd (ar->archive, output_fd);
               towrite -= CDM_CRASHDUMP_SPLIT_SIZE;
@@ -254,5 +257,91 @@ cdi_archive_extract_coredump (CdiArchive *ar)
   close (output_fd);
 
   return CDM_STATUS_OK;
+}
+
+static gchar *
+archive_get_exe_path (CdiArchive *ar)
+{
+  g_autofree gchar *buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
+  g_autoptr (GKeyFile) keyfile = g_key_file_new ();
+  g_autoptr (GError) error = NULL;
+  struct archive_entry *entry;
+  gchar *exe_path = NULL;
+
+  g_assert (ar);
+
+  /* need to reopen the archive */
+  archive_read_free (ar->archive);
+  ar->archive = archive_read_new ();
+
+  archive_read_support_filter_all (ar->archive);
+  archive_read_support_format_all (ar->archive);
+
+  if (archive_read_open_filename (ar->archive, ar->file_path, 10240) != ARCHIVE_OK)
+    return NULL;
+
+  while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
+    {
+      if (g_strcmp0 (archive_entry_pathname (entry), "info.crashdata") == 0)
+        archive_read_data (ar->archive, buffer, ARCHIVE_READ_BUFFER_SIZE);
+      else
+        archive_read_data_skip (ar->archive);
+    }
+
+  if (strlen (buffer) == 0)
+    return NULL;
+
+  if (!g_key_file_load_from_data (keyfile, buffer, (gsize) - 1, G_KEY_FILE_NONE, NULL))
+    return NULL;
+
+  exe_path = g_key_file_get_string (keyfile, "crashdata", "ProcessExe", &error);
+  if (error != NULL)
+    return NULL;
+
+  return exe_path;
+}
+
+CdmStatus
+cdi_archive_print_backtrace (CdiArchive *ar, gboolean all)
+{
+  g_autofree gchar *tmpdir = NULL;
+  g_autofree gchar *exepth = NULL;
+  g_autoptr (GError) error = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+
+  g_assert (ar);
+
+  tmpdir = g_dir_make_tmp (NULL, &error);
+  if (error != NULL)
+    return CDM_STATUS_ERROR;
+
+  if (cdi_archive_extract_coredump (ar, tmpdir) == CDM_STATUS_OK)
+    {
+      g_autofree gchar *command_line = NULL;
+
+      exepth = archive_get_exe_path (ar);
+      if (exepth != NULL)
+        {
+          g_autofree gchar *standard_output = NULL;
+          gint exit_status;
+
+          command_line = g_strdup_printf ("sh -c \"gdb -ex '%s' -ex quit %s %s/*.core\"",
+                                          all == FALSE ? "bt" : "thread apply all bt",
+                                          exepth,
+                                          tmpdir);
+
+          g_spawn_command_line_sync (command_line, &standard_output, NULL, &exit_status, &error);
+
+          if (error != NULL)
+            g_warning ("Fail to spawn process. Error %s", error->message);
+          else
+            g_print ("%s", standard_output);
+        }
+    }
+
+  if (g_remove (tmpdir) == -1)
+    g_warning ("Fail to remove tmp dir %s", tmpdir);
+
+  return status;
 }
 

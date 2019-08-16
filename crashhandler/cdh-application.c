@@ -346,6 +346,8 @@ cdh_application_execute (CdhApplication *app,
           app->context->sig,
           app->context->tstamp);
 
+  app->context->pexe = cdm_utils_get_procexe (app->context->pid);
+
 #if defined(WITH_CRASHMANAGER)
   if (cdh_manager_connect (app->manager) != CDM_STATUS_OK)
     {

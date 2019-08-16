@@ -97,6 +97,7 @@ cdh_context_unref (CdhContext *ctx)
 
       g_free (ctx->name);
       g_free (ctx->tname);
+      g_free (ctx->pexe);
       g_free (ctx->contextid);
       g_free (ctx->crashid);
       g_free (ctx->vectorid);
@@ -554,6 +555,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     "[crashdata]\n"
     "ProcessName    = %s\n"
     "ProcessThread  = %s\n"
+    "ProcessExe     = %s\n"
     "CrashTimestamp = %lu\n"
     "ProcessID      = %ld\n"
     "ResidentID     = %ld\n"
@@ -570,6 +572,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     "CoredumpSize   = %lu\n",
     ctx->name,
     ctx->tname,
+    ctx->pexe,
     ctx->tstamp,
     ctx->pid,
     ctx->cpid,

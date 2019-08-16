@@ -82,6 +82,18 @@ cdm_utils_get_procname (gint64 pid)
   return retval;
 }
 
+gchar *
+cdm_utils_get_procexe (gint64 pid)
+{
+  g_autofree gchar *exefile = NULL;
+  gchar *lnexe = NULL;
+
+  exefile = g_strdup_printf ("/proc/%ld/exe", pid);
+  lnexe = g_file_read_link (exefile, NULL);
+
+  return lnexe;
+}
+
 guint64
 cdm_utils_jenkins_hash (const gchar *key)
 {

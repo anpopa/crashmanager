@@ -51,6 +51,8 @@ main (gint argc, gchar *argv[])
   gboolean list_files = FALSE;
   gboolean print_info = FALSE;
   gboolean extract = FALSE;
+  gboolean print_bt = FALSE;
+  gboolean print_btall = FALSE;
   CdmStatus status = CDM_STATUS_OK;
 
   GOptionEntry main_entries[] = {
@@ -61,6 +63,8 @@ main (gint argc, gchar *argv[])
     { "info", 'i', 0, G_OPTION_ARG_NONE, &print_info, "Print crash info from a crash archive", "" },
     { "extract", 'x', 0, G_OPTION_ARG_NONE, &extract, "Extract coredump file", "" },
     { "print", 'p', 0, G_OPTION_ARG_STRING, &print_file, "Print file from archive to stdout", "" },
+    { "bt", 'b', 0, G_OPTION_ARG_NONE, &print_bt, "Print current thread backtrace", "" },
+    { "btall", 'a', 0, G_OPTION_ARG_NONE, &print_btall, "Print threads backtrace", "" },
     { NULL }
   };
 
@@ -101,6 +105,8 @@ main (gint argc, gchar *argv[])
         cdi_application_extract_coredump (app, argv[1]);
       else if (print_file != NULL && argc == 2)
         cdi_application_print_file (app, print_file, argv[1]);
+      else if ((print_bt || print_btall) && argc == 2)
+        cdi_application_print_backtrace (app, print_btall, argv[1]);
     }
   else
     {

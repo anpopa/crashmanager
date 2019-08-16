@@ -43,6 +43,13 @@ G_BEGIN_DECLS
 gchar *cdm_utils_get_procname (gint64 pid);
 
 /**
+ * @brief Get process exe path for pid
+ * @param pid Process ID to lookup for
+ * @return new allocated string with proc exe or NULL if not found
+ */
+gchar *cdm_utils_get_procexe (gint64 pid);
+
+/**
  * @brief Get process name for pid
  * @return const string with current os version
  */

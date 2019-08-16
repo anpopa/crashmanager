@@ -105,6 +105,14 @@ void cdi_application_extract_coredump (CdiApplication *app, const gchar *fpath);
  */
 void cdi_application_print_file (CdiApplication *app, const gchar *fname, const gchar *fpath);
 
+/**
+ * @brief Print backtrace
+ * @param app The cdi application
+ * @param all If true print backtrace for all threads
+ * @param fpath Input file path
+ */
+void cdi_application_print_backtrace (CdiApplication *app, gboolean all, const gchar *fpath);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiApplication, cdi_application_unref);
 
 G_END_DECLS

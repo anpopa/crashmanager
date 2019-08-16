@@ -47,6 +47,7 @@ typedef struct _CdhContext {
 
   gchar *name;       /**< process name */
   gchar *tname;      /**< thread name  */
+  gchar *pexe;       /**< process executable file path  */
   guint64 tstamp;    /**< crash timestamp */
   gint64 sig;        /**< signal id */
   gint64 pid;        /**< process id as seen on host */
