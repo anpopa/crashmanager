@@ -45,18 +45,22 @@ main (gint argc, gchar *argv[])
   g_autoptr (GError) error = NULL;
   g_autoptr (CdiApplication) app = NULL;
   g_autofree gchar *config_path = NULL;
-  g_autofree gchar *input_file = NULL;
+  g_autofree gchar *print_file = NULL;
   gboolean version = FALSE;
   gboolean list_entries = FALSE;
+  gboolean list_files = FALSE;
   gboolean print_info = FALSE;
+  gboolean extract = FALSE;
   CdmStatus status = CDM_STATUS_OK;
 
   GOptionEntry main_entries[] = {
     { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
     { "config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", "" },
     { "list", 'l', 0, G_OPTION_ARG_NONE, &list_entries, "List recorded crashes", "" },
-    { "files", 'f', 0, G_OPTION_ARG_FILENAME, &input_file, "List content for a crash archive", "" },
+    { "files", 'f', 0, G_OPTION_ARG_NONE, &list_files, "List content for a crash archive", "" },
     { "info", 'i', 0, G_OPTION_ARG_NONE, &print_info, "Print crash info from a crash archive", "" },
+    { "extract", 'x', 0, G_OPTION_ARG_NONE, &extract, "Extract coredump file", "" },
+    { "print", 'p', 0, G_OPTION_ARG_STRING, &print_file, "Print file from archive to stdout", "" },
     { NULL }
   };
 
@@ -88,20 +92,15 @@ main (gint argc, gchar *argv[])
       g_info ("Crashinfo tool started for OS version '%s'", cdm_utils_get_osversion ());
 
       if (list_entries)
-        {
-          cdi_application_list_entries (app);
-        }
-      else if (input_file != NULL)
-        {
-          if (print_info)
-            {
-              cdi_application_print_info (app, input_file);
-            }
-          else
-            {
-              cdi_application_list_content (app, input_file);
-            }
-        }
+        cdi_application_list_entries (app);
+      else if (print_info && argc == 2)
+        cdi_application_print_info (app, argv[1]);
+      else if (list_files && argc == 2)
+        cdi_application_list_content (app, argv[1]);
+      else if (extract && argc == 2)
+        cdi_application_extract_coredump (app, argv[1]);
+      else if (print_file != NULL && argc == 2)
+        cdi_application_print_file (app, print_file, argv[1]);
     }
   else
     {

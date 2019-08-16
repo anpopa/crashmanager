@@ -264,10 +264,10 @@ static CdmStatus
 list_dircontent_to (CdhContext *ctx,
                     const gchar *dname)
 {
+  g_autoptr (GError) error = NULL;
   g_autofree gchar *output = NULL;
   CdmStatus status = CDM_STATUS_OK;
   GDir *gdir = NULL;
-  GError *error = NULL;
   const gchar *nfile = NULL;
 
   g_assert (dname);
@@ -275,10 +275,7 @@ list_dircontent_to (CdhContext *ctx,
 
   gdir = g_dir_open (dname, 0, &error);
   if (error != NULL)
-    {
-      g_error_free (error);
-      return CDM_STATUS_ERROR;
-    }
+    return CDM_STATUS_ERROR;
 
   while ((nfile = g_dir_read_name (gdir)) != NULL)
     {
@@ -476,13 +473,13 @@ crash_context_dump (CdhContext *ctx,
 
   for (gint i = 0; groups[i] != NULL; i++)
     {
+      g_autoptr (GError) error = NULL;
       g_autofree gchar *proc_key = NULL;
       g_autofree gchar *data_key = NULL;
       g_autofree gchar *data_path = NULL;
       g_autofree gchar *str_pid = NULL;
       gchar **path_tokens = NULL;
       gchar *gname = groups[i];
-      GError *error = NULL;
       gboolean key_postcore = TRUE;
 
       if (g_regex_match_simple ("crashcontext-*", gname, 0, 0) == FALSE)
@@ -490,30 +487,21 @@ crash_context_dump (CdhContext *ctx,
 
       proc_key = g_key_file_get_string (key_file, gname, "ProcName", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       if (g_regex_match_simple (proc_key, ctx->name, 0, 0) == FALSE)
         continue;
 
       key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       if (key_postcore != postcore)
         continue;
 
       data_key = g_key_file_get_string (key_file, gname, "DataPath", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       if (g_access (data_key, R_OK) == 0)
         continue;
@@ -563,6 +551,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
 #endif
 
   file_data = g_strdup_printf (
+    "[crashdata]\n"
     "ProcessName    = %s\n"
     "ProcessThread  = %s\n"
     "CrashTimestamp = %lu\n"
@@ -616,5 +605,3 @@ cdh_context_generate_poststream (CdhContext *ctx)
 
   return status;
 }
-
-

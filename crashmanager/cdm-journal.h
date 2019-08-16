@@ -146,7 +146,19 @@ gssize cdm_journal_get_data_size (CdmJournal *journal, GError **error);
 gssize cdm_journal_get_entry_count (CdmJournal *journal, GError **error);
 
 /**
- * @brief Set archive removed state for an entry
+ * @brief Get next untransferred file
+ *
+ * @param journal The journal object
+ * @param error The GError object or NULL
+ *
+ * @return If a file is found a pointer to untranferred's file path is returned (new
+ * string to be released by the caller). If no vicitm available NULL is
+ * returned. If an error occured the error is set and NULL is returned.
+ */
+gchar* cdm_journal_get_untransferred (CdmJournal *journal, GError **error);
+
+/**
+ * @brief Get next victim
  *
  * @param journal The journal object
  * @param error The GError object or NULL

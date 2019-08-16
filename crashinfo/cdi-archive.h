@@ -43,6 +43,7 @@ G_BEGIN_DECLS
  */
 typedef struct _CdiArchive {
   struct archive *archive;                       /**< Archive object  */
+  gchar *file_path;                              /**< Archive file path for repopen */
   grefcount rc;                                  /**< Reference counter variable  */
 } CdiArchive;
 
@@ -85,6 +86,20 @@ CdmStatus cdi_archive_list_stdout (CdiArchive *ar);
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_print_info (CdiArchive *ar);
+
+/**
+ * @brief Print file content to stdout
+ *        The archive has to be opened first
+ * @return CDM_STATUS_OK on success
+ */
+CdmStatus cdi_archive_print_file (CdiArchive *ar, const gchar *fname);
+
+/**
+ * @brief Extract coredump in current directory
+ *        The archive has to be opened first
+ * @return CDM_STATUS_OK on success
+ */
+CdmStatus cdi_archive_extract_coredump (CdiArchive *ar);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiArchive, cdi_archive_unref);
 

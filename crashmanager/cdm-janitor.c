@@ -95,7 +95,8 @@ janitor_source_callback (gpointer cdmjanitor)
 {
   CdmJanitor *janitor = (CdmJanitor *)cdmjanitor;
   g_autofree gchar *victim_path = NULL;
-  GError *error = NULL;
+
+  g_autoptr (GError) error = NULL;
 
   g_assert (janitor);
 
@@ -104,16 +105,14 @@ janitor_source_callback (gpointer cdmjanitor)
     {
       g_warning ("No victim available to be cleaned");
       if (error != NULL)
-        {
-          g_warning ("Fail to get a victim from journal %s", error->message);
-          g_error_free (error);
-        }
+        g_warning ("Fail to get a victim from journal %s", error->message);
     }
   else
     {
       g_autofree gchar *victim_basename = g_path_get_basename (victim_path);
 
       g_info ("Remove old crashdump entry %s", victim_basename);
+
       if (g_remove (victim_path) == -1)
         {
           if (errno != ENOENT)
@@ -126,7 +125,6 @@ janitor_source_callback (gpointer cdmjanitor)
           g_warning ("Fail to set remove flag for victim %s: Error %s",
                      victim_basename,
                      error->message);
-          g_error_free (error);
         }
     }
 

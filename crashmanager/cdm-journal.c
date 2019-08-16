@@ -37,6 +37,7 @@ typedef enum _JournalQueryType {
   QUERY_SET_TRANSFER,
   QUERY_SET_REMOVED,
   QUERY_GET_VICTIM,
+  QUERY_GET_UNTRANSFERRED,
   QUERY_GET_DATASIZE,
   QUERY_GET_ENTRY_COUNT
 } JournalQueryType;
@@ -74,6 +75,8 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
       break;
 
     case QUERY_GET_VICTIM:
+    /* falltrough */
+    case QUERY_GET_UNTRANSFERRED:
       for (gint i = 0; i < argc; i++)
         {
           if (g_strcmp0 (colname[i], "FILEPATH") == 0)
@@ -386,6 +389,37 @@ cdm_journal_get_victim (CdmJournal *journal,
                    1,
                    "SQL query error");
       g_warning ("Fail to get victim. SQL error %s", query_error);
+      sqlite3_free (query_error);
+    }
+
+  return (gchar *)data.response;
+}
+
+gchar *
+cdm_journal_get_untransferred (CdmJournal *journal,
+                               GError **error)
+{
+  g_autofree gchar *sql = NULL;
+  gchar *query_error = NULL;
+  JournalQueryData data = {
+    .type = QUERY_GET_UNTRANSFERRED,
+    .response = NULL
+  };
+
+  g_assert (journal);
+
+  sql = g_strdup_printf ("SELECT FILEPATH FROM %s "
+                         "WHERE RSTATE IS 0 AND TSTATE IS 0 ORDER BY TIMESTAMP LIMIT 1",
+                         cdm_journal_table_name);
+
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
+      != SQLITE_OK)
+    {
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalGetUntrasnferred"),
+                   1,
+                   "SQL query error");
+      g_warning ("Fail to get untransfered. SQL error %s", query_error);
       sqlite3_free (query_error);
     }
 

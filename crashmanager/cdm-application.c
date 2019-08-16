@@ -144,7 +144,6 @@ archive_early_crashes (CdmApplication *app,
           else
             {
               g_info ("New crash entry added to database with id %016lX", dbid);
-              cdm_transfer_file (app->transfer, fpath, NULL, NULL);
             }
         }
     }
@@ -203,6 +202,48 @@ archive_kdumps (CdmApplication *app,
     }
 
   return status;
+}
+
+static void
+transfer_complete (gpointer cdmjournal,
+                   const gchar *file_path)
+{
+  CDM_UNUSED (cdmjournal);
+  g_info ("Archive transfer complete for %s", file_path);
+}
+
+static void
+transfer_missing_files (CdmApplication *app)
+{
+  gboolean finish = FALSE;
+
+  g_assert (app);
+
+  while (!finish)
+    {
+      g_autofree gchar *file = cdm_journal_get_untransferred (app->journal, NULL);
+
+      if (file != NULL)
+        {
+          g_autoptr (GError) error = NULL;
+
+          g_info ("Transfer incomplete file %s", file);
+
+          /*
+           * we only retry the transfer once if missing so we mark now the file
+           * transferred to avoid getting it again from the journal
+           */
+          cdm_transfer_file (app->transfer, file, transfer_complete, NULL);
+          cdm_journal_set_transfer (app->journal, file, TRUE, &error);
+
+          if (error != NULL)
+            g_warning ("Fail to set transfer complete for %s. Error %s", file, error->message);
+        }
+      else
+        {
+          finish = TRUE;
+        }
+    }
 }
 
 CdmApplication *
@@ -314,6 +355,9 @@ cdm_application_execute (CdmApplication *app)
   /* check and process early archives including kdumps */
   if (archive_early_crashes (app, opt_crashdir) != CDM_STATUS_OK)
     g_warning ("Fail to add early crashes");
+
+  /* transfer all untransferred files */
+  transfer_missing_files (app);
 
   /* run the main event loop */
   g_main_loop_run (app->mainloop);

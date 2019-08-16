@@ -116,7 +116,7 @@ client_source_callback (gpointer data)
 
       if ((type == CDM_CORE_COMPLETE) || (type == CDM_CORE_FAILED))
         {
-          GError *error = NULL;
+          g_autoptr (GError) error = NULL;
           guint64 dbid;
 
           if (!client->init_data || !client->update_data || !client->complete_data)
@@ -137,15 +137,11 @@ client_source_callback (gpointer data)
                                         &error);
 
           if (error != NULL)
-            {
-              g_warning ("Fail to add new crash entry in database %s", error->message);
-              g_error_free (error);
-            }
+            g_warning ("Fail to add new crash entry in database %s", error->message);
           else
-            {
-              g_debug ("New crash entry added to database with id %016lX", dbid);
-            }
+            g_debug ("New crash entry added to database with id %016lX", dbid);
 
+          /* even if we fail to add to the database we try to transfer the file */
           cdm_transfer_file (client->transfer,
                              client->complete_data->core_file,
                              archive_transfer_complete,
@@ -358,16 +354,14 @@ archive_transfer_complete (gpointer cdmclient,
                            const gchar *file_path)
 {
   CdmClient *client = (CdmClient *)cdmclient;
-  GError *error = NULL;
 
-  g_debug ("Archive transfer complete for %d : %s", client->sockfd, file_path);
+  g_autoptr (GError) error = NULL;
+
+  g_info ("Archive transfer complete for %d : %s", client->sockfd, file_path);
   cdm_journal_set_transfer (client->journal, file_path, TRUE, &error);
 
   if (error != NULL)
-    {
-      g_warning ("Fail to set transfer complete for %s. Error %s", file_path, error->message);
-      g_error_free (error);
-    }
+    g_warning ("Fail to set transfer complete for %s. Error %s", file_path, error->message);
 
   cdm_client_unref (client);
 }

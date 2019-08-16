@@ -253,11 +253,11 @@ do_crash_actions (CdmOptions *options,
 
   for (gint i = 0; groups[i] != NULL; i++)
     {
+      g_autoptr (GError) error = NULL;
       g_autofree gchar *proc_key = NULL;
       g_autofree gchar *victim_key = NULL;
       gboolean key_postcore = TRUE;
       gchar *gname = groups[i];
-      GError *error = NULL;
       pid_t victim_pid;
       gint signal_key;
 
@@ -266,37 +266,25 @@ do_crash_actions (CdmOptions *options,
 
       proc_key = g_key_file_get_string (key_file, gname, "ProcName", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       if (g_regex_match_simple (proc_key, proc_name, 0, 0) == FALSE)
         continue;
 
       key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       if (key_postcore != postcore)
         continue;
 
       victim_key = g_key_file_get_string (key_file, gname, "Victim", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       signal_key = g_key_file_get_integer (key_file, gname, "Signal", &error);
       if (error != NULL)
-        {
-          g_error_free (error);
-          continue;
-        }
+        continue;
 
       victim_pid = cdm_utils_first_pid_for_process (victim_key);
       if (victim_pid < 1)

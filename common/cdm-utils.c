@@ -204,8 +204,8 @@ cdm_utils_chown (const gchar *file_path,
 pid_t
 cdm_utils_first_pid_for_process (const gchar *exepath)
 {
+  g_autoptr (GError) error = NULL;
   const gchar *nfile = NULL;
-  GError *error = NULL;
   GDir *gdir = NULL;
   pid_t pid = -1;
 
@@ -215,7 +215,6 @@ cdm_utils_first_pid_for_process (const gchar *exepath)
   if (error != NULL)
     {
       g_warning ("Fail to open proc directory. Error %s", error->message);
-      g_error_free (error);
       return -1;
     }
 

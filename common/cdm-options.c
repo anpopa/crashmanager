@@ -47,7 +47,7 @@ cdm_options_new (const gchar *conf_path)
 
   if (conf_path != NULL)
     {
-      GError *error = NULL;
+      g_autoptr (GError) error = NULL;
 
       opts->conf = g_key_file_new ();
 
@@ -60,7 +60,6 @@ cdm_options_new (const gchar *conf_path)
       else
         {
           g_debug ("Cannot parse configuration file");
-          g_error_free (error);
         }
     }
 
@@ -218,7 +217,7 @@ gint64
 cdm_options_long_for (CdmOptions *opts,
                       CdmOptionsKey key)
 {
-  GError *error = NULL;
+  g_autoptr (GError) error = NULL;
   gint64 value = 0;
 
   switch (key)
@@ -226,55 +225,37 @@ cdm_options_long_for (CdmOptions *opts,
     case KEY_FILESYSTEM_MIN_SIZE:
       value = get_long_option (opts, "crashhandler", "FileSystemMinSize", &error);
       if (error != NULL)
-        {
-          value = CDM_FILESYSTEM_MIN_SIZE;
-          g_error_free (error);
-        }
+        value = CDM_FILESYSTEM_MIN_SIZE;
       break;
 
     case KEY_ELEVATED_NICE_VALUE:
       value = get_long_option (opts, "crashhandler", "ElevatedNiceValue", &error);
       if (error != NULL)
-        {
-          value = CDM_ELEVATED_NICE_VALUE;
-          g_error_free (error);
-        }
+        value = CDM_ELEVATED_NICE_VALUE;
       break;
 
     case KEY_IPC_TIMEOUT_SEC:
       value = get_long_option (opts, "common", "IpcSocketTimeout", &error);
       if (error != NULL)
-        {
-          value = CDM_IPC_TIMEOUT_SEC;
-          g_error_free (error);
-        }
+        value = CDM_IPC_TIMEOUT_SEC;
       break;
 
     case KEY_CRASHDUMP_DIR_MIN_SIZE:
       value = get_long_option (opts, "crashmanager", "MinCrashdumpDirSize", &error);
       if (error != NULL)
-        {
-          value = CDM_CRASHDUMP_DIR_MIN_SIZE;
-          g_error_free (error);
-        }
+        value = CDM_CRASHDUMP_DIR_MIN_SIZE;
       break;
 
     case KEY_CRASHDUMP_DIR_MAX_SIZE:
       value = get_long_option (opts, "crashmanager", "MaxCrashdumpDirSize", &error);
       if (error != NULL)
-        {
-          value = CDM_CRASHDUMP_DIR_MAX_SIZE;
-          g_error_free (error);
-        }
+        value = CDM_CRASHDUMP_DIR_MAX_SIZE;
       break;
 
     case KEY_CRASHFILES_MAX_COUNT:
       value = get_long_option (opts, "crashmanager", "MaxCrashdumpArchives", &error);
       if (error != NULL)
-        {
-          value = CDM_CRASHFILES_MAX_COUNT;
-          g_error_free (error);
-        }
+        value = CDM_CRASHFILES_MAX_COUNT;
       break;
 
     default:

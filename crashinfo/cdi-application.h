@@ -90,6 +90,21 @@ void cdi_application_list_content (CdiApplication *app, const gchar *fpath);
  */
 void cdi_application_print_info (CdiApplication *app, const gchar *fpath);
 
+/**
+ * @brief Extract coredump file
+ * @param app The cdi application
+ * @param fpath Input file path
+ */
+void cdi_application_extract_coredump (CdiApplication *app, const gchar *fpath);
+
+/**
+ * @brief Print content of a file in the archive
+ * @param app The cdi application
+ * @param fname Input file name
+ * @param fpath Input file path
+ */
+void cdi_application_print_file (CdiApplication *app, const gchar *fname, const gchar *fpath);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiApplication, cdi_application_unref);
 
 G_END_DECLS
