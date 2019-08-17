@@ -39,13 +39,13 @@ G_BEGIN_DECLS
  * @function CdmTransferCallback
  * @brief Custom callback used internally by CdmTransfer as source callback
  */
-typedef gboolean (*CdmTransferCallback) (gpointer cdmtrans, gpointer entry);
+typedef gboolean (*CdmTransferCallback) (gpointer _transfer, gpointer _entry);
 
 /**
  * @function CdmTransferEntryCallback
  * @brief Client callback to pass when requesting a file transfer
  */
-typedef void (*CdmTransferEntryCallback) (gpointer user_data, const gchar *file_path);
+typedef void (*CdmTransferEntryCallback) (gpointer _transfer, const gchar *file_path);
 
 /**
  * @struct CdmTransferEntry

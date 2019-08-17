@@ -36,14 +36,29 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+/**
+ * @brief GSource prepare function
+ */
 static gboolean janitor_source_prepare (GSource *source, gint *timeout);
 
+/**
+ * @brief GSource dispatch function
+ */
 static gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor);
 
+/**
+ * @brief GSource callback function
+ */
 static gboolean janitor_source_callback (gpointer cdmjanitor);
 
+/**
+ * @brief GSource destroy notification callback function
+ */
 static void janitor_source_destroy_notify (gpointer cdmjanitor);
 
+/**
+ * @brief GSourceFuncs vtable
+ */
 static GSourceFuncs janitor_source_funcs =
 {
   janitor_source_prepare,

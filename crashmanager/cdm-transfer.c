@@ -39,18 +39,39 @@ DLT_DECLARE_CONTEXT (cdm_transfer_ctx);
 #define DLT_MIN_TIMEOUT 1
 #endif
 
+/**
+ * @brief GSource prepare function
+ */
 static gboolean transfer_source_prepare (GSource *source, gint *timeout);
 
-static gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmtrans);
+/**
+ * @brief GSource dispatch function
+ */
+static gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer _transfer);
 
-static gboolean transfer_source_callback (gpointer cdmtrans, gpointer entry);
+/**
+ * @brief GSource callback function
+ */
+static gboolean transfer_source_callback (gpointer _transfer, gpointer _entry);
 
-static void transfer_source_destroy_notify (gpointer cdmtrans);
+/**
+ * @brief GSource destroy notification callback function
+ */
+static void transfer_source_destroy_notify (gpointer _transfer);
 
-static void transfer_queue_destroy_notify (gpointer cdmtrans);
+/**
+ * @brief Async queue destroy notification callback function
+ */
+static void transfer_queue_destroy_notify (gpointer _transfer);
 
-static void transfer_thread_func (gpointer data, gpointer user_data);
+/**
+ * @brief Transfer thread function
+ */
+static void transfer_thread_func (gpointer _entry, gpointer _transfer);
 
+/**
+ * @brief GSourceFuncs vtable
+ */
 static GSourceFuncs transfer_source_funcs =
 {
   transfer_source_prepare,
@@ -75,39 +96,40 @@ transfer_source_prepare (GSource *source,
 static gboolean
 transfer_source_dispatch (GSource *source,
                           GSourceFunc callback,
-                          gpointer cdmtrans)
+                          gpointer _transfer)
 {
   CdmTransfer *transfer = (CdmTransfer *)source;
   gpointer entry = g_async_queue_try_pop (transfer->queue);
 
   CDM_UNUSED (callback);
+  CDM_UNUSED (_transfer);
 
   if (entry == NULL)
     return G_SOURCE_CONTINUE;
 
-  return transfer->callback (cdmtrans, entry) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+  return transfer->callback (transfer, entry) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 static gboolean
-transfer_source_callback (gpointer cdmtrans,
-                          gpointer entry)
+transfer_source_callback (gpointer _transfer,
+                          gpointer _entry)
 {
-  CdmTransfer *transfer = (CdmTransfer *)cdmtrans;
-  CdmTransferEntry *trans_entry = (CdmTransferEntry *)entry;
+  CdmTransfer *transfer = (CdmTransfer *)_transfer;
+  CdmTransferEntry *entry = (CdmTransferEntry *)_entry;
 
   g_assert (transfer);
-  g_assert (trans_entry);
+  g_assert (entry);
 
-  g_debug ("Push file to tread pool transfer %s", trans_entry->file_path);
+  g_debug ("Push file to tread pool transfer %s", entry->file_path);
   g_thread_pool_push (transfer->tpool, entry, NULL);
 
   return TRUE;
 }
 
 static void
-transfer_source_destroy_notify (gpointer data)
+transfer_source_destroy_notify (gpointer _transfer)
 {
-  CdmTransfer *transfer = (CdmTransfer *)data;
+  CdmTransfer *transfer = (CdmTransfer *)_transfer;
 
   g_assert (transfer);
   g_debug ("Transfer destroy notification");
@@ -116,20 +138,20 @@ transfer_source_destroy_notify (gpointer data)
 }
 
 static void
-transfer_queue_destroy_notify (gpointer data)
+transfer_queue_destroy_notify (gpointer _transfer)
 {
-  CDM_UNUSED (data);
+  CDM_UNUSED (_transfer);
   g_debug ("Transfer queue destroy notification");
 }
 
 static void
-transfer_thread_func (gpointer data,
-                      gpointer user_data)
+transfer_thread_func (gpointer _entry,
+                      gpointer _transfer)
 {
   g_autofree gchar *file_name = NULL;
-  CdmTransferEntry *entry = (CdmTransferEntry *)data;
+  CdmTransferEntry *entry = (CdmTransferEntry *)_entry;
 
-  CDM_UNUSED (user_data);
+  CDM_UNUSED (_transfer);
 
   file_name = g_path_get_basename (entry->file_path);
 

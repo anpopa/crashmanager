@@ -34,26 +34,56 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+/**
+ * @brief GSource prepare function
+ */
 static gboolean client_source_prepare (GSource *source, gint *timeout);
 
+/**
+ * @brief GSource check function
+ */
 static gboolean client_source_check (GSource *source);
 
+/**
+ * @brief GSource dispatch function
+ */
 static gboolean client_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data);
 
+/**
+ * @brief GSource callback function
+ */
 static gboolean client_source_callback (gpointer data);
 
+/**
+ * @brief GSource destroy notification callback function
+ */
 static void client_source_destroy_notify (gpointer data);
 
+/**
+ * @brief Process message from crashhandler instance
+ */
 static void process_message (CdmClient *c, CdmMessage *msg);
 
+/**
+ * @brief Get context ID for PID
+ */
 static gchar *get_pid_context_id (pid_t pid);
 
+/**
+ * @brief Transfer complete callback
+ */
 static void archive_transfer_complete (gpointer cdmclient, const gchar *file_path);
 
 #ifdef WITH_LXC
+/**
+ * @brief Get container name for context ID
+ */
 static gchar *get_container_name_for_context (const gchar *ctxid);
 #endif
 
+/**
+ * @brief GSourceFuncs vtable
+ */
 static GSourceFuncs client_source_funcs =
 {
   client_source_prepare,

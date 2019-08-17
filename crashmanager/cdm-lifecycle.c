@@ -103,16 +103,34 @@ static void registration_state_async_cb (void *client, LCRegistrationState state
  */
 static void session_state_async_cb (void *client, LCSessionState state, CdmStatus error);
 
+/**
+ * @brief GSource prepare function
+ */
 static gboolean lifecycle_source_prepare (GSource *source, gint *timeout);
 
-static gboolean lifecycle_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmlifecycle);
+/**
+ * @brief GSource dispatch function
+ */
+static gboolean lifecycle_source_dispatch (GSource *source, GSourceFunc callback, gpointer _lifecycle);
 
-static gboolean lifecycle_source_callback (gpointer cdmlifecycle, gpointer event);
+/**
+ * @brief GSource callback function
+ */
+static gboolean lifecycle_source_callback (gpointer _lifecycle, gpointer _event);
 
-static void lifecycle_source_destroy_notify (gpointer cdmlifecycle);
+/**
+ * @brief GSource destroy notification callback function
+ */
+static void lifecycle_source_destroy_notify (gpointer _lifecycle);
 
-static void lifecycle_queue_destroy_notify (gpointer cdmlifecycle);
+/**
+ * @brief Async queue destroy notification callback function
+ */
+static void lifecycle_queue_destroy_notify (gpointer _lifecycle);
 
+/**
+ * @brief GSourceFuncs vtable
+ */
 static GSourceFuncs lifecycle_source_funcs =
 {
   lifecycle_source_prepare,
@@ -137,24 +155,25 @@ lifecycle_source_prepare (GSource *source,
 static gboolean
 lifecycle_source_dispatch (GSource *source,
                            GSourceFunc callback,
-                           gpointer cdmlifecycle)
+                           gpointer _lifecycle)
 {
   CdmLifecycle *lifecycle = (CdmLifecycle *)source;
   gpointer event = g_async_queue_try_pop (lifecycle->queue);
 
   CDM_UNUSED (callback);
+  CDM_UNUSED (_lifecycle);
 
   if (event == NULL)
     return G_SOURCE_CONTINUE;
 
-  return lifecycle->callback (cdmlifecycle, event) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+  return lifecycle->callback (lifecycle, event) == TRUE ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
 
 static gboolean
-lifecycle_source_callback (gpointer cdmlifecycle,
+lifecycle_source_callback (gpointer _lifecycle,
                            gpointer _event)
 {
-  CdmLifecycle *lifecycle = (CdmLifecycle *)cdmlifecycle;
+  CdmLifecycle *lifecycle = (CdmLifecycle *)_lifecycle;
   CdmLifecycleEvent *event = (CdmLifecycleEvent *)_event;
 
   g_assert (lifecycle);
@@ -185,9 +204,9 @@ lifecycle_source_callback (gpointer cdmlifecycle,
 }
 
 static void
-lifecycle_source_destroy_notify (gpointer data)
+lifecycle_source_destroy_notify (gpointer _lifecycle)
 {
-  CdmLifecycle *lifecycle = (CdmLifecycle *)data;
+  CdmLifecycle *lifecycle = (CdmLifecycle *)_lifecycle;
 
   g_assert (lifecycle);
   g_debug ("Lifecycle destroy notification");
@@ -196,9 +215,9 @@ lifecycle_source_destroy_notify (gpointer data)
 }
 
 static void
-lifecycle_queue_destroy_notify (gpointer data)
+lifecycle_queue_destroy_notify (gpointer _lifecycle)
 {
-  CDM_UNUSED (data);
+  CDM_UNUSED (_lifecycle);
   g_debug ("Transfer queue destroy notification");
 }
 
@@ -234,7 +253,7 @@ cdm_lifecycle_new (void)
 }
 
 CdmLifecycle *
-cdm_lifecycle_ref (CdmLifecycle *lifecycleifecycle)
+cdm_lifecycle_ref (CdmLifecycle *lifecycle)
 {
   g_assert (lifecycle);
   g_ref_count_inc (&lifecycle->rc);
@@ -242,7 +261,7 @@ cdm_lifecycle_ref (CdmLifecycle *lifecycleifecycle)
 }
 
 void
-cdm_lifecycle_unref (CdmLifecycle *lifecycleifecycle)
+cdm_lifecycle_unref (CdmLifecycle *lifecycle)
 {
   g_assert (lifecycle);
 

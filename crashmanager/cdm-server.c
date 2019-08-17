@@ -39,12 +39,34 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+/**
+ * @brief GSource prepare function
+ */
 static gboolean server_source_prepare (GSource *source, gint *timeout);
+
+/**
+ * @brief GSource check function
+ */
 static gboolean server_source_check (GSource *source);
+
+/**
+ * @brief GSource dispatch function
+ */
 static gboolean server_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmserver);
+
+/**
+ * @brief GSource callback function
+ */
 static gboolean server_source_callback (gpointer cdmserver);
+
+/**
+ * @brief GSource destroy notification callback function
+ */
 static void server_source_destroy_notify (gpointer cdmserver);
 
+/**
+ * @brief GSourceFuncs vtable
+ */
 static GSourceFuncs server_source_funcs =
 {
   server_source_prepare,

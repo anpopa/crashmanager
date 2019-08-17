@@ -30,6 +30,9 @@
 #include "cdm-journal.h"
 #include "cdm-utils.h"
 
+/**
+ * @enum Journal query type
+ */
 typedef enum _JournalQueryType {
   QUERY_CREATE,
   QUERY_ADD_ENTRY,
@@ -42,6 +45,9 @@ typedef enum _JournalQueryType {
   QUERY_GET_ENTRY_COUNT
 } JournalQueryType;
 
+/**
+ * @enum Journal query data object
+ */
 typedef struct _JournalQueryData {
   JournalQueryType type;
   gpointer response;
@@ -49,6 +55,9 @@ typedef struct _JournalQueryData {
 
 const gchar *cdm_journal_table_name = "CrashTable";
 
+/**
+ * @brief SQlite3 callback
+ */
 static int sqlite_callback (void *data, int argc, char **argv, char **colname);
 
 static int

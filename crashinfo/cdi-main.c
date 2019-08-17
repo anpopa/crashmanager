@@ -58,13 +58,13 @@ main (gint argc, gchar *argv[])
   GOptionEntry main_entries[] = {
     { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
     { "config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", "" },
-    { "list", 'l', 0, G_OPTION_ARG_NONE, &list_entries, "List recorded crashes", "" },
+    { "list", 'l', 0, G_OPTION_ARG_NONE, &list_entries, "List recorded crashes in local database", "" },
     { "files", 'f', 0, G_OPTION_ARG_NONE, &list_files, "List content for a crash archive", "" },
-    { "info", 'i', 0, G_OPTION_ARG_NONE, &print_info, "Print crash info from a crash archive", "" },
-    { "extract", 'x', 0, G_OPTION_ARG_NONE, &extract, "Extract coredump file", "" },
-    { "print", 'p', 0, G_OPTION_ARG_STRING, &print_file, "Print file from archive to stdout", "" },
-    { "bt", 'b', 0, G_OPTION_ARG_NONE, &print_bt, "Print current thread backtrace", "" },
-    { "btall", 'a', 0, G_OPTION_ARG_NONE, &print_btall, "Print threads backtrace", "" },
+    { "info", 'i', 0, G_OPTION_ARG_NONE, &print_info, "Print crash info file from a crash archive", "" },
+    { "extract", 'x', 0, G_OPTION_ARG_NONE, &extract, "Extract coredump file in current directory", "" },
+    { "print", 'p', 0, G_OPTION_ARG_STRING, &print_file, "Print file from crash archive", "" },
+    { "bt", 'b', 0, G_OPTION_ARG_NONE, &print_bt, "Print current thread backtrace from a crash archive", "" },
+    { "btall", 'a', 0, G_OPTION_ARG_NONE, &print_btall, "Print thread backtarce for all threads", "" },
     { NULL }
   };
 

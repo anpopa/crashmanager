@@ -35,8 +35,14 @@
 #define USEC2SEC(x) (x / 1000000)
 #define USEC2SECHALF(x) (guint)(x / 1000000 / 2)
 
+/**
+ * @brief GSource callback function
+ */
 static gboolean source_timer_callback (gpointer data);
 
+/**
+ * @brief GSource destroy notification callback function
+ */
 static void source_destroy_notify (gpointer data);
 
 static gboolean

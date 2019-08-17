@@ -50,7 +50,7 @@ typedef union _LCEventData {
  * @function CdmLifecycleCallback
  * @brief Custom callback used internally by CdmLifecycle as source callback
  */
-typedef gboolean (*CdmLifecycleCallback) (gpointer cdmlifecycle, gpointer event);
+typedef gboolean (*CdmLifecycleCallback) (gpointer _lifecycle, gpointer _event);
 
 /**
  * @struct CdmLifecycleEvent
