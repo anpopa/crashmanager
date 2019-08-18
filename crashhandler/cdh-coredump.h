@@ -56,11 +56,7 @@ typedef struct _CdhCoredump {
  * @brief Create a new CdhCoredump object
  * @return A pointer to the new object
  */
-#if defined(WITH_CRASHMANAGER)
-CdhCoredump *cdh_coredump_new (CdhContext *context, CdhArchive *archive, CdhManager *manager);
-#else
 CdhCoredump *cdh_coredump_new (CdhContext *context, CdhArchive *archive);
-#endif
 
 /**
  * @brief Aquire CdhCoredump object
@@ -74,6 +70,14 @@ CdhCoredump *cdh_coredump_ref (CdhCoredump *cd);
  * @param cd Pointer to the cdh_context object
  */
 void cdh_coredump_unref (CdhCoredump *cd);
+
+#if defined(WITH_CRASHMANAGER)
+/* @brief Set coredump manager object
+ * @param cd Coredump object
+ * @param manager Manager object
+ */
+void cdh_coredump_set_manager (CdhCoredump *cd, CdhManager *manager);
+#endif
 
 /* @brief Generate coredump file
  * @param cd Coredump object

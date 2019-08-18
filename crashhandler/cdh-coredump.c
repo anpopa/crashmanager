@@ -69,32 +69,19 @@ static CdmStatus read_elf_headers (CdhCoredump *cd);
 
 static CdmStatus get_coredump_registers (CdhCoredump *cd);
 
-#if defined(WITH_CRASHMANAGER)
-CdhCoredump *
-cdh_coredump_new (CdhContext *context,
-                  CdhArchive *archive,
-                  CdhManager *manager)
-#else
 CdhCoredump *
 cdh_coredump_new (CdhContext *context,
                   CdhArchive *archive)
-#endif
 {
   CdhCoredump *cd = g_new0 (CdhCoredump, 1);
 
   g_assert (context);
   g_assert (archive);
-#if defined(WITH_CRASHMANAGER)
-  g_assert (manager);
-#endif
 
   g_ref_count_init (&cd->rc);
 
   cd->context = cdh_context_ref (context);
   cd->archive = cdh_archive_ref (archive);
-#if defined(WITH_CRASHMANAGER)
-  cd->manager = cdh_manager_ref (manager);
-#endif
 
   return cd;
 }
@@ -117,11 +104,24 @@ cdh_coredump_unref (CdhCoredump *cd)
       cdh_context_unref (cd->context);
       cdh_archive_unref (cd->archive);
 #if defined(WITH_CRASHMANAGER)
-      cdh_manager_unref (cd->manager);
+      if (cd->manager != NULL)
+        cdh_manager_unref (cd->manager);
 #endif
       g_free (cd);
     }
 }
+
+#if defined(WITH_CRASHMANAGER)
+void
+cdh_coredump_set_manager (CdhCoredump *cd,
+                          CdhManager *manager)
+{
+  g_assert (cd);
+  g_assert (manager);
+
+  cd->manager = cdh_manager_ref (manager);
+}
+#endif
 
 static CdmStatus
 read_elf_headers (CdhCoredump *cd)

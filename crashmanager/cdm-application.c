@@ -258,17 +258,13 @@ cdm_application_new (const gchar *config)
 #ifdef WITH_SYSTEMD
   app->sdnotify = cdm_sdnotify_new ();
 #endif
-#ifdef WITH_GENIVI_NSM
-  app->lifecycle = cdm_lifecycle_new ();
-#endif
   app->transfer = cdm_transfer_new ();
-
   app->options = cdm_options_new (config);
   app->journal = cdm_journal_new (app->options);
   app->janitor = cdm_janitor_new (app->options, app->journal);
   app->server = cdm_server_new (app->options, app->transfer, app->journal);
-
 #ifdef WITH_GENIVI_NSM
+  app->lifecycle = cdm_lifecycle_new ();
   cdm_server_set_lifecycle (app->server, app->lifecycle);
 #endif
 

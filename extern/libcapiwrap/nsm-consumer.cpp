@@ -143,7 +143,7 @@ nsm_consumer_new (const gchar *session_name, const gchar *session_owner)
     }
 
   if (init_lifecycle_data (static_cast<LCData *>(n->private_data), session_name,
-                   session_owner) != CDM_STATUS_OK)
+                           session_owner) != CDM_STATUS_OK)
     {
       delete static_cast<LCData *>(n->private_data);
       free (n);

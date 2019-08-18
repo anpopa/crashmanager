@@ -67,16 +67,15 @@ cdh_application_new (const gchar *config_path)
   app->context = cdh_context_new (app->options, app->archive);
   g_assert (app->context);
 
+  app->coredump = cdh_coredump_new (app->context, app->archive);
+  g_assert (app->coredump);
+
 #if defined(WITH_CRASHMANAGER)
   app->manager = cdh_manager_new (app->options);
   g_assert (app->manager);
 
-  app->coredump = cdh_coredump_new (app->context, app->archive, app->manager);
-#else
-  app->coredump = cdh_coredump_new (app->context, app->archive);
+  cdh_coredump_set_manager (app->coredump, app->manager);
 #endif
-
-  g_assert (app->coredump);
 
   return app;
 }
