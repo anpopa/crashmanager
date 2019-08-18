@@ -268,6 +268,10 @@ cdm_application_new (const gchar *config)
   app->janitor = cdm_janitor_new (app->options, app->journal);
   app->server = cdm_server_new (app->options, app->transfer, app->journal);
 
+#ifdef WITH_GENIVI_NSM
+  cdm_server_set_lifecycle (app->server, app->lifecycle);
+#endif
+
   app->mainloop = g_main_loop_new (NULL, TRUE);
 
   return app;

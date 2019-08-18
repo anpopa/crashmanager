@@ -127,6 +127,7 @@ static gboolean
 client_source_callback (gpointer data)
 {
   CdmClient *client = (CdmClient *)data;
+  gboolean status = TRUE;
   CdmMessage msg;
 
   g_assert (client);
@@ -136,7 +137,18 @@ client_source_callback (gpointer data)
   if (cdm_message_read (client->sockfd, &msg) != CDM_STATUS_OK)
     {
       g_debug ("Cannot read from client socket %d", client->sockfd);
-      return FALSE;
+
+#ifdef WITH_GENIVI_NSM
+      if (client->init_data != NULL)
+        {
+          if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_INACTIVE)
+              != CDM_STATUS_OK)
+            {
+              g_warning ("Fail decrement session lifecycle counter");
+            }
+        }
+#endif
+      status = FALSE;
     }
   else
     {
@@ -151,44 +163,58 @@ client_source_callback (gpointer data)
 
           if (!client->init_data || !client->update_data || !client->complete_data)
             {
-              g_warning ("Client data from crashhandler incomplete for client %d", client->sockfd);
-              return FALSE;
+              g_warning ("Client data from crashhandler incomplete for client %d",
+                         client->sockfd);
+              status = FALSE;
             }
-
-          dbid = cdm_journal_add_crash (client->journal,
-                                        client->init_data->pname,
-                                        client->update_data->crashid,
-                                        client->update_data->vectorid,
-                                        client->update_data->contextid,
-                                        client->complete_data->core_file,
-                                        client->init_data->pid,
-                                        client->init_data->coresig,
-                                        client->init_data->tstamp,
-                                        &error);
-
-          if (error != NULL)
-            g_warning ("Fail to add new crash entry in database %s", error->message);
           else
-            g_debug ("New crash entry added to database with id %016lX", dbid);
+            {
+              dbid = cdm_journal_add_crash (client->journal,
+                                            client->init_data->pname,
+                                            client->update_data->crashid,
+                                            client->update_data->vectorid,
+                                            client->update_data->contextid,
+                                            client->complete_data->core_file,
+                                            client->init_data->pid,
+                                            client->init_data->coresig,
+                                            client->init_data->tstamp,
+                                            &error);
 
-          /* TODO: Set lifecycle state */
+              if (error != NULL)
+                g_warning ("Fail to add new crash entry in database %s", error->message);
+              else
+                g_debug ("New crash entry added to database with id %016lX", dbid);
 
-          /* even if we fail to add to the database we try to transfer the file */
-          cdm_transfer_file (client->transfer,
-                             client->complete_data->core_file,
-                             archive_transfer_complete,
-                             cdm_client_ref (client));
+              /* even if we fail to add to the database we try to transfer the file */
+              cdm_transfer_file (client->transfer,
+                                 client->complete_data->core_file,
+                                 archive_transfer_complete,
+                                 cdm_client_ref (client));
+            }
+#ifdef WITH_GENIVI_NSM
+          if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_INACTIVE)
+              != CDM_STATUS_OK)
+            {
+              g_warning ("Fail decrement session lifecycle counter");
+            }
+#endif
         }
       else
         {
           if (type == CDM_CORE_NEW)
             {
-              /* TODO: Set lifecycle state */
+#ifdef WITH_GENIVI_NSM
+              if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_ACTIVE)
+                  != CDM_STATUS_OK)
+                {
+                  g_warning ("Fail increment session lifecycle counter");
+                }
+#endif
             }
         }
     }
 
-  return TRUE;
+  return status;
 }
 
 static void
@@ -451,6 +477,11 @@ cdm_client_unref (CdmClient *client)
       cdm_transfer_unref (client->transfer);
       cdm_journal_unref (client->journal);
 
+#ifdef WITH_GENIVI_NSM
+      if (client->lifecycle != NULL)
+        cdm_lifecycle_unref (client->lifecycle);
+#endif
+
       g_free (client->init_data);
       g_free (client->update_data);
       g_free (client->complete_data);
@@ -458,3 +489,15 @@ cdm_client_unref (CdmClient *client)
       g_source_unref (CDM_EVENT_SOURCE (client));
     }
 }
+
+#ifdef WITH_GENIVI_NSM
+void
+cdm_client_set_lifecycle (CdmClient *client,
+                          CdmLifecycle *lifecycle)
+{
+  g_assert (client);
+  g_assert (lifecycle);
+
+  client->lifecycle = cdm_lifecycle_ref (lifecycle);
+}
+#endif

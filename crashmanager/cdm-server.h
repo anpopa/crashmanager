@@ -33,6 +33,9 @@
 #include "cdm-options.h"
 #include "cdm-transfer.h"
 #include "cdm-journal.h"
+#ifdef WITH_GENIVI_NSM
+#include "cdm-lifecycle.h"
+#endif
 
 #include <glib.h>
 
@@ -50,6 +53,9 @@ typedef struct _CdmServer {
   CdmOptions *options; /**< Own reference to global options */
   CdmTransfer *transfer; /**< Own a reference to transfer object */
   CdmJournal *journal; /**< Own a reference to journal object */
+#ifdef WITH_GENIVI_NSM
+  CdmJournal *lifecycle; /**< Own a reference to the lifecycle object */
+#endif
 } CdmServer;
 
 /*
@@ -85,6 +91,15 @@ CdmStatus cdm_server_bind_and_listen (CdmServer *server);
  * @param server Pointer to the server object
  */
 void cdm_server_unref (CdmServer *server);
+
+#ifdef WITH_GENIVI_NSM
+/**
+ * @brief Set lifecycle object
+ * @param server Pointer to the client object
+ * @param lifecycle Pointer to the lifecycle object
+ */
+void cdm_server_set_lifecycle (CdmServer *server, CdmLifecycle *lifecycle);
+#endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmServer, cdm_server_unref);
 

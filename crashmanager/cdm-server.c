@@ -120,7 +120,11 @@ server_source_callback (gpointer cdmserver)
     {
       CdmClient *client = cdm_client_new (clientfd, server->transfer, server->journal);
 
+#ifdef WITH_GENIVI_NSM
+      cdm_client_set_lifecycle (client, server->lifecycle);
+#else
       CDM_UNUSED (client);
+#endif
 
       g_debug ("New client connected %d", clientfd);
     }
@@ -202,6 +206,10 @@ cdm_server_unref (CdmServer *server)
       cdm_options_unref (server->options);
       cdm_transfer_unref (server->transfer);
       cdm_journal_unref (server->journal);
+#ifdef WITH_GENIVI_NSM
+      if (server->lifecycle != NULL)
+        cdm_lifecycle_unref (server->lifecycle);
+#endif
       g_source_unref (CDM_EVENT_SOURCE (server));
     }
 }
@@ -259,3 +267,15 @@ cdm_server_bind_and_listen (CdmServer *server)
 
   return status;
 }
+
+#ifdef WITH_GENIVI_NSM
+void
+cdm_server_set_lifecycle (CdmServer *server,
+                          CdmLifecycle *lifecycle)
+{
+  g_assert (server);
+  g_assert (lifecycle);
+
+  server->lifecycle = cdm_lifecycle_ref (lifecycle);
+}
+#endif

@@ -33,6 +33,9 @@
 #include "cdm-message.h"
 #include "cdm-transfer.h"
 #include "cdm-journal.h"
+#ifdef WITH_GENIVI_NSM
+#include "cdm-lifecycle.h"
+#endif
 
 #include <glib.h>
 
@@ -51,6 +54,9 @@ typedef struct _CdmClient {
 
   CdmTransfer *transfer; /**< Own a reference to the transfer object */
   CdmJournal *journal; /**< Own a reference to the journal object */
+#ifdef WITH_GENIVI_NSM
+  CdmJournal *lifecycle; /**< Own a reference to the lifecycle object */
+#endif
 
   CdmMessageType last_msg_type; /**< Last processed message type */
   CdmMessageDataNew *init_data;          /**< Coredump initial data */
@@ -81,6 +87,15 @@ CdmClient *cdm_client_ref (CdmClient *client);
  * @param client Pointer to the client object
  */
 void cdm_client_unref (CdmClient *client);
+
+#ifdef WITH_GENIVI_NSM
+/**
+ * @brief Set lifecycle object
+ * @param client Pointer to the client object
+ * @param lifecycle Pointer to the lifecycle object
+ */
+void cdm_client_set_lifecycle (CdmClient *client, CdmLifecycle *lifecycle);
+#endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmClient, cdm_client_unref);
 
