@@ -192,7 +192,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
 #endif
             }
 
-          printf ("%-4u %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
+          g_print ("%-4u %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
                   *(guint *)(querydata->response),
                   argv[1],
                   (dtime != NULL) ? g_date_time_format (dtime, "%H:%M:%S %Y-%m-%d") : argv[9],
@@ -269,7 +269,7 @@ cdi_journal_list_entries (CdiJournal *journal,
   data.response = &index;
   sql = g_strdup_printf ("SELECT * FROM %s ;", cdi_journal_table_name);
 
-  printf ("%-4s %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
+  g_print ("%-4s %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
           "Idx",
           "Procname",
           "Timestamp",
