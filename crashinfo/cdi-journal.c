@@ -193,16 +193,16 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
             }
 
           g_print ("%-4u %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
-                  *(guint *)(querydata->response),
-                  argv[1],
-                  (dtime != NULL) ? g_date_time_format (dtime, "%H:%M:%S %Y-%m-%d") : argv[9],
-                  argv[2],
-                  argv[3],
-                  context_name,
-                  argv[7],
-                  argv[11],
-                  argv[12],
-                  fname);
+                   *(guint *)(querydata->response),
+                   argv[1],
+                   (dtime != NULL) ? g_date_time_format (dtime, "%H:%M:%S %Y-%m-%d") : argv[9],
+                   argv[2],
+                   argv[3],
+                   context_name,
+                   argv[7],
+                   argv[11],
+                   argv[12],
+                   fname);
 
           *((guint *)(querydata->response)) += 1;
         }
@@ -270,16 +270,16 @@ cdi_journal_list_entries (CdiJournal *journal,
   sql = g_strdup_printf ("SELECT * FROM %s ;", cdi_journal_table_name);
 
   g_print ("%-4s %-20s %20s %16s %16s %16s %6s %3s %3s  %s\n",
-          "Idx",
-          "Procname",
-          "Timestamp",
-          "CrashID",
-          "VectorID",
-          "Context",
-          "PID",
-          "TRS",
-          "REM",
-          "FILE");
+           "Idx",
+           "Procname",
+           "Timestamp",
+           "CrashID",
+           "VectorID",
+           "Context",
+           "PID",
+           "TRS",
+           "REM",
+           "FILE");
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
       != SQLITE_OK)
