@@ -147,7 +147,8 @@ server_source_destroy_notify (gpointer cdmserver)
 CdmServer *
 cdm_server_new (CdmOptions *options,
                 CdmTransfer *transfer,
-                CdmJournal *journal)
+                CdmJournal *journal,
+                GError **error)
 {
   CdmServer *server = NULL;
   struct timeval tout;
@@ -168,18 +169,23 @@ cdm_server_new (CdmOptions *options,
 
   server->sockfd = socket (AF_UNIX, SOCK_STREAM, 0);
   if (server->sockfd < 0)
-    g_error ("Cannot create server socket");
+    {
+      g_warning ("Cannot create server socket");
+      g_set_error (error, g_quark_from_static_string ("ServerNew"), 1, "Fail to create server socket");
+    }
+  else
+    {
+      timeout = cdm_options_long_for (options, KEY_IPC_TIMEOUT_SEC);
 
-  timeout = cdm_options_long_for (options, KEY_IPC_TIMEOUT_SEC);
+      tout.tv_sec = timeout;
+      tout.tv_usec = 0;
 
-  tout.tv_sec = timeout;
-  tout.tv_usec = 0;
+      if (setsockopt (server->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, sizeof(tout)) == -1)
+        g_warning ("Failed to set the socket receiving timeout: %s", strerror (errno));
 
-  if (setsockopt (server->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tout, sizeof(tout)) == -1)
-    g_warning ("Failed to set the socket receiving timeout: %s", strerror (errno));
-
-  if (setsockopt (server->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tout, sizeof(tout)) == -1)
-    g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
+      if (setsockopt (server->sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tout, sizeof(tout)) == -1)
+        g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
+    }
 
   g_source_set_callback (CDM_EVENT_SOURCE (server), G_SOURCE_FUNC (server_source_callback),
                          server, server_source_destroy_notify);

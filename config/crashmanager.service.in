@@ -8,8 +8,8 @@ Description=Crasmanager service
 
 [Service]
 Type=simple
-User=alinp
-Group=users
+User=root
+Group=root
 ExecStart=@install_prefix@/bin/crashmanager
 RuntimeDirectory="crashmanager"
 StateDirectory="crashmanager"

@@ -38,16 +38,20 @@
 #include <sys/stat.h>
 
 CdiApplication *
-cdi_application_new (const gchar *config)
+cdi_application_new (const gchar *config, GError **error)
 {
   CdiApplication *app = g_new0 (CdiApplication, 1);
 
   g_assert (app);
+  g_assert (error);
 
   g_ref_count_init (&app->rc);
 
+  /* construct options noexept */
   app->options = cdm_options_new (config);
-  app->journal = cdi_journal_new (app->options);
+
+  /* construct journal and return if an error is set */
+  app->journal = cdi_journal_new (app->options, error);
 
   return app;
 }
@@ -64,13 +68,15 @@ void
 cdi_application_unref (CdiApplication *app)
 {
   g_assert (app);
-  g_assert (app->options);
-  g_assert (app->journal);
 
   if (g_ref_count_dec (&app->rc) == TRUE)
     {
-      cdi_journal_unref (app->journal);
-      cdm_options_unref (app->options);
+      if (app->journal != NULL)
+        cdi_journal_unref (app->journal);
+
+      if (app->options != NULL)
+        cdm_options_unref (app->options);
+
       g_free (app);
     }
 }
@@ -211,7 +217,7 @@ cdi_application_extract_coredump (CdiApplication *app,
 
   if (status == CDM_STATUS_OK)
     {
-      g_autofree gchar *cwd = g_get_current_dir();
+      g_autofree gchar *cwd = g_get_current_dir ();
       (void)cdi_archive_extract_coredump (archive, cwd);
     }
   else

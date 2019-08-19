@@ -193,7 +193,10 @@ archive_kdumps (CdmApplication *app,
 
           if (g_rename (fpath, entry_path) != 0)
             {
-              g_warning ("Fail to move kdump %s to %s. Error %s", fpath, entry_path, strerror (errno));
+              g_warning ("Fail to move kdump %s to %s. Error %s",
+                         fpath,
+                         entry_path,
+                         strerror (errno));
               continue;
             }
         }
@@ -247,27 +250,48 @@ transfer_missing_files (CdmApplication *app)
 }
 
 CdmApplication *
-cdm_application_new (const gchar *config)
+cdm_application_new (const gchar *config, GError **error)
 {
   CdmApplication *app = g_new0 (CdmApplication, 1);
 
+  g_autoptr (GError) module_error = NULL;
+
   g_assert (app);
+  g_assert (error);
 
   g_ref_count_init (&app->rc);
 
 #ifdef WITH_SYSTEMD
+  /* construct sdnotify noexept */
   app->sdnotify = cdm_sdnotify_new ();
 #endif
+
+  /* construct transfer noexept */
   app->transfer = cdm_transfer_new ();
+
+  /* construct options noexept */
   app->options = cdm_options_new (config);
-  app->journal = cdm_journal_new (app->options);
+
+  /* construct journal and return if an error is set */
+  app->journal = cdm_journal_new (app->options, error);
+  if (*error != NULL)
+    return app;
+
+  /* construct options noexept */
   app->janitor = cdm_janitor_new (app->options, app->journal);
-  app->server = cdm_server_new (app->options, app->transfer, app->journal);
+
+  /* construct server and return if an error is set */
+  app->server = cdm_server_new (app->options, app->transfer, app->journal, error);
+  if (*error != NULL)
+    return app;
+
 #ifdef WITH_GENIVI_NSM
+  /* construct options noexept */
   app->lifecycle = cdm_lifecycle_new ();
   cdm_server_set_lifecycle (app->server, app->lifecycle);
 #endif
 
+  /* construct options noexept */
   app->mainloop = g_main_loop_new (NULL, TRUE);
 
   return app;
@@ -285,33 +309,33 @@ void
 cdm_application_unref (CdmApplication *app)
 {
   g_assert (app);
-  g_assert (app->options);
-  g_assert (app->server);
-  g_assert (app->janitor);
-  g_assert (app->journal);
-#ifdef WITH_SYSTEMD
-  g_assert (app->sdnotify);
-#endif
-#ifdef WITH_GENIVI_NSM
-  g_assert (app->lifecycle);
-#endif
-  g_assert (app->transfer);
 
   if (g_ref_count_dec (&app->rc) == TRUE)
     {
-      cdm_server_unref (app->server);
-      cdm_janitor_unref (app->janitor);
-      cdm_journal_unref (app->journal);
+      if (app->server != NULL)
+        cdm_server_unref (app->server);
+
+      if (app->janitor != NULL)
+        cdm_janitor_unref (app->janitor);
+
+      if (app->journal != NULL)
+        cdm_journal_unref (app->journal);
 #ifdef WITH_SYSTEMD
-      cdm_sdnotify_unref (app->sdnotify);
+      if (app->sdnotify != NULL)
+        cdm_sdnotify_unref (app->sdnotify);
 #endif
 #ifdef WITH_GENIVI_NSM
-      cdm_lifecycle_unref (app->lifecycle);
+      if (app->lifecycle != NULL)
+        cdm_lifecycle_unref (app->lifecycle);
 #endif
-      cdm_transfer_unref (app->transfer);
-      cdm_options_unref (app->options);
+      if (app->transfer != NULL)
+        cdm_transfer_unref (app->transfer);
 
-      g_main_loop_unref (app->mainloop);
+      if (app->options != NULL)
+        cdm_options_unref (app->options);
+
+      if (app->mainloop != NULL)
+        g_main_loop_unref (app->mainloop);
 
       g_free (app);
     }

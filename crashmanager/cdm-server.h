@@ -70,7 +70,7 @@ typedef struct _CdmServer {
  *
  * @return On success return a new CdmServer object otherwise return NULL
  */
-CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal);
+CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal, GError **error);
 
 /**
  * @brief Aquire server object

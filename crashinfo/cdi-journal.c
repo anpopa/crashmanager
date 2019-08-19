@@ -188,7 +188,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
 #ifdef WITH_LXC
               context_name = get_container_name_for_context (argv[4]);
 #else
-              context_name = "Container";
+              context_name = g_strdup ("Container");
 #endif
             }
 
@@ -216,7 +216,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
 }
 
 CdiJournal *
-cdi_journal_new (CdmOptions *options)
+cdi_journal_new (CdmOptions *options, GError **error)
 {
   CdiJournal *journal = g_new0 (CdiJournal, 1);
   g_autofree gchar *opt_dbpath = NULL;
@@ -227,7 +227,10 @@ cdi_journal_new (CdmOptions *options)
   opt_dbpath = cdm_options_string_for (options, KEY_DATABASE_FILE);
 
   if (sqlite3_open_v2 (opt_dbpath, &journal->database, SQLITE_OPEN_READONLY, NULL))
-    g_error ("Cannot open journal database at path %s", opt_dbpath);
+    {
+      g_warning ("Cannot open journal database at path %s", opt_dbpath);
+      g_set_error (error, g_quark_from_static_string ("JournalNew"), 1, "Database open failed");
+    }
 
   return journal;
 }

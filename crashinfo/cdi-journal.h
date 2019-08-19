@@ -50,9 +50,10 @@ typedef struct _CdiJournal {
  * @brief Create a new journal object
  * @param options A pointer to the CdmOptions object created by the main
  * application
+ * @param error The GError object or NULL
  * @return On success return a new CdiJournal object otherwise return NULL
  */
-CdiJournal *cdi_journal_new (CdmOptions *options);
+CdiJournal *cdi_journal_new (CdmOptions *options, GError **error);
 
 /**
  * @brief Aquire journal object

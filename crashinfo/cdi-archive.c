@@ -224,7 +224,7 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
     return CDM_STATUS_ERROR;
 
   memset (buffer, 0, ARCHIVE_READ_BUFFER_SIZE);
-  output_fd = open (file_name, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+  output_fd = open (file_name, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
   while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
     {
@@ -263,6 +263,7 @@ static gchar *
 archive_get_exe_path (CdiArchive *ar)
 {
   g_autofree gchar *buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
+
   g_autoptr (GKeyFile) keyfile = g_key_file_new ();
   g_autoptr (GError) error = NULL;
   struct archive_entry *entry;
@@ -307,6 +308,7 @@ cdi_archive_print_backtrace (CdiArchive *ar, gboolean all)
   g_autofree gchar *tmpdir = NULL;
   g_autofree gchar *exepth = NULL;
   g_autofree gchar *rmcmd = NULL;
+
   g_autoptr (GError) error = NULL;
   CdmStatus status = CDM_STATUS_OK;
   gint exit_status;

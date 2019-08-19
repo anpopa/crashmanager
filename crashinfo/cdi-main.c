@@ -92,39 +92,48 @@ main (gint argc, gchar *argv[])
 
   if (g_access (config_path, R_OK) == 0)
     {
-      app = cdi_application_new (config_path);
-      g_info ("Crashinfo tool started for OS version '%s'", cdm_utils_get_osversion ());
+      app = cdi_application_new (config_path, &error);
 
-      if (list_entries)
+      if (error != NULL)
         {
-          cdi_application_list_entries (app);
-        }
-      else if (print_info && argc == 2)
-        {
-          cdi_application_print_info (app, argv[1]);
-        }
-      else if (list_files && argc == 2)
-        {
-          cdi_application_list_content (app, argv[1]);
-        }
-      else if (extract && argc == 2)
-        {
-          cdi_application_extract_coredump (app, argv[1]);
-        }
-      else if (print_file != NULL && argc == 2)
-        {
-          cdi_application_print_file (app, print_file, argv[1]);
-        }
-      else if ((print_bt || print_btall) && argc == 2)
-        {
-          cdi_application_print_backtrace (app, print_btall, argv[1]);
+          g_printerr ("%s\n", error->message);
+          status = CDM_STATUS_ERROR;
         }
       else
         {
-          if (argc == 2)
-            cdi_application_print_info (app, argv[1]);
+          g_info ("Crashinfo tool started for OS version '%s'", cdm_utils_get_osversion ());
+
+          if (list_entries)
+            {
+              cdi_application_list_entries (app);
+            }
+          else if (print_info && argc == 2)
+            {
+              cdi_application_print_info (app, argv[1]);
+            }
+          else if (list_files && argc == 2)
+            {
+              cdi_application_list_content (app, argv[1]);
+            }
+          else if (extract && argc == 2)
+            {
+              cdi_application_extract_coredump (app, argv[1]);
+            }
+          else if (print_file != NULL && argc == 2)
+            {
+              cdi_application_print_file (app, print_file, argv[1]);
+            }
+          else if ((print_bt || print_btall) && argc == 2)
+            {
+              cdi_application_print_backtrace (app, print_btall, argv[1]);
+            }
           else
-            cdi_application_list_entries (app);
+            {
+              if (argc == 2)
+                cdi_application_print_info (app, argv[1]);
+              else
+                cdi_application_list_entries (app);
+            }
         }
     }
   else

@@ -91,12 +91,19 @@ main (gint argc, gchar *argv[])
 
   if (g_access (config_path, R_OK) == 0)
     {
-      app = cdm_application_new (config_path);
+      app = cdm_application_new (config_path, &error);
 
-      g_info ("Crashmanager service started for OS version '%s'", cdm_utils_get_osversion ());
-      g_mainloop = cdm_application_get_mainloop (app);
-
-      status = cdm_application_execute (app);
+      if (error != NULL)
+        {
+          g_printerr ("%s\n", error->message);
+          status = CDM_STATUS_ERROR;
+        }
+      else
+        {
+          g_info ("Crashmanager service started for OS version '%s'", cdm_utils_get_osversion ());
+          g_mainloop = cdm_application_get_mainloop (app);
+          status = cdm_application_execute (app);
+        }
     }
   else
     {

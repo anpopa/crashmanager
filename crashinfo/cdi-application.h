@@ -54,8 +54,12 @@ typedef struct _CdiApplication {
 /**
  * @brief Create a new CdiApplication object
  * @param config Full path to the configuration file
+ * @param error An error object must be provided. If an error occurs during
+ * initialization the error is reported and application should not use the
+ * returned object. If the error is set the object is invalid and needs to be
+ * released.
  */
-CdiApplication *cdi_application_new (const gchar *config);
+CdiApplication *cdi_application_new (const gchar *config, GError **error);
 
 /**
  * @brief Aquire CdiApplication object

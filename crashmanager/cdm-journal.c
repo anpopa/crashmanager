@@ -113,7 +113,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
 }
 
 CdmJournal *
-cdm_journal_new (CdmOptions *options)
+cdm_journal_new (CdmOptions *options, GError **error)
 {
   CdmJournal *journal = NULL;
   g_autofree gchar *sql = NULL;
@@ -137,29 +137,37 @@ cdm_journal_new (CdmOptions *options)
   opt_group = cdm_options_string_for (options, KEY_GROUP_NAME);
 
   if (sqlite3_open (opt_dbpath, &journal->database))
-    g_error ("Cannot open journal database at path %s", opt_dbpath);
+    {
+      g_warning ("Cannot open journal database at path %s", opt_dbpath);
+      g_set_error (error, g_quark_from_static_string ("JournalNew"), 1, "Database open failed");
+    }
+  else
+    {
+      sql = g_strdup_printf ("CREATE TABLE IF NOT EXISTS %s       "
+                             "(ID INT PRIMARY KEY     NOT   NULL, "
+                             "PROCNAME        TEXT    NOT   NULL, "
+                             "CRASHID         TEXT    NOT   NULL, "
+                             "VECTORID        TEXT    NOT   NULL, "
+                             "CONTEXTID       TEXT    NOT   NULL, "
+                             "FILEPATH        TEXT    NOT   NULL, "
+                             "FILESIZE        INT     NOT   NULL, "
+                             "PID             INT     NOT   NULL, "
+                             "SIGNAL          INT     NOT   NULL, "
+                             "TIMESTAMP       INT     NOT   NULL, "
+                             "OSVERSION       TEXT    NOT   NULL, "
+                             "TSTATE          BOOL    NOT   NULL, "
+                             "RSTATE          BOOL    NOT   NULL);",
+                             cdm_journal_table_name);
 
-  sql = g_strdup_printf ("CREATE TABLE IF NOT EXISTS %s       "
-                         "(ID INT PRIMARY KEY     NOT   NULL, "
-                         "PROCNAME        TEXT    NOT   NULL, "
-                         "CRASHID         TEXT    NOT   NULL, "
-                         "VECTORID        TEXT    NOT   NULL, "
-                         "CONTEXTID       TEXT    NOT   NULL, "
-                         "FILEPATH        TEXT    NOT   NULL, "
-                         "FILESIZE        INT     NOT   NULL, "
-                         "PID             INT     NOT   NULL, "
-                         "SIGNAL          INT     NOT   NULL, "
-                         "TIMESTAMP       INT     NOT   NULL, "
-                         "OSVERSION       TEXT    NOT   NULL, "
-                         "TSTATE          BOOL    NOT   NULL, "
-                         "RSTATE          BOOL    NOT   NULL);",
-                         cdm_journal_table_name);
+      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+        {
+          g_warning ("Fail to create crash table. SQL error %s", query_error);
+          g_set_error (error, g_quark_from_static_string ("JournalNew"), 1, "Create crash table fail");
+        }
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
-    g_error ("Fail to create crash table. SQL error %s", query_error);
-
-  if (cdm_utils_chown (opt_dbpath, opt_user, opt_group) == CDM_STATUS_ERROR)
-    g_warning ("Failed to set user and group owner for database %s", opt_dbpath);
+      if (cdm_utils_chown (opt_dbpath, opt_user, opt_group) == CDM_STATUS_ERROR)
+        g_warning ("Failed to set user and group owner for database %s", opt_dbpath);
+    }
 
   return journal;
 }
