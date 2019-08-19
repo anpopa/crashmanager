@@ -254,8 +254,6 @@ cdm_application_new (const gchar *config, GError **error)
 {
   CdmApplication *app = g_new0 (CdmApplication, 1);
 
-  g_autoptr (GError) module_error = NULL;
-
   g_assert (app);
   g_assert (error);
 
@@ -277,7 +275,7 @@ cdm_application_new (const gchar *config, GError **error)
   if (*error != NULL)
     return app;
 
-  /* construct options noexept */
+  /* construct janitor noexept */
   app->janitor = cdm_janitor_new (app->options, app->journal);
 
   /* construct server and return if an error is set */
@@ -286,12 +284,12 @@ cdm_application_new (const gchar *config, GError **error)
     return app;
 
 #ifdef WITH_GENIVI_NSM
-  /* construct options noexept */
+  /* construct lifecycle noexept */
   app->lifecycle = cdm_lifecycle_new ();
   cdm_server_set_lifecycle (app->server, app->lifecycle);
 #endif
 
-  /* construct options noexept */
+  /* construct main loop noexept */
   app->mainloop = g_main_loop_new (NULL, TRUE);
 
   return app;
