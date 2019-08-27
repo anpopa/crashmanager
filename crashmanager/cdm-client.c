@@ -34,6 +34,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef WITH_LXC
+#include <lxc/lxccontainer.h>
+#endif
+
 /**
  * @brief GSource prepare function
  */

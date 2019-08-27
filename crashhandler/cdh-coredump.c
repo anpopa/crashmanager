@@ -466,7 +466,7 @@ cdh_coredump_generate (CdhCoredump *cd)
       if (phdr == -1)
         {
           g_info ("Return address + %lu memory location not found in program header",
-                     return_addr_add);
+                  return_addr_add);
         }
       else
         {

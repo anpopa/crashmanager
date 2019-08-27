@@ -35,6 +35,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef WITH_LXC
+#include <lxc/lxccontainer.h>
+#endif
+
 typedef enum _JournalQueryType {
   QUERY_LIST_ENTRIES
 } JournalQueryType;

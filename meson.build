@@ -226,6 +226,7 @@ if get_option('CRASHINFO')
 
   crashinfo_deps = [
     dep_glib, 
+    dep_lxc,
     dep_libarchive, 
     dep_sqlite,
     dep_genivi_dlt
