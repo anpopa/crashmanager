@@ -164,6 +164,7 @@ endif
   crashmanager_deps = [
     dep_glib,
     dep_lxc,
+    dep_libarchive, 
     dep_systemd,
     dep_sqlite,
     dep_genivi_dlt,

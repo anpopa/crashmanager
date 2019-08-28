@@ -1,6 +1,6 @@
 /* cdi-main.c
  *
- * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
+ * Copyright 2019 Alin Popa <alin.popa@bmw.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -85,8 +85,6 @@ main (gint argc, gchar *argv[])
       return EXIT_SUCCESS;
     }
 
-  cdm_logging_open ("CDI", "Crashinfo tool", "CDI", "Default context");
-
   if (config_path == NULL)
     config_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
 
@@ -140,8 +138,6 @@ main (gint argc, gchar *argv[])
     {
       g_warning ("Cannot open configuration file %s", config_path);
     }
-
-  cdm_logging_close ();
 
   return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -1,6 +1,6 @@
 /* cdi-journal.c
  *
- * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
+ * Copyright 2019 Alin Popa <alin.popa@bmw.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -192,7 +192,7 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
 #ifdef WITH_LXC
               context_name = get_container_name_for_context (argv[4]);
 #else
-              context_name = g_strdup ("Container");
+              context_name = g_strdup ("unknown");
 #endif
             }
 

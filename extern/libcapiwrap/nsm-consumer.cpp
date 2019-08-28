@@ -1,6 +1,6 @@
-/* nsm_consumer.cpp
+/* nsm-consumer.cpp
  *
- * Copyright 2019 Alin Popa <alin.popa@fxdata.ro>
+ * Copyright 2019 Alin Popa <alin.popa@bmw.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the

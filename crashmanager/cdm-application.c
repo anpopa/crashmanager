@@ -1,6 +1,6 @@
 /* cdm-application.c
  *
- * Copyright 2019 Alin Popa <alin.popa@fxapp.ro>
+ * Copyright 2019 Alin Popa <alin.popa@bmw.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -40,6 +40,11 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <archive.h>
+#include <archive_entry.h>
+
+#define ARCHIVE_READ_BUFFER_SIZE 4096
+
 static void
 wait_early_cdh_instances (long timeout)
 {
@@ -73,6 +78,110 @@ wait_early_cdh_instances (long timeout)
 }
 
 static CdmStatus
+archive_early_crashdump (CdmApplication *app,
+                         const gchar *crashfile)
+{
+  g_autoptr (GKeyFile) keyfile = NULL;
+  g_autoptr (GError) error = NULL;
+  g_autofree gchar *buffer = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+  struct archive_entry *entry;
+  struct archive *archive;
+
+  archive = archive_read_new ();
+
+  archive_read_support_filter_all (archive);
+  archive_read_support_format_all (archive);
+
+  if (archive_read_open_filename (archive, crashfile, 10240) != ARCHIVE_OK)
+    {
+      status = CDM_STATUS_ERROR;
+    }
+  else
+    {
+      buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
+
+      while (archive_read_next_header (archive, &entry) == ARCHIVE_OK)
+        {
+          if (g_strcmp0 (archive_entry_pathname (entry), "info.crashdata") == 0)
+            archive_read_data (archive, buffer, ARCHIVE_READ_BUFFER_SIZE);
+          else
+            archive_read_data_skip (archive);
+        }
+
+      if (strlen (buffer) == 0)
+        {
+          status = CDM_STATUS_ERROR;
+        }
+      else
+        {
+          keyfile = g_key_file_new ();
+
+          if (!g_key_file_load_from_data (keyfile, buffer, (gsize) - 1, G_KEY_FILE_NONE, NULL))
+            status = CDM_STATUS_ERROR;
+        }
+    }
+
+  archive_read_free (archive);
+
+  if (status == CDM_STATUS_OK)
+    {
+      g_autofree gchar *proc_name = NULL;
+      g_autofree gchar *crash_id = NULL;
+      g_autofree gchar *vector_id = NULL;
+      g_autofree gchar *context_id = NULL;
+      gssize proc_tstamp = 0;
+      gssize proc_pid = 0;
+      gssize proc_sig = 0;
+
+      proc_name = g_key_file_get_string (keyfile, "crashdata", "ProcessName", NULL);
+      crash_id = g_key_file_get_string (keyfile, "crashdata", "CrashID", NULL);
+      vector_id = g_key_file_get_string (keyfile, "crashdata", "VectorID", NULL);
+      context_id = g_key_file_get_string (keyfile, "crashdata", "ContextID", NULL);
+      proc_tstamp = g_key_file_get_int64 (keyfile, "crashdata", "CrashTimestamp", NULL);
+      proc_pid = g_key_file_get_int64 (keyfile, "crashdata", "ProcessID", NULL);
+      proc_sig = g_key_file_get_int64 (keyfile, "crashdata", "CrashSignal", NULL);
+
+      cdm_journal_add_crash (app->journal,
+                             proc_name != NULL ? proc_name : "earlyprocess",
+                             crash_id != NULL ? crash_id : "DEADDEADDEADDEAD",
+                             vector_id != NULL ? vector_id : "DEADDEADDEADDEAD",
+                             context_id != NULL ? context_id : "DEADDEADDEADDEAD",
+                             crashfile,
+                             proc_pid > 0 ? proc_pid : 0,
+                             proc_sig > 0 ? proc_sig : 0,
+                             (guint64)(proc_tstamp > 0 ? proc_tstamp : (g_get_real_time () / (1000000))),
+                             &error);
+
+      if (error != NULL)
+        {
+          g_warning ("Fail to add new crash entry in database %s", error->message);
+          status = CDM_STATUS_ERROR;
+        }
+    }
+  else
+    {
+      cdm_journal_add_crash (app->journal,
+                             "earlyprocess",
+                             "DEADDEADDEADDEAD",
+                             "DEADDEADDEADDEAD",
+                             "DEADDEADDEADDEAD",
+                             crashfile,
+                             0,
+                             0,
+                             (guint64)(g_get_real_time () / (10000000)),
+                             &error);
+
+      if (error != NULL)
+        g_warning ("Fail to add new crash entry in database %s", error->message);
+      else
+        status = CDM_STATUS_OK;
+    }
+
+  return status;
+}
+
+static CdmStatus
 archive_early_crashes (CdmApplication *app,
                        const gchar *crashdir)
 {
@@ -96,7 +205,7 @@ archive_early_crashes (CdmApplication *app,
     {
       g_autofree gchar *fpath = NULL;
       gboolean entry_exist = FALSE;
-      GError *journal_error = NULL;
+      g_autoptr (GError) journal_error = NULL;
 
       fpath = g_build_filename (crashdir, nfile, NULL);
       entry_exist = cdm_journal_archive_exist (app->journal, fpath, &journal_error);
@@ -106,44 +215,39 @@ archive_early_crashes (CdmApplication *app,
           g_warning ("Fail to check archive status for %s. Error %s",
                      fpath,
                      journal_error->message);
-          g_error_free (journal_error);
           continue;
         }
 
       if (!entry_exist)
         {
-          gboolean iskdump = FALSE;
-          guint64 dbid;
-
-          if (g_strrstr (fpath, "vmlinux") != NULL)
-            iskdump = TRUE;
-
           /*
-           * wait for any early crashhandler instance to avoid sending
-           * truncated archives
+           * wait for any early crashhandler instance to avoid sending truncated archives
            */
           wait_early_cdh_instances (5);
 
-          dbid = cdm_journal_add_crash (app->journal,
-                                        iskdump ? "kdump" : "early",
-                                        iskdump ? "kdump" : "early",
-                                        iskdump ? "kdump" : "early",
-                                        iskdump ? "kdump" : "early",
-                                        fpath,
-                                        0,
-                                        0,
-                                        0,
-                                        &journal_error);
-
-          if (journal_error != NULL)
+          if (g_strrstr (fpath, "vmlinux") != NULL)
             {
-              g_warning ("Fail to add new crash entry in database %s", journal_error->message);
-              g_error_free (journal_error);
-              status |= CDM_STATUS_ERROR;
+              cdm_journal_add_crash (app->journal,
+                                     "kernel",
+                                     "DEADDEADDEADDEAD",
+                                     "DEADDEADDEADDEAD",
+                                     "DEADDEADDEADDEAD",
+                                     fpath,
+                                     0,
+                                     0,
+                                     (guint64)(g_get_real_time () / (1000000)),
+                                     &journal_error);
+
+              if (journal_error != NULL)
+                {
+                  g_warning ("Fail to add kernel dump entry in database %s",
+                             journal_error->message);
+                  status |= CDM_STATUS_ERROR;
+                }
             }
           else
             {
-              g_info ("New crash entry added to database with id %016lX", dbid);
+              status |= archive_early_crashdump (app, fpath);
             }
         }
     }
@@ -189,7 +293,9 @@ archive_kdumps (CdmApplication *app,
               continue;
             }
 
-          entry_path = g_strdup_printf ("%s/vmlinux_%ld.core", crashdir, g_get_real_time ());
+          entry_path = g_strdup_printf ("%s/vmlinux_%ld.core",
+                                        crashdir,
+                                        (g_get_real_time () / (1000000)));
 
           if (g_rename (fpath, entry_path) != 0)
             {
