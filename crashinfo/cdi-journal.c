@@ -84,6 +84,8 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
             timestamp = argv[i];
           else if (g_strcmp0 (colname[i], "FILEPATH") == 0)
             file_name = g_path_get_basename (argv[i]);
+          else if (g_strcmp0 (colname[i], "PID") == 0)
+            pid = argv[i];
           else if (g_strcmp0 (colname[i], "TSTATE") == 0)
             tstate = argv[i];
           else if (g_strcmp0 (colname[i], "RSTATE") == 0)

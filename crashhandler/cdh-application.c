@@ -452,15 +452,15 @@ enter_cleanup:
                                    app->context->tstamp);
 
       sz = snprintf (msg_data.core_file, CDM_MESSAGE_FILENAME_LEN, "%s", file_path);
-      if (sz > 0 && sz < CDM_MESSAGE_FILENAME_LEN)
+      if (sz > CDM_MESSAGE_FILENAME_LEN)
         g_warning ("Fail to set the complete file name. Name too long!");
 
       sz = snprintf (msg_data.context_name, CDM_CRASHCONTEXT_LEN, "%s", app->context->context_name);
-      if (sz > 0 && sz < CDM_MESSAGE_FILENAME_LEN)
+      if (sz > CDM_CRASHCONTEXT_LEN)
         g_warning ("Fail to set the context name. Name too long!");
 
       sz = snprintf (msg_data.lifecycle_state, CDM_LIFECYCLESTATE_LEN, "%s", app->context->lifecycle_state);
-      if (sz > 0 && sz < CDM_LIFECYCLESTATE_LEN)
+      if (sz > CDM_LIFECYCLESTATE_LEN)
         g_warning ("Fail to set the lifecycle state. Name too long!");
 
       cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
