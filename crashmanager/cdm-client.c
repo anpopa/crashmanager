@@ -460,7 +460,7 @@ archive_transfer_complete (gpointer cdmclient,
 
   g_autoptr (GError) error = NULL;
 
-  g_info ("Transfer complete for %s", client->sockfd, file_path);
+  g_info ("Transfer complete for %s", file_path);
   cdm_journal_set_transfer (client->journal, file_path, TRUE, &error);
 
   if (error != NULL)
