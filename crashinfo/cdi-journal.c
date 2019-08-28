@@ -53,8 +53,6 @@ sqlite_callback (void *data, int argc, char **argv, char **colname)
 {
   JournalQueryData *querydata = (JournalQueryData *)data;
 
-  CDM_UNUSED (colname);
-
   switch (querydata->type)
     {
     case QUERY_LIST_ENTRIES:
