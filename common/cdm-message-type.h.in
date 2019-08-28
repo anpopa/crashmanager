@@ -56,8 +56,6 @@ typedef enum _CdmMessageType {
   CDM_CORE_COMPLETE,
   CDM_CORE_FAILED,
   CDM_CONTEXT_INFO,
-  CDM_MESSAGE_CHAR,
-  CDM_MESSAGE_RAW
 } CdmMessageType;
 
 typedef struct _CdmMessageDataContextInfo {

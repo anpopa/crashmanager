@@ -548,7 +548,7 @@ void
 cdh_context_set_manager (CdhContext *ctx, CdhManager *manager)
 {
   g_assert (ctx);
-  ctx->manager = manager;
+  ctx->manager = cdh_manager_ref (manager);
 }
 
 void
