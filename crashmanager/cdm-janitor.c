@@ -36,6 +36,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#define BTOMB(x) (x / 1024 / 1024)
+
 /**
  * @brief GSource prepare function
  */
@@ -85,9 +87,12 @@ janitor_source_prepare (GSource *source,
   if ((crash_dir_size > janitor->max_dir_size) || (entries_count > janitor->max_file_cnt)
       || ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size))
     {
-      g_info ("Cleaning database size=%ld (max=%ld min=%ld) count=%ld (max=%ld)",
-              crash_dir_size, janitor->max_dir_size, janitor->min_dir_size,
-              entries_count, janitor->max_file_cnt);
+      g_info ("Cleaning database size=%ldMB (max=%ldMB min=%ldMB) count=%ld (max=%ld)",
+              BTOMB (crash_dir_size) == 0 && entries_count > 0 ? 1 : BTOMB (crash_dir_size),
+              BTOMB (janitor->max_dir_size),
+              BTOMB (janitor->min_dir_size),
+              entries_count,
+              janitor->max_file_cnt);
 
       return TRUE;
     }
