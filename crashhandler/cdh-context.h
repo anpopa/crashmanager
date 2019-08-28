@@ -31,6 +31,9 @@
 
 #include "cdm-options.h"
 #include "cdh-archive.h"
+#if defined(WITH_CRASHMANAGER)
+#include "cdh-manager.h"
+#endif
 
 #include <glib.h>
 
@@ -43,6 +46,9 @@ G_BEGIN_DECLS
 typedef struct _CdhContext {
   CdmOptions *opts;       /**< Reference to objects (owned) */
   CdhArchive *archive;    /**< Reference to archive (owned)  */
+#if defined(WITH_CRASHMANAGER)
+  CdhManager *manager;    /**< Reference to manager (owned)  */
+#endif
   grefcount rc;           /**< Reference counter variable  */
 
   gchar *name;       /**< process name */
@@ -55,7 +61,9 @@ typedef struct _CdhContext {
 
   gsize cdsize;      /**< coredump size */
 
-  gchar *contextid;  /**< namespace context for the crashed pid */
+  gchar *contextid;        /**< namespace context for the crashed pid */
+  gchar *context_name;     /**< context name for the crashed pid */
+  gchar *lifecycle_state;  /**< lifecycle state when crash */
   gchar *crashid;    /**< crash id value */
   gchar *vectorid;   /**< crash course id value */
   gboolean onhost;   /**< true if the crash is in host context */
@@ -92,6 +100,21 @@ CdhContext *cdh_context_ref (CdhContext *ctx);
  * @param ctx Pointer to the cdh_context object
  */
 void cdh_context_unref (CdhContext *ctx);
+
+#if defined(WITH_CRASHMANAGER)
+/**
+ * @brief Set manager object
+ * @param ctx Pointer to the CdhContext object
+ * @param manager Pointer to the CdhManager object
+ */
+void cdh_context_set_manager (CdhContext *ctx, CdhManager *manager);
+
+/**
+ * @brief Request context info from manager
+ * @param ctx Pointer to the CdhContext object
+ */
+void cdh_context_read_context_info (CdhContext *ctx);
+#endif
 
 /* @brief Generate crashid file
  * @param ctx

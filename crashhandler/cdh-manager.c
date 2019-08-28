@@ -147,6 +147,13 @@ cdh_manager_connected (CdhManager *c)
   return c->connected;
 }
 
+gint
+cdh_manager_get_socket (CdhManager *c)
+{
+  g_assert (c);
+  return c->sfd;
+}
+
 CdmStatus
 cdh_manager_send (CdhManager *c,
                   CdmMessage *m)

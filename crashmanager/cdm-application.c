@@ -130,6 +130,8 @@ archive_early_crashdump (CdmApplication *app,
       g_autofree gchar *crash_id = NULL;
       g_autofree gchar *vector_id = NULL;
       g_autofree gchar *context_id = NULL;
+      g_autofree gchar *context_name = NULL;
+      g_autofree gchar *lifecycle_state = NULL;
       gssize proc_tstamp = 0;
       gssize proc_pid = 0;
       gssize proc_sig = 0;
@@ -138,6 +140,8 @@ archive_early_crashdump (CdmApplication *app,
       crash_id = g_key_file_get_string (keyfile, "crashdata", "CrashID", NULL);
       vector_id = g_key_file_get_string (keyfile, "crashdata", "VectorID", NULL);
       context_id = g_key_file_get_string (keyfile, "crashdata", "ContextID", NULL);
+      context_name = g_key_file_get_string (keyfile, "crashdata", "ContextName", NULL);
+      lifecycle_state = g_key_file_get_string (keyfile, "crashdata", "LifecycleState", NULL);
       proc_tstamp = g_key_file_get_int64 (keyfile, "crashdata", "CrashTimestamp", NULL);
       proc_pid = g_key_file_get_int64 (keyfile, "crashdata", "ProcessID", NULL);
       proc_sig = g_key_file_get_int64 (keyfile, "crashdata", "CrashSignal", NULL);
@@ -147,6 +151,8 @@ archive_early_crashdump (CdmApplication *app,
                              crash_id != NULL ? crash_id : "DEADDEADDEADDEAD",
                              vector_id != NULL ? vector_id : "DEADDEADDEADDEAD",
                              context_id != NULL ? context_id : "DEADDEADDEADDEAD",
+                             context_name != NULL ? context_name : "unknown",
+                             lifecycle_state != NULL ? lifecycle_state : "unknown",
                              crashfile,
                              proc_pid > 0 ? proc_pid : 0,
                              proc_sig > 0 ? proc_sig : 0,
@@ -166,6 +172,8 @@ archive_early_crashdump (CdmApplication *app,
                              "DEADDEADDEADDEAD",
                              "DEADDEADDEADDEAD",
                              "DEADDEADDEADDEAD",
+                             "unknown",
+                             "unknown",
                              crashfile,
                              0,
                              0,
@@ -232,6 +240,8 @@ archive_early_crashes (CdmApplication *app,
                                      "DEADDEADDEADDEAD",
                                      "DEADDEADDEADDEAD",
                                      "DEADDEADDEADDEAD",
+                                     "unknown",
+                                     "unknown",
                                      fpath,
                                      0,
                                      0,

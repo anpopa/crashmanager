@@ -92,13 +92,22 @@ cdh_context_unref (CdhContext *ctx)
 
   if (g_ref_count_dec (&ctx->rc) == TRUE)
     {
-      cdm_options_unref (ctx->opts);
-      cdh_archive_unref (ctx->archive);
+      if (ctx->opts != NULL)
+        cdm_options_unref (ctx->opts);
+
+      if (ctx->archive != NULL)
+        cdh_archive_unref (ctx->archive);
+
+#if defined(WITH_CRASHMANAGER)
+      if (ctx->manager != NULL)
+        cdh_manager_unref (ctx->manager);
+#endif
 
       g_free (ctx->name);
       g_free (ctx->tname);
       g_free (ctx->pexe);
       g_free (ctx->contextid);
+      g_free (ctx->context_name);
       g_free (ctx->crashid);
       g_free (ctx->vectorid);
 
@@ -534,6 +543,37 @@ cdh_context_generate_prestream (CdhContext *ctx)
   return CDM_STATUS_OK;
 }
 
+#if defined(WITH_CRASHMANAGER)
+void
+cdh_context_set_manager (CdhContext *ctx, CdhManager *manager)
+{
+  g_assert (ctx);
+  ctx->manager = manager;
+}
+
+void
+cdh_context_read_context_info (CdhContext *ctx)
+{
+  CdmMessage msg;
+
+  cdm_message_init (&msg, CDM_CORE_UNKNOWN, 0);
+
+  if (cdm_message_read (cdh_manager_get_socket (ctx->manager), &msg) != CDM_STATUS_OK)
+    {
+      g_debug ("Cannot read from manager socket %d", cdh_manager_get_socket (ctx->manager));
+    }
+  else if (msg.hdr.type == CDM_CONTEXT_INFO)
+    {
+      CdmMessageDataContextInfo *data = (CdmMessageDataContextInfo *)msg.data;
+
+      ctx->context_name = g_strdup (data->context_name);
+      ctx->lifecycle_state = g_strdup (data->lifecycle_state);
+
+      cdm_message_free_data (&msg);
+    }
+}
+#endif
+
 CdmStatus
 cdh_context_generate_poststream (CdhContext *ctx)
 {
@@ -556,6 +596,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     "ProcessName    = %s\n"
     "ProcessThread  = %s\n"
     "ProcessExe     = %s\n"
+    "LifecycleState = %s\n"
     "CrashTimestamp = %lu\n"
     "ProcessID      = %ld\n"
     "ResidentID     = %ld\n"
@@ -563,6 +604,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     "CrashID        = %s\n"
     "VectorID       = %s\n"
     "ContextID      = %s\n"
+    "ContextName    = %s\n"
     "IP             = 0x%016lx\n"
     "RA             = 0x%016lx\n"
     "IPFileOffset   = 0x%016lx\n"
@@ -573,6 +615,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     ctx->name,
     ctx->tname,
     ctx->pexe,
+    ctx->lifecycle_state,
     ctx->tstamp,
     ctx->pid,
     ctx->cpid,
@@ -580,6 +623,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     ctx->crashid,
     ctx->vectorid,
     ctx->contextid,
+    ctx->context_name,
     ip,
     ra,
     ctx->ip_file_offset,

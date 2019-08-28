@@ -560,6 +560,8 @@ cdh_coredump_generate (CdhCoredump *cd)
 
           if (cdh_manager_send (cd->manager, &msg) == CDM_STATUS_ERROR)
             g_warning ("Failed to send update message to manager");
+          else
+            cdh_context_read_context_info (cd->context);
         }
 #endif
     }

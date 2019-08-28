@@ -55,9 +55,8 @@ typedef struct _CdmClient {
   CdmTransfer *transfer; /**< Own a reference to the transfer object */
   CdmJournal *journal; /**< Own a reference to the journal object */
 #ifdef WITH_GENIVI_NSM
-  CdmJournal *lifecycle; /**< Own a reference to the lifecycle object */
+  CdmLifecycle *lifecycle; /**< Own a reference to the lifecycle object */
 #endif
-
   CdmMessageType last_msg_type; /**< Last processed message type */
   CdmMessageDataNew *init_data;          /**< Coredump initial data */
   CdmMessageDataUpdate *update_data;     /**< Coredump update data */

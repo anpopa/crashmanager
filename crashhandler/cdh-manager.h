@@ -100,6 +100,12 @@ CdmStatus cdh_manager_disconnect (CdhManager *c);
 gboolean cdh_manager_connected (CdhManager *c);
 
 /**
+ * @brief Get connection socket fd
+ * @param c Manager object
+ */
+gint cdh_manager_get_socket (CdhManager *c);
+
+/**
  * @brief Send message to cdh manager
  *
  * @param c Manager object

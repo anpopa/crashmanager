@@ -149,6 +149,8 @@ cdm_journal_new (CdmOptions *options, GError **error)
                              "CRASHID         TEXT    NOT   NULL, "
                              "VECTORID        TEXT    NOT   NULL, "
                              "CONTEXTID       TEXT    NOT   NULL, "
+                             "CONTEXTNAME     TEXT    NOT   NULL, "
+                             "LIFECYCLESTATE  TEXT    NOT   NULL, "
                              "FILEPATH        TEXT    NOT   NULL, "
                              "FILESIZE        INT     NOT   NULL, "
                              "PID             INT     NOT   NULL, "
@@ -195,6 +197,8 @@ cdm_journal_add_crash (CdmJournal *journal,
                        const gchar *crash_id,
                        const gchar *vector_id,
                        const gchar *context_id,
+                       const gchar *context_name,
+                       const gchar *lifecycle_state,
                        const gchar *file_path,
                        gint64 pid,
                        gint64 sig,
@@ -234,16 +238,18 @@ cdm_journal_add_crash (CdmJournal *journal,
   id = cdm_utils_jenkins_hash (file_path);
 
   sql = g_strdup_printf ("INSERT INTO %s "
-                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,FILEPATH,FILESIZE,"
+                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,CONTEXTNAME,LIFECYCLESTATE,FILEPATH,FILESIZE,"
                          "PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) "
                          "VALUES(                                                               "
-                         "%lu, '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s', %d, %d);",
+                         "%lu, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s', %d, %d);",
                          cdm_journal_table_name,
                          id,
                          proc_name,
                          crash_id,
                          vector_id,
                          context_id,
+                         context_name,
+                         lifecycle_state,
                          file_path,
                          file_size,
                          pid,

@@ -42,6 +42,7 @@ G_BEGIN_DECLS
 #define CDM_MESSAGE_FILENAME_LEN (1024)
 #define CDM_CRASHID_LEN (32)
 #define CDM_CRASHCONTEXT_LEN (32)
+#define CDM_LIFECYCLESTATE_LEN (32)
 #define CDM_VERSION_STRING_LEN (8)
 
 #ifndef CDM_MESSAGE_PACKED
@@ -54,9 +55,15 @@ typedef enum _CdmMessageType {
   CDM_CORE_UPDATE,
   CDM_CORE_COMPLETE,
   CDM_CORE_FAILED,
+  CDM_CONTEXT_INFO,
   CDM_MESSAGE_CHAR,
   CDM_MESSAGE_RAW
 } CdmMessageType;
+
+typedef struct _CdmMessageDataContextInfo {
+  char lifecycle_state[CDM_LIFECYCLESTATE_LEN];
+  char context_name[CDM_CRASHCONTEXT_LEN];
+} CdmMessageDataContextInfo;
 
 typedef struct _CdmMessageDataNew {
   int64_t pid;
@@ -74,6 +81,8 @@ typedef struct _CdmMessageDataUpdate {
 
 typedef struct _CDInfoComplete {
   char core_file[CDM_MESSAGE_FILENAME_LEN];
+  char context_name[CDM_CRASHCONTEXT_LEN];
+  char lifecycle_state[CDM_LIFECYCLESTATE_LEN];
 } CdmMessageDataComplete;
 
 typedef union _CdmMessageData {

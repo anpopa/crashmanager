@@ -30,9 +30,13 @@
 #include "cdm-client.h"
 #include "cdm-utils.h"
 #include "cdm-transfer.h"
+#include "cdm-defaults.h"
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #ifdef WITH_LXC
 #include <lxc/lxccontainer.h>
@@ -178,6 +182,8 @@ client_source_callback (gpointer data)
                                             client->update_data->crashid,
                                             client->update_data->vectorid,
                                             client->update_data->contextid,
+                                            client->complete_data->context_name,
+                                            client->complete_data->lifecycle_state,
                                             client->complete_data->core_file,
                                             client->init_data->pid,
                                             client->init_data->coresig,
@@ -344,6 +350,32 @@ get_container_name_for_context (const gchar *ctxid)
 #endif
 
 static void
+send_context_info (CdmClient *c, const gchar *context_name)
+{
+  CdmMessageDataContextInfo msg_data;
+  CdmMessage msg;
+
+  g_assert (c);
+  g_assert (context_name);
+
+  cdm_message_init (&msg, CDM_CONTEXT_INFO, 0);
+
+#ifdef WITH_GENIVI_NSM
+  /* set proper value from NSM */
+  snprintf (msg_data.lifecycle_state, CDM_LIFECYCLESTATE_LEN, "running");
+#else
+  snprintf (msg_data.lifecycle_state, CDM_LIFECYCLESTATE_LEN, "running");
+#endif
+  snprintf (msg_data.context_name, CDM_CRASHCONTEXT_LEN, "%s", context_name);
+
+  cdm_message_set_version (&msg, CDM_VERSION);
+  cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
+
+  if (cdm_message_write (c->sockfd, &msg) == CDM_STATUS_ERROR)
+    g_warning ("Failed to send context information to client");
+}
+
+static void
 process_message (CdmClient *c,
                  CdmMessage *msg)
 {
@@ -400,6 +432,8 @@ process_message (CdmClient *c,
               c->update_data->vectorid,
               c->update_data->contextid,
               tmp_name);
+
+      send_context_info (c, tmp_name);
       break;
 
     case CDM_CORE_COMPLETE:
