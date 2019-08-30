@@ -38,7 +38,6 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdiJournal
  * @brief The CdiJournal opaque data structure
  */
 typedef struct _CdiJournal {

@@ -40,7 +40,6 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdhContext
  * @brief The context object
  */
 typedef struct _CdhContext {
@@ -97,7 +96,7 @@ CdhContext *cdh_context_ref (CdhContext *ctx);
 
 /**
  * @brief Release a CdhContext object
- * @param ctx Pointer to the cdh_context object
+ * @param ctx Pointer to the objectto release
  */
 void cdh_context_unref (CdhContext *ctx);
 

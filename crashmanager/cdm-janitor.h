@@ -38,7 +38,6 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdmJanitor
  * @brief The CdmJanitor opaque data structure
  */
 typedef struct _CdmJanitor {
@@ -60,7 +59,7 @@ typedef struct _CdmJanitor {
  * @param journal A pointer to the CdmJournal object created by the main
  * application
  *
- * @return On success return a new CdmJanitor object otherwise return NULL
+ * @return On success return a new CdmJanitor object
  */
 CdmJanitor *cdm_janitor_new (CdmOptions *options, CdmJournal *journal);
 

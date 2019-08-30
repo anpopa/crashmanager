@@ -40,7 +40,6 @@
 G_BEGIN_DECLS
 
 /**
- * @enum LCSessionState
  * @brief Session state enum type
  */
 typedef enum _LCSessionState {
@@ -49,7 +48,7 @@ typedef enum _LCSessionState {
 } LCSessionState;
 
 /**
- * @enum lifecylce_registration
+ * @enum LCRegistrationState
  */
 typedef enum _LCRegistrationState {
   LC_REGISTERED,
@@ -58,7 +57,7 @@ typedef enum _LCRegistrationState {
 } LCRegistrationState;
 
 /**
- * @enum lifecylce_proxy
+ * @enum LCProxyState
  */
 typedef enum _LCProxyState {
   LC_PROXY_AVAILABLE,

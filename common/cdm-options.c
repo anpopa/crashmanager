@@ -54,13 +54,9 @@ cdm_options_new (const gchar *conf_path)
       g_assert (opts->conf);
 
       if (g_key_file_load_from_file (opts->conf, conf_path, G_KEY_FILE_NONE, &error) == TRUE)
-        {
           opts->has_conf = true;
-        }
       else
-        {
           g_debug ("Cannot parse configuration file");
-        }
     }
 
   g_ref_count_init (&opts->rc);

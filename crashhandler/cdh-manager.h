@@ -48,7 +48,6 @@ G_BEGIN_DECLS
 #endif
 
 /**
- * @struct cdh_manager
  * @brief The coredump handler manager object
  */
 typedef struct _CdhManager {

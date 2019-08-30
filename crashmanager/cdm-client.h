@@ -42,22 +42,21 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdmClient
  * @brief The CdmClient opaque data structure
  */
 typedef struct _CdmClient {
-  GSource source;  /**< Event loop source */
+  GSource source;   /**< Event loop source */
   gpointer tag;     /**< Unix server socket tag  */
   grefcount rc;     /**< Reference counter variable  */
   gint sockfd;      /**< Module file descriptor (client fd) */
   guint64 id;       /**< Client instance id */
 
   CdmTransfer *transfer; /**< Own a reference to the transfer object */
-  CdmJournal *journal; /**< Own a reference to the journal object */
+  CdmJournal *journal;   /**< Own a reference to the journal object */
 #ifdef WITH_GENIVI_NSM
   CdmLifecycle *lifecycle; /**< Own a reference to the lifecycle object */
 #endif
-  CdmMessageType last_msg_type; /**< Last processed message type */
+  CdmMessageType last_msg_type;          /**< Last processed message type */
   CdmMessageDataNew *init_data;          /**< Coredump initial data */
   CdmMessageDataUpdate *update_data;     /**< Coredump update data */
   CdmMessageDataComplete *complete_data; /**< Coredump complete data */
@@ -70,7 +69,7 @@ typedef struct _CdmClient {
  * application
  * @param journal A pointer to the CdmJournal object created by the main
  * application
- * @return On success return a new CdmClient object otherwise return NULL
+ * @return On success return a new CdmClient object
  */
 CdmClient *cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal);
 

@@ -38,12 +38,11 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdmJournal
  * @brief The CdmJournal opaque data structure
  */
 typedef struct _CdmJournal {
   sqlite3 *database; /**< The sqlite3 database object */
-  grefcount rc;     /**< Reference counter variable  */
+  grefcount rc;      /**< Reference counter variable  */
 } CdmJournal;
 
 /**
@@ -51,7 +50,7 @@ typedef struct _CdmJournal {
  * @param options A pointer to the CdmOptions object created by the main
  * application
  * @param error The GError object or NULL
- * @return On success return a new CdmJournal object otherwise return NULL
+ * @return On success return a new CdmJournal object
  */
 CdmJournal *cdm_journal_new (CdmOptions *options, GError **error);
 
@@ -87,6 +86,8 @@ gboolean cdm_journal_archive_exist (CdmJournal *journal, const gchar *file_path,
  * @param crash_id Process crash id
  * @param vector_id Process vector id
  * @param context_id Process context id
+ * @param context_name Process context name
+ * @param lifecycle_state System lifecycle state
  * @param file_path Process file path
  * @param pid Process id
  * @param sig Process crash signal id

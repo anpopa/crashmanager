@@ -36,7 +36,6 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdmSDNotify
  * @brief The CdmSDNotify opaque data structure
  */
 typedef struct _CdmSDNotify {
@@ -46,7 +45,7 @@ typedef struct _CdmSDNotify {
 
 /*
  * @brief Create a new sdnotify object
- * @return On success return a new CdmSDNotify object otherwise return NULL
+ * @return On success return a new CdmSDNotify object
  */
 CdmSDNotify *cdm_sdnotify_new (void);
 

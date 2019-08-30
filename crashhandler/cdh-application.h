@@ -45,18 +45,17 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdhApplication
  * @brief The global cdh app object referencing main submodules and states
  */
 typedef struct _CdhApplication {
-  CdmOptions *options;    /**< Global options */
+  CdmOptions *options;       /**< Global options */
   CdhContext *context;       /**< Crash info app */
-  CdhCoredump *coredump;       /**< Crash info app */
-  CdhArchive *archive;  /**< coredump archive streamer */
+  CdhCoredump *coredump;     /**< Crash info app */
+  CdhArchive *archive;       /**< coredump archive streamer */
 #if defined(WITH_CRASHMANAGER)
-  CdhManager *manager;   /**< manager ipc object */
+  CdhManager *manager;       /**< manager ipc object */
 #endif
-  grefcount rc;           /**< Reference counter variable  */
+  grefcount rc;              /**< Reference counter variable */
 } CdhApplication;
 
 /**

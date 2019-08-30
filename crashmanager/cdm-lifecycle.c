@@ -32,7 +32,7 @@
 /**
  * @brief On proxy status update event
  *
- * @param l A pointer to the lifecycle object
+ * @param lifecycle A pointer to the lifecycle object
  * @param proxy_state The new proxy status
  *
  * @return void
@@ -42,7 +42,7 @@ static void on_proxy_state_update (CdmLifecycle *lifecycle, LCProxyState proxy_s
 /**
  * @brief On registration status update event
  *
- * @param l A pointer to the lifecycle object
+ * @param lifecycle A pointer to the lifecycle object
  * @param reg_state The new registration status
  *
  * @return void
@@ -52,7 +52,7 @@ static void on_registration_state_update (CdmLifecycle *lifecycle, LCRegistratio
 /**
  * @brief On session status update event
  *
- * @param l A pointer to the lifecycle object
+ * @param lifecycle A pointer to the lifecycle object
  * @param session_state The new session status
  *
  * @return void
@@ -65,7 +65,7 @@ static void on_session_state_update (CdmLifecycle *lifecycle, LCSessionState ses
  * The states in this module are set directly in the async callbacks (named *_listener) and
  * all other time consuming activity should be done by posting a new event
  *
- * @param l A pointer to the lifecycle object
+ * @param lifecycle A pointer to the lifecycle object
  * @param type The type of the new event to be posted
  * @param data The payload data for the new event
  *

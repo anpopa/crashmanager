@@ -37,7 +37,6 @@
 G_BEGIN_DECLS
 
 /**
- * @enum lifecycle_event_data
  * @brief Lifecycle event data type
  */
 typedef union _LCEventData {
@@ -47,21 +46,19 @@ typedef union _LCEventData {
 } LCEventData;
 
 /**
- * @function CdmLifecycleCallback
  * @brief Custom callback used internally by CdmLifecycle as source callback
  */
 typedef gboolean (*CdmLifecycleCallback) (gpointer _lifecycle, gpointer _event);
 
 /**
- * @struct CdmLifecycleEvent
  * @brief The file transfer event
  */
 typedef struct _CdmLifecycleEvent {
   LCEventType type;     /**< The event type the element holds */
   LCEventData data;     /**< The event payload data */
 } CdmLifecycleEvent;
+
 /**
- * @struct CdmLifecycle
  * @brief The CdmLifecycle opaque data structure
  */
 typedef struct _CdmLifecycle {
@@ -79,13 +76,13 @@ CdmLifecycle *cdm_lifecycle_new (void);
 
 /**
  * @brief Aquire lifecycle object
- * @param c Pointer to the lifecycle object
+ * @param lifecycle Pointer to the lifecycle object
  */
 CdmLifecycle *cdm_lifecycle_ref (CdmLifecycle *lifecycle);
 
 /**
  * @brief Release lifecycle object
- * @param c Pointer to the lifecycle object
+ * @param lifecycle Pointer to the lifecycle object
  */
 void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
 
@@ -95,7 +92,7 @@ void cdm_lifecycle_unref (CdmLifecycle *lifecycle);
  * Internally cdm_lifecycle module uses a reference counter for lifecycle coredump session state
  * When a caller requests a new state this affects the counter but not necessary the state.
  *
- * @param l A pointer to the lifecycle object allocated with cdm_lifecycle_new().
+ * @param lifecycle A pointer to the lifecycle object allocated with cdm_lifecycle_new().
  *        If NULL the function will return CDM_STATUS_ERROR
  * @param state The requested new state
  *

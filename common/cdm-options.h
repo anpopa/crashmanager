@@ -37,7 +37,6 @@ G_BEGIN_DECLS
 
 /**
  * @enum CdmOptionsKey
- * @brief The option keys
  */
 typedef enum _CdmOptionsKey {
   KEY_USER_NAME,
@@ -57,7 +56,6 @@ typedef enum _CdmOptionsKey {
 
 /**
  * @struct CdmOptions
- * @brief The CdmOptions opaque data structure
  */
 typedef struct _CdmOptions {
   GKeyFile *conf;   /**< The GKeyFile object */
@@ -67,47 +65,31 @@ typedef struct _CdmOptions {
 
 /*
  * @brief Create a new options object
- * @return On success return a new CdmOptions object otherwise return NULL
  */
 CdmOptions *cdm_options_new (const gchar *conf_path);
 
 /*
  * @brief Aquire options object
- * @return On success return a new CdmOptions object otherwise return NULL
  */
 CdmOptions *cdm_options_ref (CdmOptions *opts);
 
 /**
  * @brief Release an options object
- * @param opts Pointer to the options object
  */
 void cdm_options_unref (CdmOptions *opts);
 
 /**
  * @brief Get the GKeyFile object
- * @param opts Pointer to the options object
  */
 GKeyFile *cdm_options_get_key_file (CdmOptions *opts);
 
 /*
  * @brief Get a configuration value string for key
- *
- * @param opts Pointer to the options object
- * @param key Option key
- * @param error The value status argument to update during call
- *
- * @return On success return a reference to the optional value otherwise return NULL
  */
 gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key);
 
 /*
  * @brief Get a configuration gint64 value for key
- *
- * @param opts Pointer to the options object
- * @param key Option key
- * @param error The value status argument to update during call
- *
- * @return On success return a reference to the optional value otherwise return NULL
  */
 gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key);
 

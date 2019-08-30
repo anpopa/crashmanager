@@ -134,7 +134,7 @@ read_elf_headers (CdhCoredump *cd)
   if (cdh_archive_stream_read (cd->archive, &cd->context->ehdr, sizeof(cd->context->ehdr))
       != CDM_STATUS_OK)
     {
-      g_warning ("read_elf_headers: We have failed to read the ELF header !");
+      g_warning ("We have failed to read the ELF header !");
       return CDM_STATUS_ERROR;
     }
 
@@ -142,7 +142,7 @@ read_elf_headers (CdhCoredump *cd)
   if (cdh_archive_stream_move_to_offset (cd->archive, cd->context->ehdr.e_phoff)
       != CDM_STATUS_OK)
     {
-      g_warning ("cdh_stream_move_to_offset: We have failed to seek to the beginning of the "
+      g_warning ("We have failed to seek to the beginning of the "
                  "segment headers !");
       return CDM_STATUS_ERROR;
     }
@@ -594,7 +594,7 @@ finished:
   /* In all cases, let's close the files */
   if (cdh_archive_stream_close (cd->archive) != CDM_STATUS_OK)
     {
-      g_warning ("Close_coredump: cdh_stream_close has failed !");
+      g_warning ("Close archive stream failed");
       ret = CDM_STATUS_ERROR;
     }
 

@@ -55,10 +55,7 @@ void cdm_message_init (CdmMessage *m, CdmMessageType type, uint16_t session);
 void cdm_message_set_data (CdmMessage *m, void *data, uint32_t size);
 
 /*
- * @brief Message data free
- *
- * The function release the data field of the message if set
- *
+ * @brief Release the data field of a message if set
  * @param m The message object
  */
 void cdm_message_free_data (CdmMessage *m);

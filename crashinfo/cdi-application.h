@@ -42,13 +42,12 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdiApplication
- * @brief Crashmanager application object referencing main objects
+ * @brief Crashinfo application object referencing main objects
  */
 typedef struct _CdiApplication {
   CdmOptions *options;
   CdiJournal *journal;
-  grefcount rc;           /**< Reference counter variable  */
+  grefcount rc;
 } CdiApplication;
 
 /**

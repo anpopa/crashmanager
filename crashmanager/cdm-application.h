@@ -50,8 +50,7 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdmApplication
- * @brief Crashmanager application object referencing main objects
+ * @brief CdmApplication application object referencing main objects
  */
 typedef struct _CdmApplication {
   CdmOptions *options;
@@ -66,7 +65,7 @@ typedef struct _CdmApplication {
 #endif
   CdmTransfer *transfer;
   GMainLoop *mainloop;
-  grefcount rc;           /**< Reference counter variable  */
+  grefcount rc;
 } CdmApplication;
 
 /**
@@ -82,7 +81,7 @@ CdmApplication *cdm_application_new (const gchar *config, GError **error);
 /**
  * @brief Aquire CdmApplication object
  * @param app The object to aquire
- * @return The aquiered app object
+ * @return The aquiered CdmApplication object
  */
 CdmApplication *cdm_application_ref (CdmApplication *app);
 
@@ -95,7 +94,7 @@ void cdm_application_unref (CdmApplication *app);
 /**
  * @brief Execute cdm application
  * @param app The cdm application object
- * @return If run was succesful CDH_OK is returned
+ * @return If run was succesful CDM_STATUS_OK is returned
  */
 CdmStatus cdm_application_execute (CdmApplication *app);
 

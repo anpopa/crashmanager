@@ -40,7 +40,6 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdhCoredump
  * @brief The coredump generation object
  */
 typedef struct _CdhCoredump {

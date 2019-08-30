@@ -38,7 +38,6 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdiArchive
  * @brief The archive object
  */
 typedef struct _CdiArchive {
@@ -55,20 +54,21 @@ CdiArchive *cdi_archive_new (void);
 
 /**
  * @brief Aquire the archive object
- * @param context Pointer to the object
+ * @param ar Pointer to the object
  * @return a pointer to archive object
  */
 CdiArchive *cdi_archive_ref (CdiArchive *ar);
 
 /**
  * @brief Release archive object
- * @param i Pointer to the cdh_context object
+ * @param ar Pointer to the object
  */
 void cdi_archive_unref (CdiArchive *ar);
 
 /**
  * @brief Open archive for read
- * @fname Absoluet path to the archive file
+ * @param ar Pointer to the object
+ * @param fname Absoluet path to the archive file
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_read_open (CdiArchive *ar, const gchar *fname);
@@ -76,6 +76,7 @@ CdmStatus cdi_archive_read_open (CdiArchive *ar, const gchar *fname);
 /**
  * @brief List archive content to stdout
  *        The archive has to be opened first
+ * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_list_stdout (CdiArchive *ar);
@@ -83,6 +84,7 @@ CdmStatus cdi_archive_list_stdout (CdiArchive *ar);
 /**
  * @brief Print information about crash archive
  *        The archive has to be opened first
+ * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_print_info (CdiArchive *ar);
@@ -90,6 +92,7 @@ CdmStatus cdi_archive_print_info (CdiArchive *ar);
 /**
  * @brief Print file content to stdout
  *        The archive has to be opened first
+ * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_print_file (CdiArchive *ar, const gchar *fname);
@@ -97,6 +100,7 @@ CdmStatus cdi_archive_print_file (CdiArchive *ar, const gchar *fname);
 /**
  * @brief Extract coredump in current directory
  *        The archive has to be opened first
+ * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath);
@@ -104,6 +108,7 @@ CdmStatus cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath);
 /**
  * @brief Print coredump backtrace
  *        The archive has to be opened first
+ * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
 CdmStatus cdi_archive_print_backtrace (CdiArchive *ar, gboolean all);

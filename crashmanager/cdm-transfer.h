@@ -36,19 +36,16 @@
 G_BEGIN_DECLS
 
 /**
- * @function CdmTransferCallback
  * @brief Custom callback used internally by CdmTransfer as source callback
  */
 typedef gboolean (*CdmTransferCallback) (gpointer _transfer, gpointer _entry);
 
 /**
- * @function CdmTransferEntryCallback
  * @brief Client callback to pass when requesting a file transfer
  */
 typedef void (*CdmTransferEntryCallback) (gpointer _transfer, const gchar *file_path);
 
 /**
- * @struct CdmTransferEntry
  * @brief The file transfer entry
  */
 typedef struct _CdmTransferEntry {
@@ -58,7 +55,6 @@ typedef struct _CdmTransferEntry {
 } CdmTransferEntry;
 
 /**
- * @struct CdmTransfer
  * @brief The CdmTransfer opaque data structure
  */
 typedef struct _CdmTransfer {
@@ -71,7 +67,7 @@ typedef struct _CdmTransfer {
 
 /*
  * @brief Create a new transfer object
- * @return On success return a new CdmTransfer object otherwise return NULL
+ * @return On success return a new CdmTransfer object
  */
 CdmTransfer *cdm_transfer_new (void);
 

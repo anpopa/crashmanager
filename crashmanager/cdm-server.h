@@ -42,17 +42,16 @@
 G_BEGIN_DECLS
 
 /**
- * @struct CdmServer
  * @brief The CdmServer opaque data structure
  */
 typedef struct _CdmServer {
-  GSource source;  /**< Event loop source */
+  GSource source;   /**< Event loop source */
   grefcount rc;     /**< Reference counter variable  */
   gpointer tag;     /**< Unix server socket tag  */
   gint sockfd;      /**< Module file descriptor (server listen fd) */
-  CdmOptions *options; /**< Own reference to global options */
+  CdmOptions *options;   /**< Own reference to global options */
   CdmTransfer *transfer; /**< Own a reference to transfer object */
-  CdmJournal *journal; /**< Own a reference to journal object */
+  CdmJournal *journal;   /**< Own a reference to journal object */
 #ifdef WITH_GENIVI_NSM
   CdmJournal *lifecycle; /**< Own a reference to the lifecycle object */
 #endif
@@ -75,7 +74,7 @@ CdmServer *cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJourna
 /**
  * @brief Aquire server object
  * @param server Pointer to the server object
- * @return The referenced server object
+ * @return The server object
  */
 CdmServer *cdm_server_ref (CdmServer *server);
 
