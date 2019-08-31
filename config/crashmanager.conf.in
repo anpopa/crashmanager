@@ -13,14 +13,13 @@
 [common]
 # UserName defines the user name string which the crashmanager is running
 #     In case a crash happens before crashmanager is able to create the database
-#     the crashmanager will do this first and needs to set the correct chown for
+#     the crashhansler will do this first and needs to set the correct chown for
 #     the database
 UserName = root
 # GroupName defines the group name string which the crashmanager is owned.
-#     See the reason above
 GroupName = root
-# CoredumpDirectory defines the relative path to FileSystemMountDir where the
-#     coredump arhives will be stored.
+# CoredumpDirectory defines the absolute path to the directory where coredumps
+#     are stored
 CrashdumpDirectory = /var/lib/crashmanager/crashdumps
 # RunDirectory application runtime directory
 RunDirectory = /run/crashmanager
@@ -53,14 +52,14 @@ DatabaseFile=/var/lib/crashmanager/.crashstate.db
 # MaxCrashDumpDirSize defines the maximum size in MB the crashdump directory
 #     should use to store old crashdump archives
 MaxCrashdumpDirSize=256
-# MinCrashdumpDirQuota defines the minimum size in MB to be free from the quota
+# MinCrashdumpDirSize defines the minimum size in MB to be free from the quota
 #     so any cdh instance can have space available for crashdump processing
 MinCrashdumpDirSize=64
 # MaxCrashdumpArchives defines the maximum number of archives to keep in
 #     coredump directory
 MaxCrashdumpArchives=4
 # KDumpSourceDir defines the source directory to read at start for previous
-#     kernel crashes.
+#     kernel crashes
 KernelDumpSourceDir = /var/kdumps
 
 ###############################################################################
@@ -69,9 +68,9 @@ KernelDumpSourceDir = /var/kdumps
 #   Each section should have unique name matching pattern crashcontext-<name>
 #
 ###############################################################################
-# ProcName defines the process name to match to apply this crashcontext rule
+# ProcName defines the process name to apply this crashcontext rule
 #   This can be a process name or a regular expresion to match the process name
-# DataPath defines the path to data file or directory to dump. 
+# DataPath defines the path to data file or directory to dump
 #   If the path is a directory only the directory content is listed
 #   The PID of the process can be used with formater $$.
 # PostCore defines when to process the data
@@ -224,11 +223,11 @@ PostCore = false
 #   Each section should have unique name matching pattern crashaction-<name>
 #
 ###############################################################################
-# ProcName defines the process name to match to apply this crashaction rule
+# ProcName defines the process name to apply this crashaction rule
 #   This can be a process name or a regular expresion to match the process name
 # Victim defines the binary path of the victim. The first and only the first
 #   PID for process matching this exe name while enumerating procfs will 
-#   receive the signal from crashhandler.
+#   receive the signal from crashhandler
 # Signal defines the signal number to be sent to process
 # PostCore defines when to process the data
 #   If data holds only until process is release (eg. proc) then set 

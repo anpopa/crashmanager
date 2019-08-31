@@ -42,7 +42,7 @@ G_BEGIN_DECLS
  */
 typedef struct _CdiJournal {
   sqlite3 *database; /**< The sqlite3 database object */
-  grefcount rc;     /**< Reference counter variable  */
+  grefcount rc;      /**< Reference counter variable  */
 } CdiJournal;
 
 /**
@@ -69,7 +69,6 @@ void cdi_journal_unref (CdiJournal *journal);
 
 /**
  * @brief List database entries to stdout
- *
  * @param journal The journal object
  * @param error The GError object or NULL
  */

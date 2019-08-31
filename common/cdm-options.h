@@ -36,7 +36,7 @@
 G_BEGIN_DECLS
 
 /**
- * @enum CdmOptionsKey
+ * @enum Option keys
  */
 typedef enum _CdmOptionsKey {
   KEY_USER_NAME,
@@ -55,11 +55,11 @@ typedef enum _CdmOptionsKey {
 } CdmOptionsKey;
 
 /**
- * @struct CdmOptions
+ * @struct Option object
  */
 typedef struct _CdmOptions {
   GKeyFile *conf;   /**< The GKeyFile object */
-  bool has_conf;      /**< Flag to check if a runtime option object is available */
+  bool has_conf;    /**< Flag to check if a runtime option object is available */
   grefcount rc;     /**< Reference counter variable  */
 } CdmOptions;
 

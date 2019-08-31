@@ -42,7 +42,7 @@ G_BEGIN_DECLS
  */
 typedef struct _CdmJanitor {
   GSource source;  /**< Event loop source */
-  grefcount rc;     /**< Reference counter variable  */
+  grefcount rc;    /**< Reference counter variable  */
 
   glong max_dir_size; /**< Maximum allowed crash dir size */
   glong min_dir_size; /**< Minimum space to preserve from quota */
