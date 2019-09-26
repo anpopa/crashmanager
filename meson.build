@@ -86,29 +86,6 @@ if get_option('GENIVI_DLT')
   dep_genivi_dlt = dependency('automotive-dlt', method : 'pkg-config')
 endif
 
-dep_genivi_nsm = declare_dependency()
-if get_option('GENIVI_NSM')
-  add_project_arguments('-DWITH_GENIVI_NSM', language : 'c')
-  dep_genivi_nsm += dependency('CommonAPI', method : 'cmake', modules : ['CommonAPI'])
-  dep_genivi_nsm += dependency('CommonAPI-SomeIP', method : 'cmake', modules : [
-    'org.genivi.nodestatemanager.proxy.core',
-    'org.genivi.nodestatemanager.proxy.someip'
-    ])
-
-  libcapiwrap_sources = [
-    'src/extern/libcapiwrap/nsm_consumer.c',
-    ]
-
-  libcapiwrap_deps = [dep_genivi_nsm]
-
-  dep_libcapiwrap = static_library('libcapiwrap', libcapiwrap_sources,
-    dependencies: libcapiwrap_deps,
-    install: true,
-    )
-
-  dep_genivi_nsm += dep_libcapiwrap
-endif
-
 if get_option('DEBUG_ATTACH')
   add_project_arguments('-DWITH_DEBUG_ATTACH', language : 'c')
 endif
@@ -157,10 +134,6 @@ if get_option('SYSTEMD')
   crashmanager_sources += 'crashmanager/cdm-sdnotify.c'
 endif
 
-if get_option('GENIVI_NSM')
-  crashmanager_sources += 'crashmanager/cdm-lifecycle.c'
-endif
-
   crashmanager_deps = [
     dep_glib,
     dep_lxc,
@@ -168,7 +141,6 @@ endif
     dep_systemd,
     dep_sqlite,
     dep_genivi_dlt,
-    dep_genivi_nsm
     ]
 
   executable('crashmanager', crashmanager_sources,

@@ -1,14 +1,21 @@
 /*
- * SPDX license identifier: MPL-2.0
+ * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019, BMW Car IT GmbH
+ * Copyright (C) 2019 Alin Popa
  *
- * This Source Code Form is subject to the terms of the
- * Mozilla Public License (MPL), v. 2.0.
- * If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * For further information see http://www.genivi.org/.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * \author Alin Popa <alin.popa@bmw.de>
  * \file cdm-utils.h
@@ -81,7 +88,7 @@ pid_t cdm_utils_first_pid_for_process (const gchar *exepath);
  *         CDM_STATUS_OK in success
  */
 CdmStatus cdm_utils_chown (const gchar *file_path,
-                           const gchar *user_name, c
-                           onst gchar *group_name);
+                           const gchar *user_name,
+                           const gchar *group_name);
 
 G_END_DECLS

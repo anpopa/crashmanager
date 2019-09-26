@@ -1,10 +1,10 @@
 # CrashManager
 
-The CrashManager is a new coredump handler and crash manager for linux system which brings more features to existing coremanager in our platform. One of the disadvantages of the current solution, inherited from MGU18, is that the coredump archive and the context file are separated and in different formats. The context file itself is just a text file with content from procfs entry for the crash process. This content is hardcoded in coredumper and doesn't consider components needs during a crash.
-This new crashmanager implementation solves this and other limitations the old components has. Some highlights:
+The CrashManager is a new coredump handler and crash manager for linux system which brings more features to existing coredump solutions available. One of the disadvantages of the current solution, inherited from MGU18, is that the coredump archive and the context file are separated and in different formats. The context file itself is just a text file with content from procfs entry for the crash process.   
+Some highlights:   
     
-  * The output is one file, a compressed tarball containing the coredump and the context files (including binary) defined in the configuration file as context information per process. See default configuration file: https://cc-github.bmwgroup.net/alinpopa/crashmanager/blob/master/config/crashmanager.conf.in
-  * Because the output is a standard compressed tarball no extra tooling is required to extract the information and work with the content
+  * The output is one file, a compressed tarball containing the coredump and the context files (including binary) defined in the configuration file as context information per process. See default configuration file:
+  * The output is a standard compressed tarball no extra tooling is required to extract the information and work with the content
   * Dynamic content support dumping binary files as well. This is very useful to embed data like screenshots, textures, databases, etc.
   * Support for cascade crashing. When a process crash analyses require peer process coredump for debugging (eg. generate a server coredump when a client is crashing with ipc timeout)
   * The component is using libarchive to create the output so the compression algorithm can be easily changed at build time
@@ -86,7 +86,7 @@ Program terminated with signal SIGSEGV, Segmentation fault.
 The build system is meson so make sure you have meson installed:
 
 cd crashmanager   
-meson setup build -DGENIVI_DLT=true   
+meson setup build
 cd build   
 ninja   
 ninja install   
