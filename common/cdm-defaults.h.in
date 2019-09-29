@@ -91,4 +91,32 @@ G_BEGIN_DECLS
 #define CDM_IPC_TIMEOUT_SEC (15)
 #endif
 
+#ifndef CDM_SCP_SERVER_ADDRESS
+#define CDM_SCP_SERVER_ADDRESS ""
+#endif
+
+#ifndef CDM_SCP_SERVER_PORT
+#define CDM_SCP_SERVER_PORT (22)
+#endif
+
+#ifndef CDM_SCP_SERVER_PATH
+#define CDM_SCP_SERVER_PATH ""
+#endif
+
+#ifndef CDM_SCP_TRANSFER_USER
+#define CDM_SCP_TRANSFER_USER ""
+#endif
+
+#ifndef CDM_SCP_TRANSFER_PASSWORD
+#define CDM_SCP_TRANSFER_PASSWORD ""
+#endif
+
+#ifndef CDM_SCP_PUBLIC_KEY_PATH
+#define CDM_SCP_PUBLIC_KEY_PATH ""
+#endif
+
+#ifndef CDM_SCP_PRIVATE_KEY_PATH
+#define CDM_SCP_PRIVATE_KEY_PATH ""
+#endif
+
 G_END_DECLS

@@ -27,6 +27,14 @@
 #include <dlt.h>
 #include <dlt_filetransfer.h>
 #endif
+#ifdef WITH_SCP_TRANSFER
+#include <libssh2.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#endif
 
 #ifdef WITH_GENIVI_DLT
 DLT_DECLARE_CONTEXT (cdm_transfer_ctx);
@@ -138,14 +146,174 @@ transfer_queue_destroy_notify (gpointer _transfer)
   g_debug ("Transfer queue destroy notification");
 }
 
+#ifdef WITH_SCP_TRANSFER
+static void
+transfer_scp_upload (CdmOptions *options, const gchar *file_path)
+{
+  g_autofree gchar *username = NULL;
+  g_autofree gchar *password = NULL;
+  g_autofree gchar *publickey = NULL;
+  g_autofree gchar *privatekey = NULL;
+  g_autofree gchar *serveraddr = NULL;
+  g_autofree gchar *serverpath = NULL;
+  g_autofree gchar *file_basename = NULL;
+  g_autofree gchar *scppath = NULL;
+  LIBSSH2_SESSION *session = NULL;
+  LIBSSH2_CHANNEL *channel = NULL;
+  struct sockaddr_in sin;
+  struct stat fileinfo;
+  gchar mem[1024];
+  size_t nread;
+  FILE *local;
+  char *ptr;
+  gint sock;
+  gint rc;
+
+  serveraddr = cdm_options_string_for (options, KEY_SCP_SERVER_ADDRESS);
+  if (strlen (serveraddr) == 0)
+    return;
+
+  local = fopen (file_path, "rb");
+  if (!local)
+    {
+      g_warning ("Can't open local file for transfer %s", file_path);
+      return;
+    }
+
+  rc = libssh2_init (0);
+  if (rc != 0)
+    {
+      g_warning ("Libssh2 initialization failed (%d)", rc);
+      return;
+    }
+
+  sock = socket (AF_INET, SOCK_STREAM, 0);
+  if (sock == -1)
+    {
+      g_warning ("Failed to create scp transfer socket");
+      return;
+    }
+
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons ((guint16)cdm_options_long_for (options, KEY_SCP_SERVER_PORT));
+
+  if (inet_pton (AF_INET, serveraddr, &sin.sin_addr.s_addr) <= 0)
+    {
+      g_warning ("Failed inet_pton error occured");
+      return;
+    }
+
+  if (connect (sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in)) != 0)
+    {
+      g_warning ("Failed to connect to scp server");
+      return;
+    }
+
+  session = libssh2_session_init ();
+  if (!session)
+    {
+      g_warning ("Failed to create libssh2 session");
+      return;
+    }
+
+  rc = libssh2_session_handshake (session, sock);
+  if (rc)
+    {
+      g_warning ("Failure establishing SSH session: %d", rc);
+      return;
+    }
+
+  username = cdm_options_string_for (options, KEY_SCP_TRANSFER_USER);
+  password = cdm_options_string_for (options, KEY_SCP_TRANSFER_PASSWORD);
+  publickey = cdm_options_string_for (options, KEY_SCP_PUBLIC_KEY_PATH);
+  privatekey = cdm_options_string_for (options, KEY_SCP_PRIVATE_KEY_PATH);
+
+  if (libssh2_userauth_publickey_fromfile (session,
+                                           username,
+                                           publickey,
+                                           privatekey,
+                                           password))
+    {
+      g_warning ("Authentication by public key failed");
+      goto scp_shutdown;
+    }
+
+  stat (file_path, &fileinfo);
+
+  serverpath = cdm_options_string_for (options, KEY_SCP_SERVER_PATH);
+  file_basename = g_path_get_basename (file_path);
+  scppath = g_build_filename (serverpath, file_basename, NULL);
+
+  channel = libssh2_scp_send (session, scppath, fileinfo.st_mode & 0777,
+                              (unsigned long)fileinfo.st_size);
+  if (!channel)
+    {
+      gchar *errmsg;
+      gint errlen;
+      gint err = libssh2_session_last_error (session, &errmsg, &errlen, 0);
+
+      g_warning ("Unable to open a session: (%d) %s", err, errmsg);
+      goto scp_shutdown;
+    }
+
+  do
+    {
+      nread = fread (mem, 1, sizeof(mem), local);
+      if (nread <= 0)
+        break;
+
+      ptr = mem;
+
+      do
+        {
+          /* write the same data over and over, until error or completion */
+          ssize_t retval = libssh2_channel_write (channel, mem, nread);
+
+          if (retval < 0)
+            {
+              g_warning ("Transfer error %ld", retval);
+              break;
+            }
+          else
+            {
+              /* retval indicates how many bytes were written this time */
+              ptr += retval;
+              nread -= (size_t)retval;
+            }
+        } while (nread);
+    } while (1);
+
+  libssh2_channel_send_eof (channel);
+  libssh2_channel_wait_eof (channel);
+  libssh2_channel_wait_closed (channel);
+  libssh2_channel_free (channel);
+
+scp_shutdown:
+  if (session)
+    {
+      libssh2_session_disconnect (session, "Normal Shutdown");
+      libssh2_session_free (session);
+    }
+
+  close (sock);
+
+  if (local)
+    fclose (local);
+
+  libssh2_exit ();
+}
+#endif
+
 static void
 transfer_thread_func (gpointer _entry,
                       gpointer _transfer)
 {
   g_autofree gchar *file_name = NULL;
   CdmTransferEntry *entry = (CdmTransferEntry *)_entry;
+  CdmTransfer *transfer = (CdmTransfer *)_transfer;
 
-  CDM_UNUSED (_transfer);
+  g_assert (entry);
+  g_assert (transfer);
 
   file_name = g_path_get_basename (entry->file_path);
 
@@ -186,6 +354,8 @@ transfer_thread_func (gpointer _entry,
       if (success)
         dlt_user_log_file_end (&cdm_transfer_ctx, entry->file_path, 0);
     }
+#elif defined (WITH_SCP_TRANSFER)
+  transfer_scp_upload (transfer->options, entry->file_path);
 #endif
 
   if (entry->callback)
@@ -196,10 +366,11 @@ transfer_thread_func (gpointer _entry,
 }
 
 CdmTransfer *
-cdm_transfer_new (void)
+cdm_transfer_new (CdmOptions *options)
 {
   CdmTransfer *transfer = (CdmTransfer *)g_source_new (&transfer_source_funcs, sizeof(CdmTransfer));
 
+  g_assert (options);
   g_assert (transfer);
 
   g_ref_count_init (&transfer->rc);
@@ -208,6 +379,7 @@ cdm_transfer_new (void)
   DLT_REGISTER_CONTEXT (cdm_transfer_ctx, "FLTR", "Crashmanager file transfer");
 #endif
 
+  transfer->options = cdm_options_ref (options);
   transfer->callback = transfer_source_callback;
   transfer->queue = g_async_queue_new_full (transfer_queue_destroy_notify);
   transfer->tpool = g_thread_pool_new (transfer_thread_func, transfer, 1, TRUE, NULL);
@@ -240,6 +412,7 @@ cdm_transfer_unref (CdmTransfer *transfer)
 #ifdef WITH_GENIVI_DLT
       DLT_UNREGISTER_CONTEXT (cdm_transfer_ctx);
 #endif
+      cdm_options_unref (transfer->options);
       g_thread_pool_free (transfer->tpool, TRUE, FALSE);
       g_source_unref (CDM_EVENT_SOURCE (transfer));
     }

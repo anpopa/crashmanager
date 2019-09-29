@@ -61,6 +61,26 @@ MaxCrashdumpArchives=4
 # KDumpSourceDir defines the source directory to read at start for previous
 #     kernel crashes
 KernelDumpSourceDir = /var/kdumps
+# SCP Transfer options
+# SCPServerAddress defines the server ip address for scp connection
+SCPServerAddress = 
+# SCPServerPort defines the port number for scp connection. Default to 22
+SCPServerPort = 22
+# SCPServerPath defines the remote storage directory path to be used for 
+#   crashdump transfer
+SCPServerPath = Downloads
+# SCPTransferUser defines the user name for autentification during crashdump
+#   transfer
+SCPTransferUser = crashdumper
+# SCPTransferPassword defines the password to be used during authentification
+#   for crashdump transfer. Can be omitted 
+SCPTransferPassword = 
+# SCPPublicKeyPath defines the path to the ssh public key for autentification
+#   during crashdump transfer
+SCPPublicKeyPath = /etc/authkeys/crashmanager.pub
+# SCPPrivateKeyPath defines the path to the ssh private key for autentification
+#   during crashdump transfer
+SCPPrivateKeyPath = /etc/authkeys/crashmanager.priv
 
 ###############################################################################
 #

@@ -374,11 +374,11 @@ cdm_application_new (const gchar *config, GError **error)
   app->sdnotify = cdm_sdnotify_new ();
 #endif
 
-  /* construct transfer noexept */
-  app->transfer = cdm_transfer_new ();
-
   /* construct options noexept */
   app->options = cdm_options_new (config);
+
+  /* construct transfer noexept */
+  app->transfer = cdm_transfer_new (app->options);
 
   /* construct journal and return if an error is set */
   app->journal = cdm_journal_new (app->options, error);

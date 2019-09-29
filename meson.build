@@ -67,6 +67,12 @@ if get_option('LXC')
   dep_lxc = dependency('lxc', version : '>=3.0')
 endif
 
+dep_scp = declare_dependency()
+if get_option('SCP_TRANSFER')
+  add_project_arguments('-DWITH_SCP_TRANSFER', language : 'c')
+  dep_scp = dependency('libssh2', version : '>=1.9')
+endif
+
 dep_systemd = declare_dependency()
 if get_option('SYSTEMD')
   add_project_arguments('-DWITH_SYSTEMD', language : 'c')
@@ -141,6 +147,7 @@ endif
     dep_systemd,
     dep_sqlite,
     dep_genivi_dlt,
+    dep_scp,
     ]
 
   executable('crashmanager', crashmanager_sources,

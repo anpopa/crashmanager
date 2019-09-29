@@ -24,6 +24,7 @@
 #pragma once
 
 #include "cdm-types.h"
+#include "cdm-options.h"
 
 #include <glib.h>
 
@@ -56,6 +57,7 @@ typedef struct _CdmTransfer {
   grefcount rc;     /**< Reference counter variable  */
   GAsyncQueue    *queue;  /**< Async queue */
   GThreadPool    *tpool;  /**< Transfer thread pool */
+  CdmOptions    *options;  /**< Options object */
   CdmTransferCallback callback; /**< Transfer callback function */
 } CdmTransfer;
 
@@ -63,7 +65,7 @@ typedef struct _CdmTransfer {
  * @brief Create a new transfer object
  * @return On success return a new CdmTransfer object
  */
-CdmTransfer *cdm_transfer_new (void);
+CdmTransfer *cdm_transfer_new (CdmOptions *options);
 
 /**
  * @brief Aquire transfer object

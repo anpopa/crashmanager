@@ -163,6 +163,66 @@ cdm_options_string_for (CdmOptions *opts,
         }
       return g_strdup (CDM_IPC_SOCK_ADDR);
 
+    case KEY_SCP_SERVER_ADDRESS:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPServerAddress", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_SCP_SERVER_ADDRESS);
+
+    case KEY_SCP_SERVER_PATH:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPServerPath", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_SCP_SERVER_PATH);
+
+    case KEY_SCP_TRANSFER_USER:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPTransferUser", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_SCP_TRANSFER_USER);
+
+    case KEY_SCP_TRANSFER_PASSWORD:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPTransferPassword", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_SCP_TRANSFER_PASSWORD);
+
+    case KEY_SCP_PUBLIC_KEY_PATH:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPPublicKeyPath", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_SCP_PUBLIC_KEY_PATH);
+
+    case KEY_SCP_PRIVATE_KEY_PATH:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPPrivateKeyPath", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_SCP_PRIVATE_KEY_PATH);
+
     default:
       break;
     }
@@ -246,6 +306,12 @@ cdm_options_long_for (CdmOptions *opts,
       value = get_long_option (opts, "crashmanager", "MaxCrashdumpArchives", &error);
       if (error != NULL)
         value = CDM_CRASHFILES_MAX_COUNT;
+      break;
+
+    case KEY_SCP_SERVER_PORT:
+      value = get_long_option (opts, "crashmanager", "SCPServerPort", &error);
+      if (error != NULL)
+        value = CDM_SCP_SERVER_PORT;
       break;
 
     default:

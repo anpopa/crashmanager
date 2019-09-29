@@ -2,6 +2,7 @@ option('CONFDIR', type : 'string', value : '/etc', description : 'System configu
 option('LXC', type : 'boolean', value : false, description : 'Build LXC support for container mapping')
 option('SYSTEMD', type : 'boolean', value : true, description : 'Build systemd support service watchdog')
 option('GENIVI_DLT', type : 'boolean', value : false, description : 'Use GENIVI infrustructure for logging')
+option('SCP_TRANSFER', type : 'boolean', value : true, description : 'Use SCP to transfer crashdumps to a remote server')
 option('DEBUG_ATTACH', type : 'boolean', value : false, description : 'Stop crashhandler in main for debugging')
 option('TESTS', type : 'boolean', value : false, description : 'Build unit tests')
 option('CRASHTEST', type : 'boolean', value : true, description : 'Build crashtest application')
