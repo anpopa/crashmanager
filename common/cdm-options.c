@@ -163,65 +163,65 @@ cdm_options_string_for (CdmOptions *opts,
         }
       return g_strdup (CDM_IPC_SOCK_ADDR);
 
-    case KEY_SCP_SERVER_ADDRESS:
+    case KEY_TRANSFER_ADDRESS:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPServerAddress", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferAddress", NULL);
 
           if (tmp != NULL)
             return tmp;
         }
-      return g_strdup (CDM_SCP_SERVER_ADDRESS);
+      return g_strdup (CDM_TRANSFER_ADDRESS);
 
-    case KEY_SCP_SERVER_PATH:
+    case KEY_TRANSFER_PATH:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPServerPath", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferPath", NULL);
 
           if (tmp != NULL)
             return tmp;
         }
-      return g_strdup (CDM_SCP_SERVER_PATH);
+      return g_strdup (CDM_TRANSFER_PATH);
 
-    case KEY_SCP_TRANSFER_USER:
+    case KEY_TRANSFER_USER:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPTransferUser", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferUser", NULL);
 
           if (tmp != NULL)
             return tmp;
         }
-      return g_strdup (CDM_SCP_TRANSFER_USER);
+      return g_strdup (CDM_TRANSFER_USER);
 
-    case KEY_SCP_TRANSFER_PASSWORD:
+    case KEY_TRANSFER_PASSWORD:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPTransferPassword", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferPassword", NULL);
 
           if (tmp != NULL)
             return tmp;
         }
-      return g_strdup (CDM_SCP_TRANSFER_PASSWORD);
+      return g_strdup (CDM_TRANSFER_PASSWORD);
 
-    case KEY_SCP_PUBLIC_KEY_PATH:
+    case KEY_TRANSFER_PUBLIC_KEY:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPPublicKeyPath", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferPublicKey", NULL);
 
           if (tmp != NULL)
             return tmp;
         }
-      return g_strdup (CDM_SCP_PUBLIC_KEY_PATH);
+      return g_strdup (CDM_TRANSFER_PUBLIC_KEY);
 
-    case KEY_SCP_PRIVATE_KEY_PATH:
+    case KEY_TRANSFER_PRIVATE_KEY:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "SCPPrivateKeyPath", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferPrivateKey", NULL);
 
           if (tmp != NULL)
             return tmp;
         }
-      return g_strdup (CDM_SCP_PRIVATE_KEY_PATH);
+      return g_strdup (CDM_TRANSFER_PRIVATE_KEY);
 
     default:
       break;
@@ -284,6 +284,12 @@ cdm_options_long_for (CdmOptions *opts,
         value = CDM_ELEVATED_NICE_VALUE;
       break;
 
+    case KEY_TRUNCATE_COREDUMPS:
+      value = get_long_option (opts, "crashhandler", "TruncateCoredumps", &error);
+      if (error != NULL)
+        value = CDM_TRUNCATE_COREDUMPS;
+      break;
+
     case KEY_IPC_TIMEOUT_SEC:
       value = get_long_option (opts, "common", "IpcSocketTimeout", &error);
       if (error != NULL)
@@ -308,10 +314,10 @@ cdm_options_long_for (CdmOptions *opts,
         value = CDM_CRASHFILES_MAX_COUNT;
       break;
 
-    case KEY_SCP_SERVER_PORT:
-      value = get_long_option (opts, "crashmanager", "SCPServerPort", &error);
+    case KEY_TRANSFER_PORT:
+      value = get_long_option (opts, "crashmanager", "TransferPort", &error);
       if (error != NULL)
-        value = CDM_SCP_SERVER_PORT;
+        value = CDM_TRANSFER_PORT;
       break;
 
     default:

@@ -165,11 +165,15 @@ CdmStatus cdh_archive_stream_open (CdhArchive *ar, const gchar *src, const gchar
 CdmStatus cdh_archive_stream_read (CdhArchive *ar, void *buf, gsize size);
 
 /**
- * @brief Read and save all input stream
+ * @brief Read and save all remaining input stream
+ *
  * @param ar The CdhArchive object
+ * @param dummy_write If true will force the output stream to write 0 for
+ * remaining data
+ *
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_archive_stream_read_all (CdhArchive *ar);
+CdmStatus cdh_archive_stream_read_all (CdhArchive *ar, bool dummy_write);
 
 /**
  * @brief Advence to offset in input stream and dump everything to output up to the offset

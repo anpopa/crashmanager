@@ -41,6 +41,10 @@ DLT_DECLARE_CONTEXT (cdm_transfer_ctx);
 #define DLT_MIN_TIMEOUT 1
 #endif
 
+#ifdef WITH_SCP_TRANSFER
+#define SCP_BUFFER_SZ 1024
+#endif
+
 /**
  * @brief GSource prepare function
  */
@@ -162,23 +166,16 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
   LIBSSH2_CHANNEL *channel = NULL;
   struct sockaddr_in sin;
   struct stat fileinfo;
-  gchar mem[1024];
+  FILE *local = NULL;
+  gchar mem[SCP_BUFFER_SZ];
   size_t nread;
-  FILE *local;
   char *ptr;
   gint sock;
   gint rc;
 
-  serveraddr = cdm_options_string_for (options, KEY_SCP_SERVER_ADDRESS);
+  serveraddr = cdm_options_string_for (options, KEY_TRANSFER_ADDRESS);
   if (strlen (serveraddr) == 0)
     return;
-
-  local = fopen (file_path, "rb");
-  if (!local)
-    {
-      g_warning ("Can't open local file for transfer %s", file_path);
-      return;
-    }
 
   rc = libssh2_init (0);
   if (rc != 0)
@@ -195,7 +192,7 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
     }
 
   sin.sin_family = AF_INET;
-  sin.sin_port = htons ((guint16)cdm_options_long_for (options, KEY_SCP_SERVER_PORT));
+  sin.sin_port = htons ((guint16)cdm_options_long_for (options, KEY_TRANSFER_PORT));
 
   if (inet_pton (AF_INET, serveraddr, &sin.sin_addr.s_addr) <= 0)
     {
@@ -223,10 +220,12 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
       return;
     }
 
-  username = cdm_options_string_for (options, KEY_SCP_TRANSFER_USER);
-  password = cdm_options_string_for (options, KEY_SCP_TRANSFER_PASSWORD);
-  publickey = cdm_options_string_for (options, KEY_SCP_PUBLIC_KEY_PATH);
-  privatekey = cdm_options_string_for (options, KEY_SCP_PRIVATE_KEY_PATH);
+  /* no early return from now on, go to scp_shutdown for cleanup */
+
+  username = cdm_options_string_for (options, KEY_TRANSFER_USER);
+  password = cdm_options_string_for (options, KEY_TRANSFER_PASSWORD);
+  publickey = cdm_options_string_for (options, KEY_TRANSFER_PUBLIC_KEY);
+  privatekey = cdm_options_string_for (options, KEY_TRANSFER_PRIVATE_KEY);
 
   if (libssh2_userauth_publickey_fromfile (session,
                                            username,
@@ -238,9 +237,16 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
       goto scp_shutdown;
     }
 
+  local = fopen (file_path, "rb");
+  if (!local)
+    {
+      g_warning ("Can't open local file for transfer %s", file_path);
+      goto scp_shutdown;
+    }
+
   stat (file_path, &fileinfo);
 
-  serverpath = cdm_options_string_for (options, KEY_SCP_SERVER_PATH);
+  serverpath = cdm_options_string_for (options, KEY_TRANSFER_PATH);
   file_basename = g_path_get_basename (file_path);
   scppath = g_build_filename (serverpath, file_basename, NULL);
 
@@ -281,7 +287,7 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
               nread -= (size_t)retval;
             }
         } while (nread);
-    } while (1);
+    } while (TRUE);
 
   libssh2_channel_send_eof (channel);
   libssh2_channel_wait_eof (channel);
@@ -356,6 +362,8 @@ transfer_thread_func (gpointer _entry,
     }
 #elif defined (WITH_SCP_TRANSFER)
   transfer_scp_upload (transfer->options, entry->file_path);
+#else
+  g_debug ("No transfer method selected at build time");
 #endif
 
   if (entry->callback)

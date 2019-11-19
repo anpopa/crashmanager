@@ -422,6 +422,7 @@ cdh_coredump_generate (CdhCoredump *cd)
   CdmStatus ret = CDM_STATUS_OK;
   CdmStatus region_found;
   const gchar *region_name;
+  bool truncate_coredump = false;
   gint phdr;
 
   g_assert (cd);
@@ -570,8 +571,11 @@ finished:
   if (ret == CDM_STATUS_ERROR)
     g_warning ("Errors in preprocessing coredump stream");
 
+  if (cdm_options_long_for (cd->context->opts, KEY_TRUNCATE_COREDUMPS) != 0)
+    truncate_coredump = true;
+
   /* In all cases, we try to finish to read/compress the coredump until the end */
-  if (cdh_archive_stream_read_all (cd->archive) != CDM_STATUS_OK)
+  if (cdh_archive_stream_read_all (cd->archive, truncate_coredump) != CDM_STATUS_OK)
     {
       g_warning ("Cannot finish coredump compression");
       ret = CDM_STATUS_ERROR;

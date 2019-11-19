@@ -68,6 +68,10 @@ cdh_context_new (CdmOptions *opts,
   ctx->archive = cdh_archive_ref (archive);
   ctx->onhost = TRUE;
 
+  /* the following members store data from crashmanager which can be unavailable */
+  ctx->context_name = "Unavailable";
+  ctx->lifecycle_state = "Unavailable";
+
   return ctx;
 }
 

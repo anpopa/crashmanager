@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * 
+ *
  * \author Alin Popa <alin.popa@fxdata.ro>
  * \file cdi-archive.c
  */
@@ -235,8 +235,11 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
                 {
                   readsz = archive_read_data (ar->archive, buffer, ARCHIVE_READ_BUFFER_SIZE);
                   if (readsz > 0)
-                    write (output_fd, buffer, (gsize)readsz);
-                  towrite -= readsz;
+                    {
+                      if (write (output_fd, buffer, (gsize)readsz) != readsz)
+                        g_warning ("Fail to write the new file... output will be corrupted");
+                      towrite -= readsz;
+                    }
                 }
             }
         }

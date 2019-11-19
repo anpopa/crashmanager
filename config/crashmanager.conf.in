@@ -40,6 +40,10 @@ IpcSocketTimeout = 15
 FileSystemMinSize = 64
 # ElevatedNiceValue defines the nice value to set for crashhandler
 ElevatedNiceValue = -19
+# TruncateCoredumps if set to 1 will dummy write zero for remaining data after
+#    context information is extracted resuting smaller coredumps and faster
+#    processing with the cost of information lost for the coredump output
+TruncateCoredumps = 0
 
 ###############################################################################
 #
@@ -61,26 +65,28 @@ MaxCrashdumpArchives=4
 # KDumpSourceDir defines the source directory to read at start for previous
 #     kernel crashes
 KernelDumpSourceDir = /var/kdumps
-# SCP Transfer options
-# SCPServerAddress defines the server ip address for scp connection
-SCPServerAddress = 
-# SCPServerPort defines the port number for scp connection. Default to 22
-SCPServerPort = 22
-# SCPServerPath defines the remote storage directory path to be used for 
+# TransferAddress defines the server IP address to be used for uploading the
+#   crashdumps. If empty the transfer is skipped
+TransferAddress = 
+# TransferPort defines the port number for scp connection to transfer storage
+#   Default to 22
+TransferPort = 22
+# TransferPath defines the remote storage directory path to be used for 
 #   crashdump transfer
-SCPServerPath = Downloads
-# SCPTransferUser defines the user name for autentification during crashdump
-#   transfer
-SCPTransferUser = crashdumper
-# SCPTransferPassword defines the password to be used during authentification
-#   for crashdump transfer. Can be omitted 
-SCPTransferPassword = 
-# SCPPublicKeyPath defines the path to the ssh public key for autentification
+TransferPath = Downloads
+# TransferUser defines the user name for autentification during crashdump
+#   transfer. This user should have RW permision to the TransferPath
+TransferUser = crashdumper
+# TransferPassword defines the password/passphrase to be used during 
+#   authentification for crashdump transfer. Can be omitted if no passphrase is
+#   set for authentification keys
+TransferPassword = 
+# TransferPublicKey defines the path to the ssh public key for autentification
 #   during crashdump transfer
-SCPPublicKeyPath = /etc/authkeys/crashmanager.pub
-# SCPPrivateKeyPath defines the path to the ssh private key for autentification
+TransferPublicKey = /etc/authkeys/crashmanager.pub
+# TransferPrivateKey defines the path to the ssh private key for autentification
 #   during crashdump transfer
-SCPPrivateKeyPath = /etc/authkeys/crashmanager.priv
+TransferPrivateKey = /etc/authkeys/crashmanager.priv
 
 ###############################################################################
 #

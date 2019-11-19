@@ -70,7 +70,7 @@ endif
 dep_scp = declare_dependency()
 if get_option('SCP_TRANSFER')
   add_project_arguments('-DWITH_SCP_TRANSFER', language : 'c')
-  dep_scp = dependency('libssh2', version : '>=1.9')
+  dep_scp = dependency('libssh2', version : '>=1.8')
 endif
 
 dep_systemd = declare_dependency()
@@ -161,8 +161,8 @@ endif
 if get_option('CRASHHANDLER')
   sysctl_data = configuration_data()
   sysctl_data.set('install_prefix', get_option('prefix'))
-  configure_file(input : 'config/20-crashhandler.conf.in',
-    output : '20-crashhandler.conf',
+  configure_file(input : 'config/51-crashhandler.conf.in',
+    output : '51-crashhandler.conf',
     configuration : sysctl_data,
     install_dir : '/etc/sysctl.d')
 

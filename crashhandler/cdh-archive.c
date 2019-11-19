@@ -352,7 +352,7 @@ cdh_archive_stream_read (CdhArchive *ar,
 }
 
 CdmStatus
-cdh_archive_stream_read_all (CdhArchive *ar)
+cdh_archive_stream_read_all (CdhArchive *ar, bool dummy_write)
 {
   g_assert (ar);
   g_assert (ar->in_stream);
@@ -360,6 +360,9 @@ cdh_archive_stream_read_all (CdhArchive *ar)
   while (!feof (ar->in_stream))
     {
       gsize readsz = fread (ar->in_read_buffer, 1, sizeof(ar->in_read_buffer), ar->in_stream);
+
+      if (dummy_write)
+        memset (ar->in_read_buffer, 0, readsz);
 
       if (stream_chunk_write (ar, ar->in_read_buffer, (gssize)readsz) == CDM_STATUS_ERROR)
         g_warning ("Fail to write archive");
