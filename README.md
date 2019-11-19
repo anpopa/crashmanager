@@ -7,7 +7,7 @@ Highlights:
   * Coredumps are pre-processed while parsing the coredump stream from the kernel to generate IDs for easy categorization of the crashes (CrashID -> based on Instruction Pointer and Return Address, VectorID -> Return address only)
   * Coredumps are context aware, crashes in containers can be easily identified (ContextID) and filtered with automatic container name labelling for LXC containers
   * Automatic management of coredump database size limits defined in the configuration file
-  * The coredump output is one file, a compressed tarball containing the coredump and the context files (including binary) defined in the configuration file as context information per process. See default configuration file: https://github.com/anpopax/crashmanager/blob/master/config/crashmanager.conf.in
+  * The coredump output is one file, a compressed tarball containing the coredump and the context files (including binary) defined in the configuration file as context information per process. See default configuration file: https://gitlab.com/anpopa/crashmanager/blob/master/config/crashmanager.conf.in
   * The coredump output is a standard compressed tarball no extra tooling is required to extract the information
   * Dynamic content support dumping binary files as well. This is very useful to embed data like screenshots, textures, databases, etc.
   * Support for cascade crashing. When a process crash analyses require peer process coredump for debugging (eg. generate a server coredump when a client is crashing with ipc timeout)
