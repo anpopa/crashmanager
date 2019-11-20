@@ -220,3 +220,5 @@ if get_option('CRASHINFO')
     )
 endif
 
+install_data(sources: 'LICENSE', install_dir: '/usr/share/licenses/crashmanager')
+
