@@ -67,26 +67,32 @@ MaxCrashdumpArchives=4
 KernelDumpSourceDir = /var/kdumps
 # TransferAddress defines the server IP address to be used for uploading the
 #   crashdumps. If empty the transfer is skipped
-TransferAddress = 
+TransferAddress =
 # TransferPort defines the port number for scp connection to transfer storage
 #   Default to 22
 TransferPort = 22
-# TransferPath defines the remote storage directory path to be used for 
+# TransferPath defines the remote storage directory path to be used for
 #   crashdump transfer
 TransferPath = Downloads
 # TransferUser defines the user name for autentification during crashdump
 #   transfer. This user should have RW permision to the TransferPath
 TransferUser = crashdumper
-# TransferPassword defines the password/passphrase to be used during 
+# TransferPassword defines the password/passphrase to be used during
 #   authentification for crashdump transfer. Can be omitted if no passphrase is
 #   set for authentification keys
-TransferPassword = 
+TransferPassword =
 # TransferPublicKey defines the path to the ssh public key for autentification
 #   during crashdump transfer
 TransferPublicKey = /etc/authkeys/crashmanager.pub
 # TransferPrivateKey defines the path to the ssh private key for autentification
 #   during crashdump transfer
 TransferPrivateKey = /etc/authkeys/crashmanager.priv
+# ELogSocketFile defines the path to the epilog unix domain socket file
+#     The crashmanager is responsible to create and listen on this socket
+ELogSocketFile = .epilog.sock
+# ELogSocketTimeout defines the number of seconds for an IO operation to block
+#     during epilog client communication
+ELogSocketTimeout = 5
 
 ###############################################################################
 #
@@ -100,7 +106,7 @@ TransferPrivateKey = /etc/authkeys/crashmanager.priv
 #   If the path is a directory only the directory content is listed
 #   The PID of the process can be used with formater $$.
 # PostCore defines when to process the data
-#   If data holds only until process is release (eg. proc) then set 
+#   If data holds only until process is release (eg. proc) then set
 #   this to false.
 
 ###############################################################################
@@ -252,11 +258,11 @@ PostCore = false
 # ProcName defines the process name to apply this crashaction rule
 #   This can be a process name or a regular expresion to match the process name
 # Victim defines the binary path of the victim. The first and only the first
-#   PID for process matching this exe name while enumerating procfs will 
+#   PID for process matching this exe name while enumerating procfs will
 #   receive the signal from crashhandler
 # Signal defines the signal number to be sent to process
 # PostCore defines when to process the data
-#   If data holds only until process is release (eg. proc) then set 
+#   If data holds only until process is release (eg. proc) then set
 #   this to false.
 
 ###############################################################################

@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,9 +111,7 @@ cdh_application_unref (CdhApplication *app)
 }
 
 static CdmStatus
-read_args (CdhApplication *app,
-           gint argc,
-           gchar **argv)
+read_args (CdhApplication *app, gint argc, gchar **argv)
 {
   g_assert (app);
 
@@ -158,8 +156,7 @@ read_args (CdhApplication *app,
 }
 
 static CdmStatus
-check_disk_space (const gchar *path,
-                  gsize min)
+check_disk_space (const gchar *path, gsize min)
 {
   struct statvfs stat;
   gsize free_sz = 0;
@@ -198,15 +195,15 @@ init_crashdump_archive (CdhApplication *app, const gchar *dirname)
                            app->context->pid,
                            app->context->tstamp);
 
-  if (cdh_archive_open (app->archive, aname, (time_t)app->context->tstamp) != CDM_STATUS_OK)
+  if (cdh_archive_open (app->archive, aname,
+                        (time_t)app->context->tstamp) != CDM_STATUS_OK)
     return CDM_STATUS_ERROR;
 
   return CDM_STATUS_OK;
 }
 
 static CdmStatus
-close_crashdump_archive (CdhApplication *app,
-                         const gchar *dirname)
+close_crashdump_archive (CdhApplication *app, const gchar *dirname)
 {
   g_autofree gchar *aname = NULL;
   g_autofree gchar *opt_user = NULL;
@@ -233,9 +230,7 @@ close_crashdump_archive (CdhApplication *app,
 }
 
 static void
-do_crash_actions (CdmOptions *options,
-                  const gchar *proc_name,
-                  gboolean postcore)
+do_crash_actions (CdmOptions *options, const gchar *proc_name, gboolean postcore)
 {
   GKeyFile *key_file = NULL;
   gchar **groups = NULL;
@@ -265,7 +260,8 @@ do_crash_actions (CdmOptions *options,
       if (g_regex_match_simple (proc_key, proc_name, 0, 0) == FALSE)
         continue;
 
-      key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
+      key_postcore =
+        g_key_file_get_boolean (key_file, gname, "PostCore", &error);
       if (error != NULL)
         continue;
 
@@ -287,9 +283,7 @@ do_crash_actions (CdmOptions *options,
           continue;
         }
       else
-        {
-          g_info ("Victim '%s' found with pid %d, for crash action", victim_key, victim_pid);
-        }
+        g_info ("Victim '%s' found with pid %d, for crash action", victim_key, victim_pid);
 
       if (kill (victim_pid, signal_key) == -1)
         {
@@ -305,9 +299,7 @@ do_crash_actions (CdmOptions *options,
 }
 
 CdmStatus
-cdh_application_execute (CdhApplication *app,
-                         gint argc,
-                         gchar *argv[])
+cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[])
 {
   CdmStatus status = CDM_STATUS_OK;
   g_autofree gchar *opt_coredir = NULL;
@@ -341,29 +333,27 @@ cdh_application_execute (CdhApplication *app,
           app->context->tstamp);
 
   app->context->pexe = cdm_utils_get_procexe (app->context->pid);
+  app->context->session = (guint16)((gulong)app->context->pid | app->context->tstamp);
 
 #if defined(WITH_CRASHMANAGER)
   if (cdh_manager_connect (app->manager) != CDM_STATUS_OK)
-    {
-      g_warning ("Fail to connect to manager socket");
-    }
+    g_warning ("Fail to connect to manager socket");
   else
     {
-      CdmMessage msg;
-      CdmMessageDataNew msg_data;
+      const gchar *process_name = (app->context->name != NULL) ?
+                                  app->context->name : cdm_notavailable_str;
+      const gchar *thread_name = (app->context->tname != NULL) ?
+                                 app->context->tname : cdm_notavailable_str;
+      g_autoptr (CdmMessage) msg = cdm_message_new (CDM_MESSAGE_COREDUMP_NEW,
+                                                    app->context->session);
 
-      cdm_message_init (&msg,
-                        CDM_CORE_NEW,
-                        (guint16)((gulong)app->context->pid | app->context->tstamp));
+      cdm_message_set_process_pid (msg, app->context->pid);
+      cdm_message_set_process_exit_signal (msg, app->context->sig);
+      cdm_message_set_process_timestamp (msg, app->context->tstamp);
+      cdm_message_set_process_name (msg, process_name);
+      cdm_message_set_thread_name (msg, thread_name);
 
-      msg_data.pid = app->context->pid;
-      msg_data.coresig = app->context->sig;
-      msg_data.tstamp = app->context->tstamp;
-      memcpy (msg_data.tname, app->context->tname, strlen (app->context->tname) + 1);
-      memcpy (msg_data.pname, app->context->name, strlen (app->context->name) + 1);
-
-      cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
-      if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
+      if (cdh_manager_send (app->manager, msg) == CDM_STATUS_ERROR)
         g_warning ("Failed to send new message to manager");
     }
 #endif
@@ -372,8 +362,10 @@ cdh_application_execute (CdhApplication *app,
   opt_coredir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
   opt_user = cdm_options_string_for (app->options, KEY_USER_NAME);
   opt_group = cdm_options_string_for (app->options, KEY_GROUP_NAME);
-  opt_fs_min_size = (gsize)cdm_options_long_for (app->options, KEY_FILESYSTEM_MIN_SIZE);
-  opt_nice_value = (gint)cdm_options_long_for (app->options, KEY_ELEVATED_NICE_VALUE);
+  opt_fs_min_size = (gsize)cdm_options_long_for (app->options,
+                                                 KEY_FILESYSTEM_MIN_SIZE);
+  opt_nice_value = (gint)cdm_options_long_for (app->options,
+                                               KEY_ELEVATED_NICE_VALUE);
 
   g_debug ("Coredump appbase path %s", opt_coredir);
 
@@ -429,37 +421,32 @@ enter_cleanup:
   if (cdh_manager_connected (app->manager))
     {
       g_autofree gchar *file_path = NULL;
-      CdmMessageDataComplete msg_data;
+      g_autoptr (CdmMessage) msg = NULL;
       CdmMessageType type;
-      CdmMessage msg;
-      gssize sz = 0;
 
-      type = (status == CDM_STATUS_OK ? CDM_CORE_COMPLETE : CDM_CORE_FAILED);
+      type = (status == CDM_STATUS_OK ? CDM_MESSAGE_COREDUMP_SUCCESS : CDM_MESSAGE_COREDUMP_FAILED);
 
-      cdm_message_init (&msg, type, (guint16)((gulong)app->context->pid | app->context->tstamp));
+      msg = cdm_message_new (type, (guint16)((gulong)app->context->pid | app->context->tstamp));
 
-      memset (&msg_data, 0, sizeof(CdmMessageDataComplete));
       file_path = g_strdup_printf (ARCHIVE_NAME_PATTERN,
                                    opt_coredir,
                                    app->context->name,
                                    app->context->pid,
                                    app->context->tstamp);
 
-      sz = snprintf (msg_data.core_file, CDM_MESSAGE_FILENAME_LEN, "%s", file_path);
-      if (sz > CDM_MESSAGE_FILENAME_LEN)
-        g_warning ("Fail to set the complete file name. Name too long!");
+      if (type == CDM_MESSAGE_COREDUMP_SUCCESS)
+        {
+          const gchar *context_name = (app->context->context_name != NULL) ?
+                                      app->context->context_name : cdm_notavailable_str;
+          const gchar *lifecycle_state = (app->context->lifecycle_state != NULL) ?
+                                         app->context->lifecycle_state : cdm_notavailable_str;
 
-      sz = snprintf (msg_data.context_name, CDM_CRASHCONTEXT_LEN, "%s", app->context->context_name);
-      if (sz > CDM_CRASHCONTEXT_LEN)
-        g_warning ("Fail to set the context name. Name too long!");
+          cdm_message_set_coredump_file_path (msg, file_path);
+          cdm_message_set_context_name (msg, context_name);
+          cdm_message_set_lifecycle_state (msg, lifecycle_state);
+        }
 
-      sz = snprintf (msg_data.lifecycle_state, CDM_LIFECYCLESTATE_LEN, "%s", app->context->lifecycle_state);
-      if (sz > CDM_LIFECYCLESTATE_LEN)
-        g_warning ("Fail to set the lifecycle state. Name too long!");
-
-      cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
-
-      if (cdh_manager_send (app->manager, &msg) == CDM_STATUS_ERROR)
+      if (cdh_manager_send (app->manager, msg) == CDM_STATUS_ERROR)
         g_warning ("Failed to send status message to manager");
 
       if (cdh_manager_disconnect (app->manager) != CDM_STATUS_OK)

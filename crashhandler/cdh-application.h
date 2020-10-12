@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,31 +56,31 @@ typedef struct _CdhApplication {
  * @brief Create a new CdhApplication object
  * @param config_path Full path to the cdh configuration fole
  */
-CdhApplication *cdh_application_new (const gchar *config_path);
+CdhApplication *        cdh_application_new                 (const gchar *config_path);
 
 /**
  * @brief Aquire CdhApplication object
  * @param app The object to aquire
  * @return The aquiered app object
  */
-CdhApplication *cdh_application_ref (CdhApplication *app);
+CdhApplication *        cdh_application_ref                 (CdhApplication *app);
 
 /**
  * @brief Release a app object
  * @param app The cdh app object to release
  */
-void cdh_application_unref (CdhApplication *app);
+void                    cdh_application_unref               (CdhApplication *app);
 
 /**
  * @brief Execute cdh logic
- *
  * @param d The cdh object to deinitialize
  * @param argc Main arguments count
  * @param argv Main arguments table
- *
  * @return If run was succesful CDH_OK is returned
  */
-CdmStatus cdh_application_execute (CdhApplication *app, gint argc, gchar *argv[]);
+CdmStatus               cdh_application_execute             (CdhApplication *app, 
+                                                             gint argc, 
+                                                             gchar *argv[]);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdhApplication, cdh_application_unref);
 

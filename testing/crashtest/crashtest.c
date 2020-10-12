@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,12 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * 
+ *
  * \author Alin Popa <alin.popa@fxdata.ro>
  * \file crashtest.c
  */
+
+#include <cdh-epilog.h>
 
 #include <assert.h>
 #include <getopt.h>
@@ -29,10 +31,27 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 #define TEST_BUFFER_MB(x) (sizeof(uint8_t) * x * 1024 * 1024)
+#define CRASH_MSG_LEN 1024
 
 typedef enum _crashtype { crash_abrt, crash_segv1, crash_segv2 } crashtype;
+
+static void
+on_crash_cb (int efd, int signum)
+{
+  char msg[CRASH_MSG_LEN] = {};
+  ssize_t sz;
+
+  sz = snprintf (msg, CRASH_MSG_LEN, "Crashed with signal '%s' and is sad!\n", strsignal (signum));
+  if (sz < 0 || sz >= CRASH_MSG_LEN)
+    return;
+
+  sz = write (efd, msg, sz + 1);
+  if (sz < 0)
+    return;
+}
 
 static uint8_t *
 allocate_buffer (size_t sz, bool rdz)
@@ -108,6 +127,8 @@ main (int argc, char *argv[])
       printf ("     --help, -h            Print this help\n\n");
       exit (EXIT_SUCCESS);
     }
+
+  cdh_epilog_register_crash_handlers (on_crash_cb);
 
   if (randomize == true)
     srand ((unsigned int)time (0));

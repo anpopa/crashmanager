@@ -41,7 +41,8 @@ main (gint argc, gchar *argv[])
 
   cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
 
-  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
+  conf_path =
+    g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
   if (g_access (conf_path, R_OK) == 0)
     {
       g_autoptr (CdhApplication) app = cdh_application_new (conf_path);

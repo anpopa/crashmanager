@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

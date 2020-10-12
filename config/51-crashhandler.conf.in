@@ -1,3 +1,2 @@
 # Use crashhandler as default coredump handler
-
 kernel.core_pattern=|@install_prefix@/bin/crashhandler %t %P %p %s %e

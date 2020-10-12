@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,9 +62,9 @@ static gboolean client_source_callback (gpointer data);
 static void client_source_destroy_notify (gpointer data);
 
 /**
- * @brief Process message from crashhandler instance
+ * @brief Initial message processing
  */
-static void process_message (CdmClient *c, CdmMessage *msg);
+static void do_initial_message_process (CdmClient *c, CdmMessage *msg);
 
 /**
  * @brief Get context ID for PID
@@ -97,8 +97,7 @@ static GSourceFuncs client_source_funcs =
 };
 
 static gboolean
-client_source_prepare (GSource *source,
-                       gint *timeout)
+client_source_prepare (GSource *source, gint *timeout)
 {
   CDM_UNUSED (source);
   *timeout = -1;
@@ -113,9 +112,7 @@ client_source_check (GSource *source)
 }
 
 static gboolean
-client_source_dispatch (GSource *source,
-                        GSourceFunc callback,
-                        gpointer user_data)
+client_source_dispatch (GSource *source, GSourceFunc callback, gpointer user_data)
 {
   CDM_UNUSED (source);
 
@@ -128,20 +125,20 @@ client_source_dispatch (GSource *source,
 static gboolean
 client_source_callback (gpointer data)
 {
+  g_autoptr (CdmMessage) msg = NULL;
   CdmClient *client = (CdmClient *)data;
   gboolean status = TRUE;
-  CdmMessage msg;
 
   g_assert (client);
 
-  cdm_message_init (&msg, CDM_CORE_UNKNOWN, 0);
+  msg = cdm_message_new (CDM_MESSAGE_INVALID, 0);
 
-  if (cdm_message_read (client->sockfd, &msg) != CDM_STATUS_OK)
+  if (cdm_message_read (client->sockfd, msg) != CDM_STATUS_OK)
     {
       g_debug ("Cannot read from client socket %d", client->sockfd);
 
 #ifdef WITH_GENIVI_NSM
-      if (client->init_data != NULL)
+      if (client->last_msg_type != CDM_MESSAGE_INVALID)
         {
           if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_INACTIVE)
               != CDM_STATUS_OK)
@@ -154,47 +151,24 @@ client_source_callback (gpointer data)
     }
   else
     {
-      CdmMessageType type = cdm_message_get_type (&msg);
+      CdmMessageType type = cdm_message_get_type (msg);
 
-      process_message (client, &msg);
+      do_initial_message_process (client, msg);
 
-      if ((type == CDM_CORE_COMPLETE) || (type == CDM_CORE_FAILED))
+      switch (type)
         {
-          g_autoptr (GError) error = NULL;
-          guint64 dbid;
-
-          if (!client->init_data || !client->update_data || !client->complete_data)
+        case CDM_MESSAGE_COREDUMP_NEW:
+#ifdef WITH_GENIVI_NSM
+          if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_ACTIVE)
+              != CDM_STATUS_OK)
             {
-              g_warning ("Client data from crashhandler incomplete for client %d",
-                         client->sockfd);
-              status = FALSE;
+              g_warning ("Fail increment session lifecycle counter");
             }
-          else
-            {
-              dbid = cdm_journal_add_crash (client->journal,
-                                            client->init_data->pname,
-                                            client->update_data->crashid,
-                                            client->update_data->vectorid,
-                                            client->update_data->contextid,
-                                            client->complete_data->context_name,
-                                            client->complete_data->lifecycle_state,
-                                            client->complete_data->core_file,
-                                            client->init_data->pid,
-                                            client->init_data->coresig,
-                                            client->init_data->tstamp,
-                                            &error);
+#endif
+          break;
 
-              if (error != NULL)
-                g_warning ("Fail to add new crash entry in database %s", error->message);
-              else
-                g_debug ("New crash entry added to database with id %016lX", dbid);
-
-              /* even if we fail to add to the database we try to transfer the file */
-              cdm_transfer_file (client->transfer,
-                                 client->complete_data->core_file,
-                                 archive_transfer_complete,
-                                 cdm_client_ref (client));
-            }
+        case CDM_MESSAGE_COREDUMP_FAILED:
+          g_warning ("Coredump processing failed for client %d", client->sockfd);
 #ifdef WITH_GENIVI_NSM
           if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_INACTIVE)
               != CDM_STATUS_OK)
@@ -202,19 +176,46 @@ client_source_callback (gpointer data)
               g_warning ("Fail decrement session lifecycle counter");
             }
 #endif
-        }
-      else
-        {
-          if (type == CDM_CORE_NEW)
-            {
+          break;
+
+        case CDM_MESSAGE_COREDUMP_SUCCESS: {
+          g_autoptr (GError) error = NULL;
+          guint64 dbid;
+
+          dbid = cdm_journal_add_crash (client->journal,
+                                        client->process_name,
+                                        client->process_crash_id,
+                                        client->process_vector_id,
+                                        client->process_context_id,
+                                        client->context_name,
+                                        client->lifecycle_state,
+                                        client->coredump_file_path,
+                                        client->process_pid,
+                                        client->process_exit_signal,
+                                        client->process_timestamp,
+                                        &error);
+
+          if (error != NULL)
+            g_warning ("Fail to add new crash entry in database %s", error->message);
+          else
+            g_debug ("New crash entry added to database with id %016lX", dbid);
+
+          /* even if we fail to add to the database we try to transfer the file */
+          cdm_transfer_file (client->transfer,
+                             client->coredump_file_path,
+                             archive_transfer_complete,
+                             cdm_client_ref (client));
 #ifdef WITH_GENIVI_NSM
-              if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_ACTIVE)
-                  != CDM_STATUS_OK)
-                {
-                  g_warning ("Fail increment session lifecycle counter");
-                }
-#endif
+          if (cdm_lifecycle_set_session_state (client->lifecycle, LC_SESSION_INACTIVE)
+              != CDM_STATUS_OK)
+            {
+              g_warning ("Fail decrement session lifecycle counter");
             }
+#endif
+        } break;
+
+        default:
+          break;
         }
     }
 
@@ -285,9 +286,7 @@ get_pid_context_id (pid_t pid)
           ctx_str = ctx_tmp;
         }
       else
-        {
-          ctx_str = g_strdup (proc_ns_buf);
-        }
+        ctx_str = g_strdup (proc_ns_buf);
     }
 
   if (ctx_str == NULL)
@@ -312,7 +311,7 @@ get_container_name_for_context (const gchar *ctxid)
   for (gint i = 0; i < count && !found; i++)
     {
       struct lxc_container *container = active_containers[i];
-      gchar *name = names[i];
+      const gchar *name = names[i];
 
       if (name == NULL || container == NULL)
         continue;
@@ -325,7 +324,7 @@ get_container_name_for_context (const gchar *ctxid)
           pid = container->init_pid (container);
           tmp_id = get_pid_context_id (pid);
 
-          if (g_strcmp0 (tmp_id, ctxid) != 0)
+          if (g_strcmp0 (tmp_id, ctxid) == 0)
             {
               container_name = g_strdup_printf ("%s", name);
               found = true;
@@ -333,10 +332,13 @@ get_container_name_for_context (const gchar *ctxid)
         }
     }
 
+  if (!found)
+    container_name = g_strdup ("container");
+
   for (int i = 0; i < count; i++)
     {
       free (names[i]);
-      free (active_containers[i]);
+      lxc_container_put (active_containers[i]);
     }
 
   return container_name;
@@ -346,32 +348,68 @@ get_container_name_for_context (const gchar *ctxid)
 static void
 send_context_info (CdmClient *c, const gchar *context_name)
 {
-  CdmMessageDataContextInfo msg_data;
-  CdmMessage msg;
+  g_autoptr (CdmMessage) msg = cdm_message_new (CDM_MESSAGE_COREDUMP_CONTEXT, 0);
 
   g_assert (c);
   g_assert (context_name);
 
-  cdm_message_init (&msg, CDM_CONTEXT_INFO, 0);
+  cdm_message_set_context_name (msg, context_name);
 
 #ifdef WITH_GENIVI_NSM
   /* set proper value from NSM */
-  snprintf (msg_data.lifecycle_state, CDM_LIFECYCLESTATE_LEN, "running");
+  cdm_message_set_lifecycle_state (msg, "running");
 #else
-  snprintf (msg_data.lifecycle_state, CDM_LIFECYCLESTATE_LEN, "running");
+  cdm_message_set_lifecycle_state (msg, "running");
 #endif
-  snprintf (msg_data.context_name, CDM_CRASHCONTEXT_LEN, "%s", context_name);
 
-  cdm_message_set_version (&msg, CDM_VERSION);
-  cdm_message_set_data (&msg, &msg_data, sizeof(msg_data));
-
-  if (cdm_message_write (c->sockfd, &msg) == CDM_STATUS_ERROR)
+  if (cdm_message_write (c->sockfd, msg) == CDM_STATUS_ERROR)
     g_warning ("Failed to send context information to client");
 }
 
 static void
-process_message (CdmClient *c,
-                 CdmMessage *msg)
+send_epilog (CdmClient *c, CdmJournalEpilog *elog)
+{
+  g_autoptr (CdmMessage) msg = cdm_message_new (CDM_MESSAGE_EPILOG_FRAME_INFO, 0);
+  uint64_t frame_cnt = 0;
+
+  g_assert (c);
+
+  if (elog == NULL)
+    {
+      g_info ("Epilog not available for client %lx", c->id);
+      cdm_message_set_epilog_frame_count (msg, 0);
+    }
+  else
+    {
+      frame_cnt = strlen (elog->backtrace) / CDM_MESSAGE_EPILOG_FRAME_MAX_LEN;
+      if (strlen (elog->backtrace) % CDM_MESSAGE_EPILOG_FRAME_MAX_LEN > 0)
+        frame_cnt++;
+
+      cdm_message_set_epilog_frame_count (msg, frame_cnt);
+      g_info ("Epilog available for client %lx with %lu frames", c->id, frame_cnt);
+    }
+
+  if (cdm_message_write (c->sockfd, msg) == CDM_STATUS_ERROR)
+    g_warning ("Failed to send epilog information to client");
+
+  if (frame_cnt > 0)
+    {
+      for (guint64 i = 0; i < frame_cnt; i++)
+        {
+          g_autoptr (CdmMessage) fmsg = cdm_message_new (CDM_MESSAGE_EPILOG_FRAME_DATA, 0);
+
+          cdm_message_set_epilog_frame_data (fmsg,
+                                             elog->backtrace +
+                                             (i * CDM_MESSAGE_EPILOG_FRAME_MAX_LEN));
+
+          if (cdm_message_write (c->sockfd, fmsg) == CDM_STATUS_ERROR)
+            g_warning ("Failed to send epilog frame %lu to client", i);
+        }
+    }
+}
+
+static void
+do_initial_message_process (CdmClient *c, CdmMessage *msg)
 {
   g_autofree gchar *tmp_id = NULL;
   g_autofree gchar *tmp_name = NULL;
@@ -379,65 +417,72 @@ process_message (CdmClient *c,
   g_assert (c);
   g_assert (msg);
 
-  if (strncmp ((char *)msg->hdr.version, CDM_BUILDTIME_VERSION, CDM_VERSION_STRING_LEN) != 0)
-    g_warning ("Using different cdh header than coredumper");
+  if (!cdm_message_is_valid (msg))
+    g_warning ("Message malformat or with different protocol version");
 
-  switch (msg->hdr.type)
+  c->last_msg_type = cdm_message_get_type (msg);
+
+  switch (cdm_message_get_type (msg))
     {
-    case CDM_CORE_NEW:
-      g_assert (msg->data);
-
-      c->last_msg_type = CDM_CORE_NEW;
-      c->id = msg->hdr.session;
-      c->init_data = (CdmMessageDataNew *)msg->data;
+    case CDM_MESSAGE_COREDUMP_NEW:
+      c->id = cdm_message_get_session (msg);
+      c->process_pid = cdm_message_get_process_pid (msg);
+      c->process_exit_signal = cdm_message_get_process_exit_signal (msg);
+      c->process_timestamp = cdm_message_get_process_timestamp (msg);
+      c->process_name = g_strdup (cdm_message_get_process_name (msg));
+      c->thread_name = g_strdup (cdm_message_get_thread_name (msg));
 
       g_info ("New crash id=%lx name=%s thread=%s pid=%d signal=%d",
-              c->id, c->init_data->pname,
-              c->init_data->tname,
-              (gint)c->init_data->pid,
-              (gint)c->init_data->coresig);
+              c->id,
+              c->process_name,
+              c->thread_name,
+              (gint)c->process_pid,
+              (gint)c->process_exit_signal);
       break;
 
-    case CDM_CORE_UPDATE:
-      g_assert (msg->data);
-
-      c->last_msg_type = CDM_CORE_UPDATE;
-      c->update_data = (CdmMessageDataUpdate *)msg->data;
+    case CDM_MESSAGE_COREDUMP_UPDATE:
+      c->process_crash_id = g_strdup (cdm_message_get_process_crash_id (msg));
+      c->process_vector_id = g_strdup (cdm_message_get_process_vector_id (msg));
+      c->process_context_id = g_strdup (cdm_message_get_process_context_id (msg));
 
       /* Crashhandler is running in host context so use current pid */
       tmp_id = get_pid_context_id (getpid ());
-
-      if (g_strcmp0 (tmp_id, c->update_data->contextid) == 0)
-        {
-          tmp_name = g_strdup (g_get_host_name ());
-        }
+      if (g_strcmp0 (tmp_id, c->process_context_id) == 0)
+        tmp_name = g_strdup (g_get_host_name ());
       else
         {
 #ifdef WITH_LXC
-          tmp_name = get_container_name_for_context (c->update_data->contextid);
+          tmp_name = get_container_name_for_context (c->process_context_id);
 #else
-          tmp_name = "Container";
+          tmp_name = g_strdup ("container");
 #endif
         }
 
       g_info ("Update crash id=%lx crashID=%s vectorID=%s contextID=%s contextName=%s",
               c->id,
-              c->update_data->crashid,
-              c->update_data->vectorid,
-              c->update_data->contextid,
+              c->process_crash_id,
+              c->process_vector_id,
+              c->process_context_id,
               tmp_name);
 
+#ifdef WITH_DBUS_SERVICES
+      cdm_dbusown_emit_new_crash (c->dbusown,
+                                  c->process_name,
+                                  tmp_name,
+                                  c->process_crash_id);
+#endif
       send_context_info (c, tmp_name);
+      send_epilog (c, cdm_journal_epilog_get (c->journal, c->process_pid));
       break;
 
-    case CDM_CORE_COMPLETE:
-      c->last_msg_type = CDM_CORE_COMPLETE;
-      c->complete_data = (CdmMessageDataComplete *)msg->data;
+    case CDM_MESSAGE_COREDUMP_SUCCESS:
+      c->coredump_file_path = g_strdup (cdm_message_get_coredump_file_path (msg));
+      c->context_name = g_strdup (cdm_message_get_context_name (msg));
+      c->lifecycle_state = g_strdup (cdm_message_get_lifecycle_state (msg));
       g_info ("Coredump id=%lx status OK", c->id);
       break;
 
-    case CDM_CORE_FAILED:
-      c->last_msg_type = CDM_CORE_FAILED;
+    case CDM_MESSAGE_COREDUMP_FAILED:
       g_info ("Coredump id=%lx status FAILED", c->id);
       break;
 
@@ -447,8 +492,7 @@ process_message (CdmClient *c,
 }
 
 static void
-archive_transfer_complete (gpointer cdmclient,
-                           const gchar *file_path)
+archive_transfer_complete (gpointer cdmclient, const gchar *file_path)
 {
   CdmClient *client = (CdmClient *)cdmclient;
 
@@ -464,9 +508,7 @@ archive_transfer_complete (gpointer cdmclient,
 }
 
 CdmClient *
-cdm_client_new (gint clientfd,
-                CdmTransfer *transfer,
-                CdmJournal *journal)
+cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal)
 {
   CdmClient *client = (CdmClient *)g_source_new (&client_source_funcs, sizeof(CdmClient));
 
@@ -513,10 +555,19 @@ cdm_client_unref (CdmClient *client)
       if (client->lifecycle != NULL)
         cdm_lifecycle_unref (client->lifecycle);
 #endif
+#ifdef WITH_DBUS_SERVICES
+      if (client->dbusown != NULL)
+        cdm_dbusown_unref (client->dbusown);
+#endif
 
-      g_free (client->init_data);
-      g_free (client->update_data);
-      g_free (client->complete_data);
+      g_free (client->lifecycle_state);
+      g_free (client->process_name);
+      g_free (client->thread_name);
+      g_free (client->context_name);
+      g_free (client->process_crash_id);
+      g_free (client->process_vector_id);
+      g_free (client->process_context_id);
+      g_free (client->coredump_file_path);
 
       g_source_unref (CDM_EVENT_SOURCE (client));
     }
@@ -531,5 +582,16 @@ cdm_client_set_lifecycle (CdmClient *client,
   g_assert (lifecycle);
 
   client->lifecycle = cdm_lifecycle_ref (lifecycle);
+}
+#endif
+#ifdef WITH_DBUS_SERVICES
+void
+cdm_client_set_dbusown (CdmClient *client,
+                        CdmDBusOwn *dbusown)
+{
+  g_assert (client);
+  g_assert (dbusown);
+
+  client->dbusown = cdm_dbusown_ref (dbusown);
 }
 #endif

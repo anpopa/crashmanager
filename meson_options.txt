@@ -7,5 +7,7 @@ option('DEBUG_ATTACH', type : 'boolean', value : false, description : 'Stop cras
 option('TESTS', type : 'boolean', value : false, description : 'Build unit tests')
 option('CRASHTEST', type : 'boolean', value : true, description : 'Build crashtest application')
 option('CRASHMANAGER', type : 'boolean', value : true, description : 'Build crashmanager daemon')
+option('LIBCDHEPILOG', type : 'boolean', value : true, description : 'Build libcdhepilog')
 option('CRASHHANDLER', type : 'boolean', value : true, description : 'Build crashhandler application')
 option('CRASHINFO', type : 'boolean', value : true, description : 'Build crashinfo application')
+option('DBUS_SERVICES', type : 'boolean', value : true, description : 'Build and enable the DBUS services')

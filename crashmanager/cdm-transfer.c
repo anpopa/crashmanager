@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,9 @@ static gboolean transfer_source_prepare (GSource *source, gint *timeout);
 /**
  * @brief GSource dispatch function
  */
-static gboolean transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer _transfer);
+static gboolean transfer_source_dispatch (GSource *source,
+                                          GSourceFunc callback,
+                                          gpointer _transfer);
 
 /**
  * @brief GSource callback function
@@ -89,8 +91,7 @@ static GSourceFuncs transfer_source_funcs =
 };
 
 static gboolean
-transfer_source_prepare (GSource *source,
-                         gint *timeout)
+transfer_source_prepare (GSource *source, gint *timeout)
 {
   CdmTransfer *transfer = (CdmTransfer *)source;
 
@@ -100,9 +101,7 @@ transfer_source_prepare (GSource *source,
 }
 
 static gboolean
-transfer_source_dispatch (GSource *source,
-                          GSourceFunc callback,
-                          gpointer _transfer)
+transfer_source_dispatch (GSource *source, GSourceFunc callback, gpointer _transfer)
 {
   CdmTransfer *transfer = (CdmTransfer *)source;
   gpointer entry = g_async_queue_try_pop (transfer->queue);
@@ -117,8 +116,7 @@ transfer_source_dispatch (GSource *source,
 }
 
 static gboolean
-transfer_source_callback (gpointer _transfer,
-                          gpointer _entry)
+transfer_source_callback (gpointer _transfer, gpointer _entry)
 {
   CdmTransfer *transfer = (CdmTransfer *)_transfer;
   CdmTransferEntry *entry = (CdmTransferEntry *)_entry;
@@ -227,11 +225,7 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
   publickey = cdm_options_string_for (options, KEY_TRANSFER_PUBLIC_KEY);
   privatekey = cdm_options_string_for (options, KEY_TRANSFER_PRIVATE_KEY);
 
-  if (libssh2_userauth_publickey_fromfile (session,
-                                           username,
-                                           publickey,
-                                           privatekey,
-                                           password))
+  if (libssh2_userauth_publickey_fromfile (session, username, publickey, privatekey, password))
     {
       g_warning ("Authentication by public key failed");
       goto scp_shutdown;
@@ -250,7 +244,9 @@ transfer_scp_upload (CdmOptions *options, const gchar *file_path)
   file_basename = g_path_get_basename (file_path);
   scppath = g_build_filename (serverpath, file_basename, NULL);
 
-  channel = libssh2_scp_send (session, scppath, fileinfo.st_mode & 0777,
+  channel = libssh2_scp_send (session,
+                              scppath,
+                              fileinfo.st_mode & 0777,
                               (unsigned long)fileinfo.st_size);
   if (!channel)
     {
@@ -311,8 +307,7 @@ scp_shutdown:
 #endif
 
 static void
-transfer_thread_func (gpointer _entry,
-                      gpointer _transfer)
+transfer_thread_func (gpointer _entry, gpointer _transfer)
 {
   g_autofree gchar *file_name = NULL;
   CdmTransferEntry *entry = (CdmTransferEntry *)_entry;

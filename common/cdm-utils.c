@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -123,9 +123,7 @@ cdm_utils_get_osversion (void)
       FILE *fstm;
 
       if ((fstm = fopen ("/etc/os-release", "r")) == NULL)
-        {
-          g_warning ("Fail to open /etc/os-release file. Error %s", strerror (errno));
-        }
+        g_warning ("Fail to open /etc/os-release file. Error %s", strerror (errno));
       else
         {
           while (fgets (tmpbuf, sizeof(tmpbuf), fstm) && !done)
@@ -173,11 +171,8 @@ cdm_utils_get_filesize (const gchar *file_path)
 }
 
 CdmStatus
-cdm_utils_chown (const gchar *file_path,
-                 const gchar *user_name,
-                 const gchar *group_name)
+cdm_utils_chown (const gchar *file_path, const gchar *user_name, const gchar *group_name)
 {
-  CdmStatus status = CDM_STATUS_OK;
   struct passwd *pwd;
   struct group *grp;
 
@@ -187,24 +182,17 @@ cdm_utils_chown (const gchar *file_path,
 
   pwd = getpwnam (user_name);
   if (pwd == NULL)
-    {
-      status = CDM_STATUS_ERROR;
-    }
-  else
-    {
-      grp = getgrnam (group_name);
-      if (grp == NULL)
-        {
-          status = CDM_STATUS_ERROR;
-        }
-      else
-        {
-          if (chown (file_path, pwd->pw_uid, grp->gr_gid) == -1)
-            status = CDM_STATUS_ERROR;
-        }
-    }
+    return CDM_STATUS_ERROR;
 
-  return status;
+  grp = getgrnam (group_name);
+  if (grp == NULL)
+    return CDM_STATUS_ERROR;
+
+
+  if (chown (file_path, pwd->pw_uid, grp->gr_gid) == -1)
+    return CDM_STATUS_ERROR;
+
+  return CDM_STATUS_OK;
 }
 
 pid_t

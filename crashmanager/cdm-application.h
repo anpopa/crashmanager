@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include "cdm-logging.h"
 #include "cdm-options.h"
 #include "cdm-server.h"
+#include "cdm-elogsrv.h"
 #include "cdm-janitor.h"
 #include "cdm-journal.h"
 #include "cdm-transfer.h"
@@ -36,6 +37,9 @@
 #endif
 #ifdef WITH_GENIVI_NSM
 #include "cdm-lifecycle.h"
+#endif
+#ifdef WITH_DBUS_SERVICES
+#include "cdm-dbusown.h"
 #endif
 
 #include <glib.h>
@@ -49,6 +53,7 @@ G_BEGIN_DECLS
 typedef struct _CdmApplication {
   CdmOptions *options;
   CdmServer *server;
+  CdmELogSrv *elogsrv;
   CdmJanitor *janitor;
   CdmJournal *journal;
 #ifdef WITH_SYSTEMD
@@ -56,6 +61,9 @@ typedef struct _CdmApplication {
 #endif
 #ifdef WITH_GENIVI_NSM
   CdmLifecycle *lifecycle;
+#endif
+#ifdef WITH_DBUS_SERVICES
+  CdmDBusOwn *dbusown;
 #endif
   CdmTransfer *transfer;
   GMainLoop *mainloop;
@@ -70,34 +78,35 @@ typedef struct _CdmApplication {
  * returned object. If the error is set the object is invalid and needs to be
  * released.
  */
-CdmApplication *cdm_application_new (const gchar *config, GError **error);
+CdmApplication *        cdm_application_new                 (const gchar *config, 
+                                                             GError **error);
 
 /**
  * @brief Aquire CdmApplication object
  * @param app The object to aquire
  * @return The aquiered CdmApplication object
  */
-CdmApplication *cdm_application_ref (CdmApplication *app);
+CdmApplication *        cdm_application_ref                 (CdmApplication *app);
 
 /**
  * @brief Release a CdmApplication object
  * @param app The cdm application object to release
  */
-void cdm_application_unref (CdmApplication *app);
+void                    cdm_application_unref               (CdmApplication *app);
 
 /**
  * @brief Execute cdm application
  * @param app The cdm application object
  * @return If run was succesful CDM_STATUS_OK is returned
  */
-CdmStatus cdm_application_execute (CdmApplication *app);
+CdmStatus               cdm_application_execute             (CdmApplication *app);
 
 /**
  * @brief Get main event loop reference
  * @param app The cdm application object
  * @return A pointer to the main event loop
  */
-GMainLoop *cdm_application_get_mainloop (CdmApplication *app);
+GMainLoop *             cdm_application_get_mainloop        (CdmApplication *app);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmApplication, cdm_application_unref);
 

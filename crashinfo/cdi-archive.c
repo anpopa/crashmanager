@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,6 +131,27 @@ cdi_archive_print_info (CdiArchive *ar)
 }
 
 CdmStatus
+cdi_archive_print_epilog (CdiArchive *ar)
+{
+  struct archive_entry *entry;
+
+  g_assert (ar);
+
+  if (ar->archive == NULL)
+    return CDM_STATUS_ERROR;
+
+  while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
+    {
+      if (g_strcmp0 (archive_entry_pathname (entry), "info.epilog") == 0)
+        archive_read_data_into_fd (ar->archive, STDOUT_FILENO);
+      else
+        archive_read_data_skip (ar->archive);
+    }
+
+  return CDM_STATUS_OK;
+}
+
+CdmStatus
 cdi_archive_print_file (CdiArchive *ar, const gchar *fname)
 {
   struct archive_entry *entry;
@@ -159,6 +180,7 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
   g_autofree gchar *buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
   g_autofree gchar *proc_name = NULL;
   g_autofree gchar *file_name = NULL;
+
   g_autoptr (GError) error = NULL;
   struct archive_entry *entry;
   gssize proc_pid = 0;
@@ -199,12 +221,12 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
   if (error != NULL)
     return CDM_STATUS_ERROR;
 
-  proc_name = g_key_file_get_string (keyfile, "crashdata", "ProcessName", &error);
+  proc_name =
+    g_key_file_get_string (keyfile, "crashdata", "ProcessName", &error);
   if (error != NULL)
     return CDM_STATUS_ERROR;
 
   file_name = g_strdup_printf ("%s/%s.%ld.%ld.core", dpath, proc_name, proc_pid, proc_tstamp);
-
   g_print ("Extracting coredump with size %ld ... ", towrite);
 
   /* need to reopen the archive */
@@ -218,7 +240,9 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
     return CDM_STATUS_ERROR;
 
   memset (buffer, 0, ARCHIVE_READ_BUFFER_SIZE);
-  output_fd = open (file_name, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  output_fd = open (file_name,
+                    O_CREAT | O_WRONLY | O_TRUNC,
+                    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
   while (archive_read_next_header (ar->archive, &entry) == ARCHIVE_OK)
     {
@@ -244,13 +268,10 @@ cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath)
             }
         }
       else
-        {
-          archive_read_data_skip (ar->archive);
-        }
+        archive_read_data_skip (ar->archive);
     }
 
   g_print ("Done.\nNew file name: %s\n", file_name);
-
   close (output_fd);
 
   return CDM_STATUS_OK;
@@ -326,12 +347,17 @@ cdi_archive_print_backtrace (CdiArchive *ar, gboolean all)
           g_autofree gchar *standard_output = NULL;
           g_autoptr (GError) cmd_error = NULL;
 
-          command_line = g_strdup_printf ("sh -c \"gdb -q -ex '%s' -ex quit %s %s/*.core\"",
-                                          all == FALSE ? "bt" : "thread apply all bt",
-                                          exepth,
-                                          tmpdir);
+          command_line = g_strdup_printf (
+            "sh -c \"gdb -q -ex '%s' -ex quit %s %s/*.core\"",
+            all == FALSE ? "bt" : "thread apply all bt",
+            exepth,
+            tmpdir);
 
-          g_spawn_command_line_sync (command_line, &standard_output, NULL, &exit_status, &cmd_error);
+          g_spawn_command_line_sync (command_line,
+                                     &standard_output,
+                                     NULL,
+                                     &exit_status,
+                                     &cmd_error);
 
           if (cmd_error != NULL)
             g_warning ("Fail to spawn process. Error %s", cmd_error->message);

@@ -95,6 +95,14 @@ G_BEGIN_DECLS
 #define CDM_IPC_TIMEOUT_SEC (15)
 #endif
 
+#ifndef CDM_ELOG_SOCK_ADDR
+#define CDM_ELOG_SOCK_ADDR ".epilog.sock"
+#endif
+
+#ifndef CDM_ELOG_TIMEOUT_SEC
+#define CDM_ELOG_TIMEOUT_SEC (5)
+#endif
+
 #ifndef CDM_TRANSFER_ADDRESS
 #define CDM_TRANSFER_ADDRESS ""
 #endif

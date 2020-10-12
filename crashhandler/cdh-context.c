@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@
 
 #define CRASH_ID_HIGH (6)
 #define CRASH_ID_LOW (2)
-#define CRASH_ID_QUALITY(x) ((x) > CRASH_ID_HIGH ? "high" : (x) < CRASH_ID_LOW ? "low" : "medium")
+#define CRASH_ID_QUALITY(x) ((x) > CRASH_ID_HIGH ? "high" : (x) < \
+                             CRASH_ID_LOW ? "low" : "medium")
 
 static gchar ftypelet (mode_t bits);
 
@@ -53,8 +54,7 @@ static void crash_context_dump (CdhContext *ctx, gboolean postcore);
 static CdmStatus create_crashid (CdhContext *ctx);
 
 CdhContext *
-cdh_context_new (CdmOptions *opts,
-                 CdhArchive *archive)
+cdh_context_new (CdmOptions *opts, CdhArchive *archive)
 {
   CdhContext *ctx = g_new0 (CdhContext, 1);
 
@@ -67,10 +67,6 @@ cdh_context_new (CdmOptions *opts,
   ctx->opts = cdm_options_ref (opts);
   ctx->archive = cdh_archive_ref (archive);
   ctx->onhost = TRUE;
-
-  /* the following members store data from crashmanager which can be unavailable */
-  ctx->context_name = "Unavailable";
-  ctx->lifecycle_state = "Unavailable";
 
   return ctx;
 }
@@ -108,6 +104,7 @@ cdh_context_unref (CdhContext *ctx)
       g_free (ctx->context_name);
       g_free (ctx->crashid);
       g_free (ctx->vectorid);
+      g_free (ctx->epilog);
 
       g_free (ctx);
     }
@@ -155,38 +152,58 @@ create_crashid (CdhContext *ctx)
 
   if (ctx->crashid_info & CID_RA_FILE_OFFSET)
     {
-      vid_str = g_strdup_printf ("%s%lx%s",
-                                 ctx->name,
-                                 ctx->ip_file_offset,
-                                 ctx->ra_module_name);
-
+      vid_str = g_strdup_printf ("%s%lx%s", ctx->name, ctx->ip_file_offset, ctx->ra_module_name);
       ctx->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (vid_str));
     }
   else
-    {
-      ctx->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (cid_str));
-    }
+    ctx->vectorid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (cid_str));
 
   /* crash context location string */
   loc = ctx->onhost == TRUE ? locstr[0] : locstr[1];
 #ifdef __x86_64__
   g_info (
-    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s "
-    "vectorID=%s confidence=\"%s\" signal=\"%s\" rip=0x%lx rbp=0x%lx retaddr=0x%lx "
-    "IPFileOffset=0x%lx RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
-    loc, ctx->contextid, ctx->name, ctx->tname, ctx->pid, ctx->cpid,
-    ctx->crashid, ctx->vectorid, CRASH_ID_QUALITY (ctx->crashid_info),
-    strsignal ((gint)ctx->sig), ctx->regs.rip, ctx->regs.rbp, ctx->ra, ctx->ip_file_offset,
-    ctx->ra_file_offset, ctx->ip_module_name, ctx->ra_module_name);
+    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s vectorID=%s "
+    "confidence=\"%s\" signal=\"%s\" rip=0x%lx rbp=0x%lx retaddr=0x%lx IPFileOffset=0x%lx "
+    "RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
+    loc,
+    ctx->contextid,
+    ctx->name,
+    ctx->tname,
+    ctx->pid,
+    ctx->cpid,
+    ctx->crashid,
+    ctx->vectorid,
+    CRASH_ID_QUALITY (ctx->crashid_info),
+    strsignal ((gint)ctx->sig),
+    ctx->regs.rip,
+    ctx->regs.rbp,
+    ctx->ra,
+    ctx->ip_file_offset,
+    ctx->ra_file_offset,
+    ctx->ip_module_name,
+    ctx->ra_module_name);
 #elif __aarch64__
   g_info (
-    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s "
-    "vectorID=%s confidence=\"%s\" signal=\"%s\" pc=0x%lx lr=0x%lx retaddr=0x%lx "
-    "IPFileOffset=0x%lx RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
-    loc, ctx->contextid, ctx->name, ctx->tname, ctx->pid, ctx->cpid,
-    ctx->crashid, ctx->vectorid, CRASH_ID_QUALITY (ctx->crashid_info),
-    strsignal (ctx->sig), ctx->regs.pc, ctx->regs.lr, ctx->ra, ctx->ip_file_offset,
-    ctx->ra_file_offset, ctx->ip_module_name, ctx->ra_module_name);
+    "Crash in %s contextID=%s process=\"%s\" thread=\"%s\" pid=%ld cpid=%ld crashID=%s vectorID=%s "
+    "confidence=\"%s\" signal=\"%s\" pc=0x%lx lr=0x%lx retaddr=0x%lx IPFileOffset=0x%lx "
+    "RAFileOffset=0x%lx IPModule=\"%s\" RAModule=\"%s\"",
+    loc,
+    ctx->contextid,
+    ctx->name,
+    ctx->tname,
+    ctx->pid,
+    ctx->cpid,
+    ctx->crashid,
+    ctx->vectorid,
+    CRASH_ID_QUALITY (ctx->crashid_info),
+    strsignal ((int)ctx->sig),
+    ctx->regs.pc,
+    ctx->regs.lr,
+    ctx->ra,
+    ctx->ip_file_offset,
+    ctx->ra_file_offset,
+    ctx->ip_module_name,
+    ctx->ra_module_name);
 #endif
 
   return CDM_STATUS_OK;
@@ -250,8 +267,7 @@ ftypelet (mode_t bits)
 }
 
 static void
-strmode (mode_t mode,
-         gchar str[12])
+strmode (mode_t mode, gchar str[12])
 {
   g_assert (str);
 
@@ -269,8 +285,7 @@ strmode (mode_t mode,
   str[11] = '\0';
 }
 static CdmStatus
-list_dircontent_to (CdhContext *ctx,
-                    const gchar *dname)
+list_dircontent_to (CdhContext *ctx, const gchar *dname)
 {
   g_autoptr (GError) error = NULL;
   g_autofree gchar *output = NULL;
@@ -355,9 +370,7 @@ list_dircontent_to (CdhContext *ctx,
           output = output_tmp;
         }
       else
-        {
-          output = g_strdup_printf ("%s", fline);
-        }
+        output = g_strdup_printf ("%s", fline);
     }
 
   g_dir_close (gdir);
@@ -375,9 +388,7 @@ list_dircontent_to (CdhContext *ctx,
             status = CDM_STATUS_ERROR;
         }
       else
-        {
-          status = CDM_STATUS_ERROR;
-        }
+        status = CDM_STATUS_ERROR;
     }
 
   return status;
@@ -456,9 +467,7 @@ update_context_info (CdhContext *ctx)
           ctx_str = ctx_tmp;
         }
       else
-        {
-          ctx_str = g_strdup (proc_ns_buf);
-        }
+        ctx_str = g_strdup (proc_ns_buf);
     }
 
   ctx->contextid = g_strdup_printf ("%016lX", cdm_utils_jenkins_hash (ctx_str));
@@ -468,8 +477,7 @@ update_context_info (CdhContext *ctx)
 
 
 static void
-crash_context_dump (CdhContext *ctx,
-                    gboolean postcore)
+crash_context_dump (CdhContext *ctx, gboolean postcore)
 {
   GKeyFile *key_file = NULL;
   gchar **groups = NULL;
@@ -500,7 +508,8 @@ crash_context_dump (CdhContext *ctx,
       if (g_regex_match_simple (proc_key, ctx->name, 0, 0) == FALSE)
         continue;
 
-      key_postcore = g_key_file_get_boolean (key_file, gname, "PostCore", &error);
+      key_postcore =
+        g_key_file_get_boolean (key_file, gname, "PostCore", &error);
       if (error != NULL)
         continue;
 
@@ -529,8 +538,6 @@ crash_context_dump (CdhContext *ctx,
 CdmStatus
 cdh_context_generate_prestream (CdhContext *ctx)
 {
-  g_autofree gchar *file = NULL;
-
   g_assert (ctx);
 
   if (update_context_info (ctx) == CDM_STATUS_ERROR)
@@ -552,22 +559,51 @@ cdh_context_set_manager (CdhContext *ctx, CdhManager *manager)
 void
 cdh_context_read_context_info (CdhContext *ctx)
 {
-  CdmMessage msg;
+  g_autoptr (CdmMessage) msg = cdm_message_new (CDM_MESSAGE_INVALID, 0);
 
-  cdm_message_init (&msg, CDM_CORE_UNKNOWN, 0);
-
-  if (cdm_message_read (cdh_manager_get_socket (ctx->manager), &msg) != CDM_STATUS_OK)
+  if (cdm_message_read (cdh_manager_get_socket (ctx->manager), msg) != CDM_STATUS_OK)
+    g_debug ("Cannot read from manager socket %d", cdh_manager_get_socket (ctx->manager));
+  else if (cdm_message_get_type (msg) == CDM_MESSAGE_COREDUMP_CONTEXT)
     {
-      g_debug ("Cannot read from manager socket %d", cdh_manager_get_socket (ctx->manager));
+      ctx->context_name = g_strdup (cdm_message_get_context_name (msg));
+      ctx->lifecycle_state = g_strdup (cdm_message_get_lifecycle_state (msg));
     }
-  else if (msg.hdr.type == CDM_CONTEXT_INFO)
+}
+
+void
+cdh_context_read_epilog (CdhContext *ctx)
+{
+  g_autoptr (CdmMessage) msg = cdm_message_new (CDM_MESSAGE_INVALID, 0);
+
+  if (cdm_message_read (cdh_manager_get_socket (ctx->manager), msg) != CDM_STATUS_OK)
+    g_debug ("Cannot epilog read from manager socket %d", cdh_manager_get_socket (ctx->manager));
+  else if (cdm_message_get_type (msg) == CDM_MESSAGE_EPILOG_FRAME_INFO)
     {
-      CdmMessageDataContextInfo *data = (CdmMessageDataContextInfo *)msg.data;
+      const uint64_t frame_count = cdm_message_get_epilog_frame_count (msg);
 
-      ctx->context_name = g_strdup (data->context_name);
-      ctx->lifecycle_state = g_strdup (data->lifecycle_state);
+      if (frame_count > 0)
+        {
+          ctx->epilog = calloc (CDM_MESSAGE_EPILOG_FRAME_MAX_LEN * frame_count, 1);
 
-      cdm_message_free_data (&msg);
+          for (guint64 i = 0; i < frame_count; i++)
+            {
+              g_autoptr (CdmMessage) fmsg = cdm_message_new (CDM_MESSAGE_INVALID, 0);
+
+              if (cdm_message_read (cdh_manager_get_socket (ctx->manager), fmsg) != CDM_STATUS_OK)
+                {
+                  g_debug ("Cannot read epilog from manager socket %d",
+                           cdh_manager_get_socket (ctx->manager));
+                }
+              else if (cdm_message_get_type (fmsg) == CDM_MESSAGE_EPILOG_FRAME_DATA)
+                {
+                  memcpy (ctx->epilog + (i * CDM_MESSAGE_EPILOG_FRAME_MAX_LEN),
+                          cdm_message_get_epilog_frame_data (fmsg),
+                          CDM_MESSAGE_EPILOG_FRAME_MAX_LEN);
+                }
+            }
+        }
+      else
+        g_info ("No epilog available from crashmanager");
     }
 }
 #endif
@@ -613,7 +649,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     ctx->name,
     ctx->tname,
     ctx->pexe,
-    ctx->lifecycle_state,
+    ctx->lifecycle_state != NULL ? ctx->lifecycle_state : "unavailable",
     ctx->tstamp,
     ctx->pid,
     ctx->cpid,
@@ -621,7 +657,7 @@ cdh_context_generate_poststream (CdhContext *ctx)
     ctx->crashid,
     ctx->vectorid,
     ctx->contextid,
-    ctx->context_name,
+    ctx->context_name != NULL ? ctx->context_name : "unavailable",
     ip,
     ra,
     ctx->ip_file_offset,
@@ -631,19 +667,29 @@ cdh_context_generate_poststream (CdhContext *ctx)
     ctx->cdsize
     );
 
-  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data))
-      == CDM_STATUS_OK)
+  if (cdh_archive_create_file (ctx->archive, "info.crashdata", strlen (file_data)) == CDM_STATUS_OK)
     {
-      status = cdh_archive_write_file (ctx->archive,
-                                       (const void*)file_data,
-                                       strlen (file_data));
-
+      status = cdh_archive_write_file (ctx->archive, (const void*)file_data, strlen (file_data));
       if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
         status = CDM_STATUS_ERROR;
     }
   else
+    status = CDM_STATUS_ERROR;
+
+  if ((status == CDM_STATUS_OK) && (ctx->epilog != NULL))
     {
-      status = CDM_STATUS_ERROR;
+      if (cdh_archive_create_file (ctx->archive, "info.epilog", strlen (ctx->epilog))
+          == CDM_STATUS_OK)
+        {
+          status = cdh_archive_write_file (ctx->archive,
+                                           (const void*)ctx->epilog,
+                                           strlen (ctx->epilog));
+
+          if (cdh_archive_finish_file (ctx->archive) != CDM_STATUS_OK)
+            status = CDM_STATUS_ERROR;
+        }
+      else
+        status = CDM_STATUS_ERROR;
     }
 
   crash_context_dump (ctx, TRUE);

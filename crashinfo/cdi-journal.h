@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,27 +46,29 @@ typedef struct _CdiJournal {
  * @param error The GError object or NULL
  * @return On success return a new CdiJournal object otherwise return NULL
  */
-CdiJournal *cdi_journal_new (CdmOptions *options, GError **error);
+CdiJournal *            cdi_journal_new                         (CdmOptions *options, 
+                                                                 GError **error);
 
 /**
  * @brief Aquire journal object
  * @param journal Pointer to the journal object
  * @return The referenced journal object
  */
-CdiJournal *cdi_journal_ref (CdiJournal *journal);
+CdiJournal *            cdi_journal_ref                         (CdiJournal *journal);
 
 /**
  * @brief Release an journal object
  * @param journal Pointer to the journal object
  */
-void cdi_journal_unref (CdiJournal *journal);
+void                    cdi_journal_unref                       (CdiJournal *journal);
 
 /**
  * @brief List database entries to stdout
  * @param journal The journal object
  * @param error The GError object or NULL
  */
-void cdi_journal_list_entries (CdiJournal *journal, GError **error);
+void                    cdi_journal_list_entries                (CdiJournal *journal, 
+                                                                 GError **error);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiJournal, cdi_journal_unref);
 

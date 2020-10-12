@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,9 +59,7 @@ wait_early_cdh_instances (long timeout)
           count++;
         }
       else
-        {
-          end = TRUE;
-        }
+        end = TRUE;
 
       if (!end && count >= timeout)
         {
@@ -72,8 +70,7 @@ wait_early_cdh_instances (long timeout)
 }
 
 static CdmStatus
-archive_early_crashdump (CdmApplication *app,
-                         const gchar *crashfile)
+archive_early_crashdump (CdmApplication *app, const gchar *crashfile)
 {
   g_autoptr (GKeyFile) keyfile = NULL;
   g_autoptr (GError) error = NULL;
@@ -88,32 +85,25 @@ archive_early_crashdump (CdmApplication *app,
   archive_read_support_format_all (archive);
 
   if (archive_read_open_filename (archive, crashfile, 10240) != ARCHIVE_OK)
+    return CDM_STATUS_ERROR;
+
+  buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
+
+  while (archive_read_next_header (archive, &entry) == ARCHIVE_OK)
     {
-      status = CDM_STATUS_ERROR;
+      if (g_strcmp0 (archive_entry_pathname (entry), "info.crashdata") == 0)
+        archive_read_data (archive, buffer, ARCHIVE_READ_BUFFER_SIZE);
+      else
+        archive_read_data_skip (archive);
     }
+
+  if (strlen (buffer) == 0)
+    status = CDM_STATUS_ERROR;
   else
     {
-      buffer = g_new0 (gchar, ARCHIVE_READ_BUFFER_SIZE);
-
-      while (archive_read_next_header (archive, &entry) == ARCHIVE_OK)
-        {
-          if (g_strcmp0 (archive_entry_pathname (entry), "info.crashdata") == 0)
-            archive_read_data (archive, buffer, ARCHIVE_READ_BUFFER_SIZE);
-          else
-            archive_read_data_skip (archive);
-        }
-
-      if (strlen (buffer) == 0)
-        {
-          status = CDM_STATUS_ERROR;
-        }
-      else
-        {
-          keyfile = g_key_file_new ();
-
-          if (!g_key_file_load_from_data (keyfile, buffer, (gsize) - 1, G_KEY_FILE_NONE, NULL))
-            status = CDM_STATUS_ERROR;
-        }
+      keyfile = g_key_file_new ();
+      if (!g_key_file_load_from_data (keyfile, buffer, (gsize) - 1, G_KEY_FILE_NONE, NULL))
+        status = CDM_STATUS_ERROR;
     }
 
   archive_read_free (archive);
@@ -150,7 +140,8 @@ archive_early_crashdump (CdmApplication *app,
                              crashfile,
                              proc_pid > 0 ? proc_pid : 0,
                              proc_sig > 0 ? proc_sig : 0,
-                             (guint64)(proc_tstamp > 0 ? proc_tstamp : (g_get_real_time () / (1000000))),
+                             (guint64)(proc_tstamp >
+                                       0 ? proc_tstamp : (g_get_real_time () / (1000000))),
                              &error);
 
       if (error != NULL)
@@ -184,8 +175,7 @@ archive_early_crashdump (CdmApplication *app,
 }
 
 static CdmStatus
-archive_early_crashes (CdmApplication *app,
-                       const gchar *crashdir)
+archive_early_crashes (CdmApplication *app, const gchar *crashdir)
 {
   CdmStatus status = CDM_STATUS_OK;
   const gchar *nfile = NULL;
@@ -207,24 +197,20 @@ archive_early_crashes (CdmApplication *app,
     {
       g_autofree gchar *fpath = NULL;
       gboolean entry_exist = FALSE;
-      g_autoptr (GError) journal_error = NULL;
+      g_autoptr (GError) jerror = NULL;
 
       fpath = g_build_filename (crashdir, nfile, NULL);
-      entry_exist = cdm_journal_archive_exist (app->journal, fpath, &journal_error);
+      entry_exist = cdm_journal_archive_exist (app->journal, fpath, &jerror);
 
-      if (journal_error != NULL)
+      if (jerror != NULL)
         {
-          g_warning ("Fail to check archive status for %s. Error %s",
-                     fpath,
-                     journal_error->message);
+          g_warning ("Fail to check archive status for %s. Error %s", fpath, jerror->message);
           continue;
         }
 
       if (!entry_exist)
         {
-          /*
-           * wait for any early crashhandler instance to avoid sending truncated archives
-           */
+          /* wait for any early crashhandler instance to avoid sending truncated archives */
           wait_early_cdh_instances (5);
 
           if (g_strrstr (fpath, "vmlinux") != NULL)
@@ -240,19 +226,16 @@ archive_early_crashes (CdmApplication *app,
                                      0,
                                      0,
                                      (guint64)(g_get_real_time () / (1000000)),
-                                     &journal_error);
+                                     &jerror);
 
-              if (journal_error != NULL)
+              if (jerror != NULL)
                 {
-                  g_warning ("Fail to add kernel dump entry in database %s",
-                             journal_error->message);
+                  g_warning ("Fail to add kernel dump entry in database %s", jerror->message);
                   status |= CDM_STATUS_ERROR;
                 }
             }
           else
-            {
-              status |= archive_early_crashdump (app, fpath);
-            }
+            status |= archive_early_crashdump (app, fpath);
         }
     }
 
@@ -262,8 +245,7 @@ archive_early_crashes (CdmApplication *app,
 }
 
 static CdmStatus
-archive_kdumps (CdmApplication *app,
-                const gchar *crashdir)
+archive_kdumps (CdmApplication *app, const gchar *crashdir)
 {
   g_autofree gchar *opt_kdumpdir = NULL;
   const gchar *nfile = NULL;
@@ -318,8 +300,7 @@ archive_kdumps (CdmApplication *app,
 }
 
 static void
-transfer_complete (gpointer cdmjournal,
-                   const gchar *file_path)
+transfer_complete (gpointer cdmjournal, const gchar *file_path)
 {
   CDM_UNUSED (cdmjournal);
   g_info ("Archive transfer complete for %s", file_path);
@@ -334,7 +315,8 @@ transfer_missing_files (CdmApplication *app)
 
   while (!finish)
     {
-      g_autofree gchar *file = cdm_journal_get_untransferred (app->journal, NULL);
+      g_autofree gchar *file =
+        cdm_journal_get_untransferred (app->journal, NULL);
 
       if (file != NULL)
         {
@@ -353,9 +335,7 @@ transfer_missing_files (CdmApplication *app)
             g_warning ("Fail to set transfer complete for %s. Error %s", file, error->message);
         }
       else
-        {
-          finish = TRUE;
-        }
+        finish = TRUE;
     }
 }
 
@@ -389,7 +369,13 @@ cdm_application_new (const gchar *config, GError **error)
   app->janitor = cdm_janitor_new (app->options, app->journal);
 
   /* construct server and return if an error is set */
-  app->server = cdm_server_new (app->options, app->transfer, app->journal, error);
+  app->server =
+    cdm_server_new (app->options, app->transfer, app->journal, error);
+  if (*error != NULL)
+    return app;
+
+  /* construct epilog server and return if an error is set */
+  app->elogsrv = cdm_elogsrv_new (app->options, app->journal, error);
   if (*error != NULL)
     return app;
 
@@ -397,6 +383,11 @@ cdm_application_new (const gchar *config, GError **error)
   /* construct lifecycle noexept */
   app->lifecycle = cdm_lifecycle_new ();
   cdm_server_set_lifecycle (app->server, app->lifecycle);
+#endif
+
+#ifdef WITH_DBUS_SERVICES
+  app->dbusown = cdm_dbusown_new (app->options);
+  cdm_server_set_dbusown (app->server, app->dbusown);
 #endif
 
   /* construct main loop noexept */
@@ -423,6 +414,9 @@ cdm_application_unref (CdmApplication *app)
       if (app->server != NULL)
         cdm_server_unref (app->server);
 
+      if (app->elogsrv != NULL)
+        cdm_elogsrv_unref (app->elogsrv);
+
       if (app->janitor != NULL)
         cdm_janitor_unref (app->janitor);
 
@@ -435,6 +429,10 @@ cdm_application_unref (CdmApplication *app)
 #ifdef WITH_GENIVI_NSM
       if (app->lifecycle != NULL)
         cdm_lifecycle_unref (app->lifecycle);
+#endif
+#ifdef WITH_DBUS_SERVICES
+      if (app->dbusown != NULL)
+        cdm_dbusown_unref (app->dbusown);
 #endif
       if (app->transfer != NULL)
         cdm_transfer_unref (app->transfer);
@@ -468,16 +466,15 @@ cdm_application_execute (CdmApplication *app)
   opt_group = cdm_options_string_for (app->options, KEY_GROUP_NAME);
 
   if (g_mkdir_with_parents (opt_crashdir, 0755) != 0)
-    {
-      return CDM_STATUS_ERROR;
-    }
-  else
-    {
-      if (cdm_utils_chown (opt_crashdir, opt_user, opt_group) == CDM_STATUS_ERROR)
-        g_warning ("Failed to set user and group owner");
-    }
+    return CDM_STATUS_ERROR;
+
+  if (cdm_utils_chown (opt_crashdir, opt_user, opt_group) == CDM_STATUS_ERROR)
+    g_warning ("Failed to set user and group owner");
 
   if (cdm_server_bind_and_listen (app->server) != CDM_STATUS_OK)
+    return CDM_STATUS_ERROR;
+
+  if (cdm_elogsrv_bind_and_listen (app->elogsrv) != CDM_STATUS_OK)
     return CDM_STATUS_ERROR;
 
   /* we move the kdump archives if any */

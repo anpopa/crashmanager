@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ main (gint argc, gchar *argv[])
   GOptionEntry main_entries[] = {
     { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
     { "config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", "" },
-    { NULL }
+    { 0 }
   };
 
   signal (SIGINT, terminate);
@@ -86,7 +86,6 @@ main (gint argc, gchar *argv[])
   if (g_access (config_path, R_OK) == 0)
     {
       app = cdm_application_new (config_path, &error);
-
       if (error != NULL)
         {
           g_printerr ("%s\n", error->message);
@@ -100,9 +99,7 @@ main (gint argc, gchar *argv[])
         }
     }
   else
-    {
-      g_warning ("Cannot open configuration file %s", config_path);
-    }
+    g_warning ("Cannot open configuration file %s", config_path);
 
   cdm_logging_close ();
 

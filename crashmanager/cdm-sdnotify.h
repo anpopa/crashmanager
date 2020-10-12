@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,20 +41,20 @@ typedef struct _CdmSDNotify {
  * @brief Create a new sdnotify object
  * @return On success return a new CdmSDNotify object
  */
-CdmSDNotify *cdm_sdnotify_new (void);
+CdmSDNotify *           cdm_sdnotify_new                    (void);
 
 /**
  * @brief Aquire sdnotify object
  * @param sdnotify Pointer to the sdnotify object
  * @return The referenced sdnotify object
  */
-CdmSDNotify *cdm_sdnotify_ref (CdmSDNotify *sdnotify);
+CdmSDNotify *           cdm_sdnotify_ref                    (CdmSDNotify *sdnotify);
 
 /**
  * @brief Release sdnotify object
  * @param sdnotify Pointer to the sdnotify object
  */
-void cdm_sdnotify_unref (CdmSDNotify *sdnotify);
+void                    cdm_sdnotify_unref                  (CdmSDNotify *sdnotify);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmSDNotify, cdm_sdnotify_unref);
 

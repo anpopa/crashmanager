@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,8 @@ static gboolean janitor_source_prepare (GSource *source, gint *timeout);
 /**
  * @brief GSource dispatch function
  */
-static gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor);
+static gboolean janitor_source_dispatch (GSource *source, GSourceFunc callback,
+                                         gpointer cdmjanitor);
 
 /**
  * @brief GSource callback function
@@ -66,8 +67,7 @@ static GSourceFuncs janitor_source_funcs =
 };
 
 static gboolean
-janitor_source_prepare (GSource *source,
-                        gint *timeout)
+janitor_source_prepare (GSource *source, gint *timeout)
 {
   CdmJanitor *janitor = (CdmJanitor *)source;
   gssize crash_dir_size;
@@ -78,15 +78,18 @@ janitor_source_prepare (GSource *source,
   crash_dir_size = cdm_journal_get_data_size (janitor->journal, NULL);
   entries_count = cdm_journal_get_entry_count (janitor->journal, NULL);
 
-  if ((crash_dir_size > janitor->max_dir_size) || (entries_count > janitor->max_file_cnt)
+  if ((crash_dir_size > janitor->max_dir_size)
+      || (entries_count > janitor->max_file_cnt)
       || ((janitor->max_dir_size - crash_dir_size) < janitor->min_dir_size))
     {
-      g_info ("Cleaning database size=%ldMB (max=%ldMB min=%ldMB) count=%ld (max=%ld)",
-              BTOMB (crash_dir_size) == 0 && entries_count > 0 ? 1 : BTOMB (crash_dir_size),
-              BTOMB (janitor->max_dir_size),
-              BTOMB (janitor->min_dir_size),
-              entries_count,
-              janitor->max_file_cnt);
+      g_info (
+        "Cleaning database size=%ldMB (max=%ldMB min=%ldMB) count=%ld (max=%ld)",
+        BTOMB (crash_dir_size) == 0 &&
+        entries_count > 0 ? 1 : BTOMB (crash_dir_size),
+        BTOMB (janitor->max_dir_size),
+        BTOMB (janitor->min_dir_size),
+        entries_count,
+        janitor->max_file_cnt);
 
       return TRUE;
     }
@@ -95,9 +98,7 @@ janitor_source_prepare (GSource *source,
 }
 
 static gboolean
-janitor_source_dispatch (GSource *source,
-                         GSourceFunc callback,
-                         gpointer cdmjanitor)
+janitor_source_dispatch (GSource *source, GSourceFunc callback, gpointer cdmjanitor)
 {
   CDM_UNUSED (callback);
   CDM_UNUSED (source);
@@ -156,8 +157,7 @@ janitor_source_destroy_notify (gpointer cdmjanitor)
 
 
 CdmJanitor *
-cdm_janitor_new (CdmOptions *options,
-                 CdmJournal *journal)
+cdm_janitor_new (CdmOptions *options, CdmJournal *journal)
 {
   CdmJanitor *janitor = (CdmJanitor *)g_source_new (&janitor_source_funcs, sizeof(CdmJanitor));
 
@@ -167,11 +167,15 @@ cdm_janitor_new (CdmOptions *options,
 
   janitor->journal = cdm_journal_ref (journal);
 
-  janitor->max_dir_size = cdm_options_long_for (options, KEY_CRASHDUMP_DIR_MAX_SIZE) * 1024 * 1024;
-  janitor->min_dir_size = cdm_options_long_for (options, KEY_CRASHDUMP_DIR_MIN_SIZE) * 1024 * 1024;
-  janitor->max_file_cnt = cdm_options_long_for (options, KEY_CRASHFILES_MAX_COUNT);
+  janitor->max_dir_size = cdm_options_long_for (options,
+                                                KEY_CRASHDUMP_DIR_MAX_SIZE) * 1024 * 1024;
+  janitor->min_dir_size = cdm_options_long_for (options,
+                                                KEY_CRASHDUMP_DIR_MIN_SIZE) * 1024 * 1024;
+  janitor->max_file_cnt = cdm_options_long_for (options,
+                                                KEY_CRASHFILES_MAX_COUNT);
 
-  g_source_set_callback (CDM_EVENT_SOURCE (janitor), G_SOURCE_FUNC (janitor_source_callback),
+  g_source_set_callback (CDM_EVENT_SOURCE (janitor),
+                         G_SOURCE_FUNC (janitor_source_callback),
                          janitor, janitor_source_destroy_notify);
   g_source_attach (CDM_EVENT_SOURCE (janitor), NULL);
 

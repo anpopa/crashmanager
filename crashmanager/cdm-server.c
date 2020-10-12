@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,6 +120,9 @@ server_source_callback (gpointer cdmserver)
       CDM_UNUSED (client);
 #endif
 
+#ifdef WITH_DBUS_SERVICES
+      cdm_client_set_dbusown (client, server->dbusown);
+#endif
       g_debug ("New client connected %d", clientfd);
     }
   else
@@ -139,10 +142,7 @@ server_source_destroy_notify (gpointer cdmserver)
 }
 
 CdmServer *
-cdm_server_new (CdmOptions *options,
-                CdmTransfer *transfer,
-                CdmJournal *journal,
-                GError **error)
+cdm_server_new (CdmOptions *options, CdmTransfer *transfer, CdmJournal *journal, GError **error)
 {
   CdmServer *server = NULL;
   struct timeval tout;
@@ -156,7 +156,6 @@ cdm_server_new (CdmOptions *options,
   g_assert (server);
 
   g_ref_count_init (&server->rc);
-
   server->options = cdm_options_ref (options);
   server->transfer = cdm_transfer_ref (transfer);
   server->journal = cdm_journal_ref (journal);
@@ -165,7 +164,10 @@ cdm_server_new (CdmOptions *options,
   if (server->sockfd < 0)
     {
       g_warning ("Cannot create server socket");
-      g_set_error (error, g_quark_from_static_string ("ServerNew"), 1, "Fail to create server socket");
+      g_set_error (error,
+                   g_quark_from_static_string ("ServerNew"),
+                   1,
+                   "Fail to create server socket");
     }
   else
     {
@@ -181,7 +183,8 @@ cdm_server_new (CdmOptions *options,
         g_warning ("Failed to set the socket sending timeout: %s", strerror (errno));
     }
 
-  g_source_set_callback (CDM_EVENT_SOURCE (server), G_SOURCE_FUNC (server_source_callback),
+  g_source_set_callback (CDM_EVENT_SOURCE (server),
+                         G_SOURCE_FUNC (server_source_callback),
                          server, server_source_destroy_notify);
   g_source_attach (CDM_EVENT_SOURCE (server), NULL);
 
@@ -209,6 +212,10 @@ cdm_server_unref (CdmServer *server)
 #ifdef WITH_GENIVI_NSM
       if (server->lifecycle != NULL)
         cdm_lifecycle_unref (server->lifecycle);
+#endif
+#ifdef WITH_DBUS_SERVICES
+      if (server->dbusown != NULL)
+        cdm_dbusown_unref (server->dbusown);
 #endif
       g_source_unref (CDM_EVENT_SOURCE (server));
     }
@@ -259,23 +266,30 @@ cdm_server_bind_and_listen (CdmServer *server)
       server->sockfd = -1;
     }
   else
-    {
-      server->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (server),
-                                          server->sockfd,
-                                          G_IO_IN | G_IO_PRI);
-    }
+    server->tag = g_source_add_unix_fd (CDM_EVENT_SOURCE (server),
+                                        server->sockfd,
+                                        G_IO_IN | G_IO_PRI);
 
   return status;
 }
 
 #ifdef WITH_GENIVI_NSM
 void
-cdm_server_set_lifecycle (CdmServer *server,
-                          CdmLifecycle *lifecycle)
+cdm_server_set_lifecycle (CdmServer *server, CdmLifecycle *lifecycle)
 {
   g_assert (server);
   g_assert (lifecycle);
 
   server->lifecycle = cdm_lifecycle_ref (lifecycle);
+}
+#endif
+#ifdef WITH_DBUS_SERVICES
+void
+cdm_server_set_dbusown (CdmServer *server, CdmDBusOwn *dbusown)
+{
+  g_assert (server);
+  g_assert (dbusown);
+
+  server->dbusown = cdm_dbusown_ref (dbusown);
 }
 #endif

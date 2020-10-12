@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,10 +93,14 @@ cdh_manager_connect (CdhManager *c)
   memset (&c->saddr, 0, sizeof(struct sockaddr_un));
   c->saddr.sun_family = AF_UNIX;
 
-  snprintf (c->saddr.sun_path, (sizeof(c->saddr.sun_path) - 1), "%s/%s", opt_run_dir,
+  snprintf (c->saddr.sun_path,
+            (sizeof(c->saddr.sun_path) - 1),
+            "%s/%s",
+            opt_run_dir,
             opt_sock_addr);
 
-  if (connect (c->sfd, (struct sockaddr *)&c->saddr, sizeof(struct sockaddr_un)) < 0)
+  if (connect (c->sfd, (struct sockaddr *)&c->saddr,
+               sizeof(struct sockaddr_un)) < 0)
     {
       g_info ("Core manager not available: %s", c->saddr.sun_path);
       close (c->sfd);
@@ -149,8 +153,7 @@ cdh_manager_get_socket (CdhManager *c)
 }
 
 CdmStatus
-cdh_manager_send (CdhManager *c,
-                  CdmMessage *m)
+cdh_manager_send (CdhManager *c, CdmMessage *m)
 {
   fd_set wfd;
   struct timeval tv;
@@ -164,8 +167,6 @@ cdh_manager_send (CdhManager *c,
       g_warning ("No connection to manager");
       return CDM_STATUS_ERROR;
     }
-
-  cdm_message_set_version (m, CDM_VERSION);
 
   FD_ZERO (&wfd);
 

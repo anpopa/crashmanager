@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -123,7 +123,10 @@ cdi_journal_new (CdmOptions *options, GError **error)
   if (sqlite3_open_v2 (opt_dbpath, &journal->database, SQLITE_OPEN_READONLY, NULL))
     {
       g_warning ("Cannot open journal database at path %s", opt_dbpath);
-      g_set_error (error, g_quark_from_static_string ("JournalNew"), 1, "Database open failed");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalNew"),
+                   1,
+                   "Database open failed");
     }
 
   return journal;
@@ -175,8 +178,7 @@ cdi_journal_list_entries (CdiJournal *journal,
            "REM",
            "FILE");
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-      != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_set_error (error,
                    g_quark_from_static_string ("JournalListEntries"),

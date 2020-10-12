@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ typedef enum _CdmOptionsKey {
   KEY_CRASHFILES_MAX_COUNT,
   KEY_IPC_SOCK_ADDR,
   KEY_IPC_TIMEOUT_SEC,
+  KEY_ELOG_SOCK_ADDR,
+  KEY_ELOG_TIMEOUT_SEC,
   KEY_TRANSFER_ADDRESS,
   KEY_TRANSFER_PORT,
   KEY_TRANSFER_PATH,
@@ -60,39 +62,41 @@ typedef enum _CdmOptionsKey {
  * @struct Option object
  */
 typedef struct _CdmOptions {
-  GKeyFile *conf;   /**< The GKeyFile object */
-  bool has_conf;    /**< Flag to check if a runtime option object is available */
-  grefcount rc;     /**< Reference counter variable  */
+  GKeyFile *conf;       /**< The GKeyFile object */
+  gboolean has_conf;    /**< True if a runtime option object is available */
+  grefcount rc;         /**< Reference counter variable  */
 } CdmOptions;
 
 /*
  * @brief Create a new options object
  */
-CdmOptions *cdm_options_new (const gchar *conf_path);
+CdmOptions *            cdm_options_new                     (const gchar *conf_path);
 
 /*
  * @brief Aquire options object
  */
-CdmOptions *cdm_options_ref (CdmOptions *opts);
+CdmOptions *            cdm_options_ref                     (CdmOptions *opts);
 
 /**
  * @brief Release an options object
  */
-void cdm_options_unref (CdmOptions *opts);
+void                    cdm_options_unref                   (CdmOptions *opts);
 
 /**
  * @brief Get the GKeyFile object
  */
-GKeyFile *cdm_options_get_key_file (CdmOptions *opts);
+GKeyFile *              cdm_options_get_key_file            (CdmOptions *opts);
 
 /*
  * @brief Get a configuration value string for key
  */
-gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key);
+gchar *                 cdm_options_string_for              (CdmOptions *opts, 
+                                                             CdmOptionsKey key);
 
 /*
  * @brief Get a configuration gint64 value for key
  */
-gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key);
+gint64                  cdm_options_long_for                (CdmOptions *opts, 
+                                                             CdmOptionsKey key);
 
 G_END_DECLS

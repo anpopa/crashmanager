@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,13 @@
 
 #pragma once
 
-#include "cdm-message-type.h"
-
 #include <glib.h>
 #include <elf.h>
 
 G_BEGIN_DECLS
+
+#define CDM_EPILOG_FRAME_LEN (1024)
+#define CDM_EPILOG_FRAME_CNT (4)
 
 #ifndef CDM_UNUSED
 #define CDM_UNUSED(x) (void)(x)
@@ -40,7 +41,11 @@ G_BEGIN_DECLS
 
 #define CDM_EVENT_SOURCE(x) (GSource *)(x)
 
-enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
+enum {
+  CID_RETURN_ADDRESS = 1 << 0,
+  CID_IP_FILE_OFFSET = 1 << 1,
+  CID_RA_FILE_OFFSET = 1 << 2
+};
 
 typedef enum _CdmStatus {
   CDM_STATUS_ERROR = -1,
@@ -58,5 +63,7 @@ typedef struct _CdmRegisters {
   static_assert (false, "Don't know whow to handle this arhitecture");
 #endif
 } CdmRegisters;
+
+extern const char *cdm_notavailable_str;
 
 G_END_DECLS

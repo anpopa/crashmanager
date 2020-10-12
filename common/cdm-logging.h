@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,14 @@ G_BEGIN_DECLS
  * @param ctx_name Context identifier
  * @param ctx_desc Context description
  */
-void cdm_logging_open (const gchar *app_name,
-                       const gchar *app_desc,
-                       const gchar *ctx_name,
-                       const gchar *ctx_desc);
+void                    cdm_logging_open                    (const gchar *app_name,
+                                                             const gchar *app_desc,
+                                                             const gchar *ctx_name,
+                                                             const gchar *ctx_desc);
 
 /**
  * @brief Close logging system
  */
-void cdm_logging_close (void);
+void                    cdm_logging_close                   (void);
 
 G_END_DECLS

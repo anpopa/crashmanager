@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,8 +83,7 @@ cdi_application_list_entries (CdiApplication *app)
 }
 
 void
-cdi_application_list_content (CdiApplication *app,
-                              const gchar *fpath)
+cdi_application_list_content (CdiApplication *app, const gchar *fpath)
 {
   g_autoptr (CdiArchive) archive = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -95,9 +94,7 @@ cdi_application_list_content (CdiApplication *app,
   archive = cdi_archive_new ();
 
   if (g_access (fpath, R_OK) == 0)
-    {
-      status = cdi_archive_read_open (archive, fpath);
-    }
+    status = cdi_archive_read_open (archive, fpath);
   else
     {
       g_autofree gchar *opt_coredir = NULL;
@@ -116,8 +113,7 @@ cdi_application_list_content (CdiApplication *app,
 }
 
 void
-cdi_application_print_info (CdiApplication *app,
-                            const gchar *fpath)
+cdi_application_print_info (CdiApplication *app, const gchar *fpath)
 {
   g_autoptr (CdiArchive) archive = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -128,9 +124,7 @@ cdi_application_print_info (CdiApplication *app,
   archive = cdi_archive_new ();
 
   if (g_access (fpath, R_OK) == 0)
-    {
-      status = cdi_archive_read_open (archive, fpath);
-    }
+    status = cdi_archive_read_open (archive, fpath);
   else
     {
       g_autofree gchar *opt_coredir = NULL;
@@ -149,9 +143,7 @@ cdi_application_print_info (CdiApplication *app,
 }
 
 void
-cdi_application_print_file (CdiApplication *app,
-                            const gchar *fname,
-                            const gchar *fpath)
+cdi_application_print_epilog (CdiApplication *app, const gchar *fpath)
 {
   g_autoptr (CdiArchive) archive = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -162,9 +154,37 @@ cdi_application_print_file (CdiApplication *app,
   archive = cdi_archive_new ();
 
   if (g_access (fpath, R_OK) == 0)
+    status = cdi_archive_read_open (archive, fpath);
+  else
     {
-      status = cdi_archive_read_open (archive, fpath);
+      g_autofree gchar *opt_coredir = NULL;
+      g_autofree gchar *dbpath = NULL;
+
+      opt_coredir = cdm_options_string_for (app->options, KEY_CRASHDUMP_DIR);
+      dbpath = g_build_filename (opt_coredir, fpath, NULL);
+
+      status = cdi_archive_read_open (archive, dbpath);
     }
+
+  if (status == CDM_STATUS_OK)
+    (void)cdi_archive_print_epilog (archive);
+  else
+    g_print ("Cannot open file: %s\n", fpath);
+}
+
+void
+cdi_application_print_file (CdiApplication *app, const gchar *fname, const gchar *fpath)
+{
+  g_autoptr (CdiArchive) archive = NULL;
+  CdmStatus status = CDM_STATUS_OK;
+
+  g_assert (app);
+  g_assert (fpath);
+
+  archive = cdi_archive_new ();
+
+  if (g_access (fpath, R_OK) == 0)
+    status = cdi_archive_read_open (archive, fpath);
   else
     {
       g_autofree gchar *opt_coredir = NULL;
@@ -183,8 +203,7 @@ cdi_application_print_file (CdiApplication *app,
 }
 
 void
-cdi_application_extract_coredump (CdiApplication *app,
-                                  const gchar *fpath)
+cdi_application_extract_coredump (CdiApplication *app, const gchar *fpath)
 {
   g_autoptr (CdiArchive) archive = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -195,9 +214,7 @@ cdi_application_extract_coredump (CdiApplication *app,
   archive = cdi_archive_new ();
 
   if (g_access (fpath, R_OK) == 0)
-    {
-      status = cdi_archive_read_open (archive, fpath);
-    }
+    status = cdi_archive_read_open (archive, fpath);
   else
     {
       g_autofree gchar *opt_coredir = NULL;
@@ -215,15 +232,11 @@ cdi_application_extract_coredump (CdiApplication *app,
       (void)cdi_archive_extract_coredump (archive, cwd);
     }
   else
-    {
-      g_print ("Cannot open file: %s\n", fpath);
-    }
+    g_print ("Cannot open file: %s\n", fpath);
 }
 
 void
-cdi_application_print_backtrace (CdiApplication *app,
-                                 gboolean all,
-                                 const gchar *fpath)
+cdi_application_print_backtrace (CdiApplication *app, gboolean all, const gchar *fpath)
 {
   g_autoptr (CdiArchive) archive = NULL;
   CdmStatus status = CDM_STATUS_OK;
@@ -234,9 +247,7 @@ cdi_application_print_backtrace (CdiApplication *app,
   archive = cdi_archive_new ();
 
   if (g_access (fpath, R_OK) == 0)
-    {
-      status = cdi_archive_read_open (archive, fpath);
-    }
+    status = cdi_archive_read_open (archive, fpath);
   else
     {
       g_autofree gchar *opt_coredir = NULL;

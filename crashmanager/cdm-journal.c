@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 
 #include "cdm-journal.h"
 #include "cdm-utils.h"
+
+#define USEC2SEC(x) (x / 1000000)
+#define SEC2USEC(x) (x * 1000000)
 
 /**
  * @enum Journal query type
@@ -53,6 +56,51 @@ const gchar *cdm_journal_table_name = "CrashTable";
  * @brief SQlite3 callback
  */
 static int sqlite_callback (void *data, int argc, char **argv, char **colname);
+
+/**
+ * @brief GSource callback function
+ */
+static gboolean source_timer_callback (gpointer data);
+
+/**
+ * @brief GSource destroy notification callback function
+ */
+static void source_destroy_notify (gpointer data);
+
+static gboolean
+source_timer_callback (gpointer data)
+{
+  CdmJournal *journal = (CdmJournal *)data;
+  gint64 current_time = 0;
+  GList *l = NULL;
+
+  g_assert (journal);
+
+  l = journal->elogs;
+  current_time = g_get_monotonic_time ();
+
+  while (l != NULL)
+    {
+      GList *next = l->next;
+
+      if (((CdmJournalEpilog *)l->data)->tstamp + SEC2USEC (10) > current_time)
+        {
+          g_debug ("Journal remove epilog for pid %ld", ((CdmJournalEpilog *)l->data)->pid);
+          g_free (l->data);
+          journal->elogs = g_list_delete_link (journal->elogs, l);
+        }
+      l = next;
+    }
+
+  return TRUE;
+}
+
+static void
+source_destroy_notify (gpointer data)
+{
+  CDM_UNUSED (data);
+  g_info ("Journal epilog cleanup event disabled");
+}
 
 static int
 sqlite_callback (void *data, int argc, char **argv, char **colname)
@@ -133,7 +181,10 @@ cdm_journal_new (CdmOptions *options, GError **error)
   if (sqlite3_open (opt_dbpath, &journal->database))
     {
       g_warning ("Cannot open journal database at path %s", opt_dbpath);
-      g_set_error (error, g_quark_from_static_string ("JournalNew"), 1, "Database open failed");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalNew"),
+                   1,
+                   "Database open failed");
     }
   else
     {
@@ -158,12 +209,24 @@ cdm_journal_new (CdmOptions *options, GError **error)
       if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
         {
           g_warning ("Fail to create crash table. SQL error %s", query_error);
-          g_set_error (error, g_quark_from_static_string ("JournalNew"), 1, "Create crash table fail");
+          g_set_error (error,
+                       g_quark_from_static_string ("JournalNew"),
+                       1,
+                       "Create crash table fail");
         }
 
       if (cdm_utils_chown (opt_dbpath, opt_user, opt_group) == CDM_STATUS_ERROR)
         g_warning ("Failed to set user and group owner for database %s", opt_dbpath);
     }
+
+  /* prepare epilog cleanup source */
+  journal->source = g_timeout_source_new_seconds (10);
+  g_source_ref (journal->source);
+  g_source_set_callback (journal->source,
+                         G_SOURCE_FUNC (source_timer_callback),
+                         journal,
+                         source_destroy_notify);
+  g_source_attach (journal->source, NULL);
 
   return journal;
 }
@@ -182,7 +245,66 @@ cdm_journal_unref (CdmJournal *journal)
   g_assert (journal);
 
   if (g_ref_count_dec (&journal->rc) == TRUE)
-    g_free (journal);
+    {
+      if (journal->source != NULL)
+        g_source_unref (journal->source);
+
+      g_free (journal);
+    }
+}
+
+void
+cdm_journal_epilog_add (CdmJournal *journal, CdmJournalEpilog *elog)
+{
+  g_assert (elog);
+  g_assert (journal);
+
+  elog->tstamp = g_get_monotonic_time ();
+  journal->elogs = g_list_append (journal->elogs, elog);
+}
+
+CdmStatus
+cdm_journal_epilog_rem (CdmJournal *journal, int64_t pid)
+{
+  CdmStatus status = CDM_STATUS_ERROR;
+  GList *l = NULL;
+
+  g_assert (journal);
+
+  l = journal->elogs;
+
+  while (l != NULL)
+    {
+      GList *next = l->next;
+
+      if (((CdmJournalEpilog *)l->data)->pid == pid)
+        {
+          status = CDM_STATUS_OK;
+          g_free (l->data);
+          journal->elogs = g_list_delete_link (journal->elogs, l);
+        }
+      l = next;
+    }
+
+  return status;
+}
+
+CdmJournalEpilog *
+cdm_journal_epilog_get (CdmJournal *journal, int64_t pid)
+{
+  CdmJournalEpilog *elog = NULL;
+
+  GList *l = NULL;
+
+  g_assert (journal);
+
+  for (l = journal->elogs; l != NULL; l = l->next)
+    {
+      if (((CdmJournalEpilog *)l->data)->pid == pid)
+        elog = (CdmJournalEpilog *)l->data;
+    }
+
+  return elog;
 }
 
 guint64
@@ -216,7 +338,7 @@ cdm_journal_add_crash (CdmJournal *journal,
                    g_quark_from_static_string ("JournalAddCrash"),
                    1,
                    "Invalid arguments");
-      return(0);
+      return 0;
     }
 
   file_size = cdm_utils_get_filesize (file_path);
@@ -226,16 +348,16 @@ cdm_journal_add_crash (CdmJournal *journal,
                    g_quark_from_static_string ("JournalAddCrash"),
                    1,
                    "Cannot stat file for size");
-      return(0);
+      return 0;
     }
 
   id = cdm_utils_jenkins_hash (file_path);
 
   sql = g_strdup_printf ("INSERT INTO %s "
-                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,CONTEXTNAME,LIFECYCLESTATE,FILEPATH,FILESIZE,"
-                         "PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) "
-                         "VALUES(                                                               "
-                         "%lu, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s', %d, %d);",
+                         "(ID,PROCNAME,CRASHID,VECTORID,CONTEXTID,CONTEXTNAME,LIFECYCLESTATE,"
+                         "FILEPATH,FILESIZE,PID,SIGNAL,TIMESTAMP,OSVERSION,TSTATE,RSTATE) VALUES("
+                         "%lu, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %ld, %ld, %ld, %lu, '%s',"
+                         "%d, %d);",
                          cdm_journal_table_name,
                          id,
                          proc_name,
@@ -255,20 +377,21 @@ cdm_journal_add_crash (CdmJournal *journal,
 
   if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalAddCrash"), 1, "SQL query error");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalAddCrash"),
+                   1,
+                   "SQL query error");
       g_warning ("Fail to add new entry. SQL error %s", query_error);
       sqlite3_free (query_error);
 
-      return(0);
+      return 0;
     }
 
-  return(id);
+  return id;
 }
 
 gboolean
-cdm_journal_archive_exist (CdmJournal *journal,
-                           const gchar *file_path,
-                           GError **error)
+cdm_journal_archive_exist (CdmJournal *journal, const gchar *file_path, GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -284,12 +407,14 @@ cdm_journal_archive_exist (CdmJournal *journal,
   id = cdm_utils_jenkins_hash (file_path);
   data.response = (gpointer) & entry_exist;
 
-  sql = g_strdup_printf ("SELECT ID FROM %s WHERE ID IS %lu",
-                         cdm_journal_table_name, id);
-
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
+  sql = g_strdup_printf ("SELECT ID FROM %s WHERE ID IS %lu", cdm_journal_table_name, id);
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data,
+                    &query_error) != SQLITE_OK)
     {
-      g_set_error (error, g_quark_from_static_string ("JournalGetEntry"), 1, "SQL query error");
+      g_set_error (error,
+                   g_quark_from_static_string ("JournalGetEntry"),
+                   1,
+                   "SQL query error");
       g_warning ("Fail to get victim. SQL error %s", query_error);
       sqlite3_free (query_error);
     }
@@ -324,10 +449,11 @@ cdm_journal_set_transfer (CdmJournal *journal,
       guint64 id = cdm_utils_jenkins_hash (file_path);
 
       sql = g_strdup_printf ("UPDATE %s SET TSTATE = %d WHERE ID IS %lu",
-                             cdm_journal_table_name, complete, id);
+                             cdm_journal_table_name,
+                             complete,
+                             id);
 
-      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-          != SQLITE_OK)
+      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
         {
           g_set_error (error,
                        g_quark_from_static_string ("JournalSetTransfer"),
@@ -366,10 +492,11 @@ cdm_journal_set_removed (CdmJournal *journal,
       guint64 id = cdm_utils_jenkins_hash (file_path);
 
       sql = g_strdup_printf ("UPDATE %s SET RSTATE = %d WHERE ID IS %lu",
-                             cdm_journal_table_name, complete, id);
+                             cdm_journal_table_name,
+                             complete,
+                             id);
 
-      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-          != SQLITE_OK)
+      if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
         {
           g_set_error (error,
                        g_quark_from_static_string ("JournalSetRemoved"),
@@ -382,8 +509,7 @@ cdm_journal_set_removed (CdmJournal *journal,
 }
 
 gchar *
-cdm_journal_get_victim (CdmJournal *journal,
-                        GError **error)
+cdm_journal_get_victim (CdmJournal *journal, GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -398,8 +524,7 @@ cdm_journal_get_victim (CdmJournal *journal,
                          "WHERE RSTATE IS 0 AND TSTATE IS 1 ORDER BY TIMESTAMP LIMIT 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-      != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_set_error (error,
                    g_quark_from_static_string ("JournalGetVictim"),
@@ -413,8 +538,7 @@ cdm_journal_get_victim (CdmJournal *journal,
 }
 
 gchar *
-cdm_journal_get_untransferred (CdmJournal *journal,
-                               GError **error)
+cdm_journal_get_untransferred (CdmJournal *journal, GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -429,8 +553,7 @@ cdm_journal_get_untransferred (CdmJournal *journal,
                          "WHERE RSTATE IS 0 AND TSTATE IS 0 ORDER BY TIMESTAMP LIMIT 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-      != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_set_error (error,
                    g_quark_from_static_string ("JournalGetUntrasnferred"),
@@ -444,8 +567,7 @@ cdm_journal_get_untransferred (CdmJournal *journal,
 }
 
 gssize
-cdm_journal_get_data_size (CdmJournal *journal,
-                           GError **error)
+cdm_journal_get_data_size (CdmJournal *journal, GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -462,8 +584,7 @@ cdm_journal_get_data_size (CdmJournal *journal,
   sql = g_strdup_printf ("SELECT FILESIZE FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-      != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_set_error (error,
                    g_quark_from_static_string ("JournalGetDatasize"),
@@ -477,8 +598,7 @@ cdm_journal_get_data_size (CdmJournal *journal,
 }
 
 gssize
-cdm_journal_get_entry_count (CdmJournal *journal,
-                             GError **error)
+cdm_journal_get_entry_count (CdmJournal *journal, GError **error)
 {
   g_autofree gchar *sql = NULL;
   gchar *query_error = NULL;
@@ -495,8 +615,7 @@ cdm_journal_get_entry_count (CdmJournal *journal,
   sql = g_strdup_printf ("SELECT FILEPATH FROM %s WHERE RSTATE IS 0 AND TSTATE IS 1",
                          cdm_journal_table_name);
 
-  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error)
-      != SQLITE_OK)
+  if (sqlite3_exec (journal->database, sql, sqlite_callback, &data, &query_error) != SQLITE_OK)
     {
       g_set_error (error,
                    g_quark_from_static_string ("JournalGetDatasize"),

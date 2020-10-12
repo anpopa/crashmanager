@@ -1,7 +1,7 @@
 /*
  * SPDX license identifier: GPL-2.0-or-later
  *
- * Copyright (C) 2019 Alin Popa
+ * Copyright (C) 2019-2020 Alin Popa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ cdm_options_new (const gchar *conf_path)
 {
   CdmOptions *opts = g_new0 (CdmOptions, 1);
 
-  opts->has_conf = false;
+  opts->has_conf = FALSE;
 
   if (conf_path != NULL)
     {
@@ -48,7 +48,7 @@ cdm_options_new (const gchar *conf_path)
       g_assert (opts->conf);
 
       if (g_key_file_load_from_file (opts->conf, conf_path, G_KEY_FILE_NONE, &error) == TRUE)
-        opts->has_conf = true;
+        opts->has_conf = TRUE;
       else
         g_debug ("Cannot parse configuration file");
     }
@@ -88,8 +88,7 @@ cdm_options_get_key_file (CdmOptions *opts)
 }
 
 gchar *
-cdm_options_string_for (CdmOptions *opts,
-                        CdmOptionsKey key)
+cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key)
 {
   switch (key)
     {
@@ -146,7 +145,10 @@ cdm_options_string_for (CdmOptions *opts,
     case KEY_KDUMPSOURCE_DIR:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "KernelDumpSourceDir", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf,
+                                              "crashmanager",
+                                              "KernelDumpSourceDir",
+                                              NULL);
 
           if (tmp != NULL)
             return tmp;
@@ -162,6 +164,16 @@ cdm_options_string_for (CdmOptions *opts,
             return tmp;
         }
       return g_strdup (CDM_IPC_SOCK_ADDR);
+
+    case KEY_ELOG_SOCK_ADDR:
+      if (opts->has_conf)
+        {
+          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "ELogSocketFile", NULL);
+
+          if (tmp != NULL)
+            return tmp;
+        }
+      return g_strdup (CDM_ELOG_SOCK_ADDR);
 
     case KEY_TRANSFER_ADDRESS:
       if (opts->has_conf)
@@ -206,7 +218,10 @@ cdm_options_string_for (CdmOptions *opts,
     case KEY_TRANSFER_PUBLIC_KEY:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferPublicKey", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf,
+                                              "crashmanager",
+                                              "TransferPublicKey",
+                                              NULL);
 
           if (tmp != NULL)
             return tmp;
@@ -216,7 +231,10 @@ cdm_options_string_for (CdmOptions *opts,
     case KEY_TRANSFER_PRIVATE_KEY:
       if (opts->has_conf)
         {
-          gchar *tmp = g_key_file_get_string (opts->conf, "crashmanager", "TransferPrivateKey", NULL);
+          gchar *tmp = g_key_file_get_string (opts->conf,
+                                              "crashmanager",
+                                              "TransferPrivateKey",
+                                              NULL);
 
           if (tmp != NULL)
             return tmp;
@@ -244,7 +262,10 @@ get_long_option (CdmOptions *opts,
 
   if (opts->has_conf)
     {
-      g_autofree gchar *tmp = g_key_file_get_string (opts->conf, section_name, property_name, NULL);
+      g_autofree gchar *tmp = g_key_file_get_string (opts->conf,
+                                                     section_name,
+                                                     property_name,
+                                                     NULL);
 
       if (tmp != NULL)
         {
@@ -258,7 +279,10 @@ get_long_option (CdmOptions *opts,
         }
     }
 
-  g_set_error_literal (error, g_quark_from_string ("cdm-options"), 0, "Cannot convert option to long");
+  g_set_error_literal (error,
+                       g_quark_from_string ("cdm-options"),
+                       0,
+                       "Cannot convert option to long");
 
   return -1;
 }
@@ -294,6 +318,12 @@ cdm_options_long_for (CdmOptions *opts,
       value = get_long_option (opts, "common", "IpcSocketTimeout", &error);
       if (error != NULL)
         value = CDM_IPC_TIMEOUT_SEC;
+      break;
+
+    case KEY_ELOG_TIMEOUT_SEC:
+      value = get_long_option (opts, "crashmanager", "ELogSocketTimeout", &error);
+      if (error != NULL)
+        value = CDM_ELOG_TIMEOUT_SEC;
       break;
 
     case KEY_CRASHDUMP_DIR_MIN_SIZE:
