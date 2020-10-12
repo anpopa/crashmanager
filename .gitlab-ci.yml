@@ -1,0 +1,24 @@
+variables:
+  DEBIAN_FRONTEND: noninteractive
+  
+image: ubuntu:latest
+
+build:
+  stage: build
+  before_script:
+    - apt update && apt -y install build-essential meson libsystemd-dev libsqlite3-dev libssh2-1-dev libglib2.0-dev
+  script:
+    - meson setup build && ninja -C build
+  #artifacts:
+  #  paths:
+  #    - recoverymanager
+      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
+      # cache:
+      #   paths:
+      #     - "*.o"
+
+# run tests using the binary built before
+#test:
+#  stage: test
+#  script:
+#    - ./runmytests.sh
