@@ -1,0 +1,41 @@
+pkgname=crashmanager
+pkgver=r88.0b9abdf
+pkgrel=1
+epoch=
+pkgdesc="Linux crash manager"
+arch=(x86_64)
+url="https://www.fxdata.ro/crashmanager"
+license=('GPL')
+groups=()
+depends=('libarchive>=3', 'sqlite>=3.0', 'glib2>=2.58')
+makedepends=('meson>=0.52', 'git')
+checkdepends=()
+optdepends=()
+provides=("${pkgname%}")
+conflicts=("${pkgname%}")
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=("crashmanager::git+https://gitlab.com/anpopa/crashmanager.git#branch=master")
+noextract=()
+md5sums=(SKIP)
+validpgpkeys=()
+
+pkgver() {
+  cd "$pkgname"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+    cd "$pkgname"
+	meson setup build    
+    cd build   
+    ninja     
+}
+
+package() {
+	cd "$pkgname"/build
+	DESTDIR="$pkgdir/" ninja install
+}
