@@ -1,8 +1,0 @@
-debian/tmp/etc/crashmanager.conf
-debian/tmp/etc/systemd/system/crashmanager.service
-debian/tmp/etc/dbus-1/system.d/crashmanager-dbus.conf
-debian/tmp/etc/sysctl.d/51-crashhandler.conf
-debian/tmp/usr/bin/crashinfo
-debian/tmp/usr/bin/crashmanager
-debian/tmp/usr/bin/crashhandler
-debian/tmp/usr/share/licenses/crashmanager/LICENSE
