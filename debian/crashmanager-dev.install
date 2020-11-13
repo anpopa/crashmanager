@@ -1,0 +1,3 @@
+usr/lib/x86_64-linux-gnu/libCdhEpilog.a
+usr/lib/x86_64-linux-gnu/pkgconfig/libcdhepilog.pc
+usr/include/crashmanager/cdh-epilog.h

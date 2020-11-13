@@ -1,0 +1,40 @@
+Source: crashmanager
+Section: Administration Utilities
+Priority: optional
+Maintainer: Alin Popa <alin.popa@fxdata.ro>
+Build-Depends: debhelper (>=12~),
+               libglib2.0-dev,
+               libssh2-1-dev,
+               libsqlite3-dev,
+               libarchive-dev,
+               libsystemd-dev,
+               zlib1g-dev,
+               meson (>= 0.40.0),
+               ninja-build,
+               pkg-config
+Standards-Version: 4.1.3
+
+Package: crashmanager
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: Linux process crash manager
+ Powerfull linux process crash dumper and crash manager.
+
+Package: crashmanager-dbg
+Section: Debug packages
+Priority: optional
+Architecture: any
+Depends: crashmanager (= ${binary:Version}),
+         ${misc:Depends},
+Description: Crash manager (debugging symbols)
+ Debug package for crash manager including crashtest binary.
+
+Package: crashmanager-dev
+Section: Development
+Priority: optional
+Architecture: any
+Depends: crashmanager (= ${binary:Version}),
+         ${misc:Depends},
+Description: Crash manager development extra
+ Crash manager development files including epilog interfaces and library.

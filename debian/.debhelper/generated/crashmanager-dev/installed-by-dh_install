@@ -1,0 +1,3 @@
+debian/tmp/usr/lib/x86_64-linux-gnu/libCdhEpilog.a
+debian/tmp/usr/lib/x86_64-linux-gnu/pkgconfig/libcdhepilog.pc
+debian/tmp/usr/include/crashmanager/cdh-epilog.h

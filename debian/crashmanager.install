@@ -1,0 +1,8 @@
+etc/crashmanager.conf
+etc/systemd/system/crashmanager.service
+etc/dbus-1/system.d/crashmanager-dbus.conf
+etc/sysctl.d/51-crashhandler.conf
+usr/bin/crashinfo
+usr/bin/crashmanager
+usr/bin/crashhandler
+usr/share/licenses/crashmanager/LICENSE
