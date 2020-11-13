@@ -1,3 +1,18 @@
 build/
 configure/
 *.swp
+
+# Debian build
+debian/crashmanager-dbg.debhelper.log
+debian/crashmanager-dbg.substvars
+debian/crashmanager-dbg/
+debian/crashmanager-dev.debhelper.log
+debian/crashmanager-dev.substvars
+debian/crashmanager-dev/
+debian/crashmanager.debhelper.log
+debian/crashmanager.substvars
+debian/crashmanager/
+debian/debhelper-build-stamp
+debian/files
+debian/tmp/
+

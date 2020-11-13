@@ -1,5 +1,5 @@
 Source: crashmanager
-Section: Administration Utilities
+Section: admin
 Priority: optional
 Maintainer: Alin Popa <alin.popa@fxdata.ro>
 Build-Depends: debhelper (>=12~),
@@ -22,19 +22,19 @@ Description: Linux process crash manager
  Powerfull linux process crash dumper and crash manager.
 
 Package: crashmanager-dbg
-Section: Debug packages
+Section: debug
 Priority: optional
 Architecture: any
 Depends: crashmanager (= ${binary:Version}),
-         ${misc:Depends},
-Description: Crash manager (debugging symbols)
+         ${misc:Depends}
+Description: Linux crash manager (debugging symbols)
  Debug package for crash manager including crashtest binary.
 
 Package: crashmanager-dev
-Section: Development
+Section: devel
 Priority: optional
 Architecture: any
 Depends: crashmanager (= ${binary:Version}),
-         ${misc:Depends},
-Description: Crash manager development extra
+         ${misc:Depends}
+Description: Linux crash manager development extra
  Crash manager development files including epilog interfaces and library.
