@@ -16,3 +16,6 @@ debian/debhelper-build-stamp
 debian/files
 debian/tmp/
 
+rpm/.build*
+rpm/crashmanager-*
+rpm/x86_64/

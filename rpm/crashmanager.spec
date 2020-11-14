@@ -58,6 +58,10 @@ Requires:       %{name}%{?_isa} = %{?epoch:%{epoch}:}%{version}-%{release}
 %{_sysconfdir}/crashmanager.conf
 %{_sysconfdir}/sysctl.d/51-crashhandler.conf
 %{_sysconfdir}/systemd/system/crashmanager.service
+%{_sysconfdir}/dbus-1/system.d/crashmanager-dbus.conf
 
 %files devel
 %{_bindir}/crashtest
+%{_includedir}/crashmanager/cdh-epilog.h
+%{_prefix}/%{_lib}/libCdhEpilog.a
+%{_prefix}/%{_lib}/pkgconfig/libcdhepilog.pc
