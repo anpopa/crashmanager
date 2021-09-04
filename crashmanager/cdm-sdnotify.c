@@ -32,88 +32,79 @@
 /**
  * @brief GSource callback function
  */
-static gboolean source_timer_callback (gpointer data);
+static gboolean source_timer_callback(gpointer data);
 
 /**
  * @brief GSource destroy notification callback function
  */
-static void source_destroy_notify (gpointer data);
+static void source_destroy_notify(gpointer data);
 
-static gboolean
-source_timer_callback (gpointer data)
+static gboolean source_timer_callback(gpointer data)
 {
-  CDM_UNUSED (data);
+    CDM_UNUSED(data);
 
-  if (sd_notify (0, "WATCHDOG=1") < 0)
-    g_warning ("Fail to send the heartbeet to systemd");
-  else
-    g_debug ("Watchdog heartbeat sent");
+    if (sd_notify(0, "WATCHDOG=1") < 0)
+        g_warning("Fail to send the heartbeet to systemd");
+    else
+        g_debug("Watchdog heartbeat sent");
 
-  return TRUE;
+    return TRUE;
 }
 
-static void
-source_destroy_notify (gpointer data)
+static void source_destroy_notify(gpointer data)
 {
-  CDM_UNUSED (data);
-  g_info ("System watchdog disabled");
+    CDM_UNUSED(data);
+    g_info("System watchdog disabled");
 }
 
-CdmSDNotify *
-cdm_sdnotify_new (void)
+CdmSDNotify *cdm_sdnotify_new(void)
 {
-  CdmSDNotify *sdnotify = g_new0 (CdmSDNotify, 1);
-  gint sdw_status;
-  gulong usec = 0;
+    CdmSDNotify *sdnotify = g_new0(CdmSDNotify, 1);
+    gint sdw_status;
+    gulong usec = 0;
 
-  g_assert (sdnotify);
+    g_assert(sdnotify);
 
-  g_ref_count_init (&sdnotify->rc);
+    g_ref_count_init(&sdnotify->rc);
 
-  sdw_status = sd_watchdog_enabled (0, &usec);
+    sdw_status = sd_watchdog_enabled(0, &usec);
 
-  if (sdw_status > 0)
-    {
-      g_info ("Systemd watchdog enabled with timeout %lu seconds", USEC2SEC (usec));
+    if (sdw_status > 0) {
+        g_info("Systemd watchdog enabled with timeout %lu seconds", USEC2SEC(usec));
 
-      sdnotify->source = g_timeout_source_new_seconds (USEC2SECHALF (usec));
-      g_source_ref (sdnotify->source);
+        sdnotify->source = g_timeout_source_new_seconds(USEC2SECHALF(usec));
+        g_source_ref(sdnotify->source);
 
-      g_source_set_callback (sdnotify->source,
-                             G_SOURCE_FUNC (source_timer_callback),
-                             sdnotify,
-                             source_destroy_notify);
-      g_source_attach (sdnotify->source, NULL);
-    }
-  else
-    {
-      if (sdw_status == 0)
-        g_info ("Systemd watchdog disabled");
-      else
-        g_warning ("Fail to get the systemd watchdog status");
+        g_source_set_callback(sdnotify->source,
+                              G_SOURCE_FUNC(source_timer_callback),
+                              sdnotify,
+                              source_destroy_notify);
+        g_source_attach(sdnotify->source, NULL);
+    } else {
+        if (sdw_status == 0)
+            g_info("Systemd watchdog disabled");
+        else
+            g_warning("Fail to get the systemd watchdog status");
     }
 
-  return sdnotify;
+    return sdnotify;
 }
 
-CdmSDNotify *
-cdm_sdnotify_ref (CdmSDNotify *sdnotify)
+CdmSDNotify *cdm_sdnotify_ref(CdmSDNotify *sdnotify)
 {
-  g_assert (sdnotify);
-  g_ref_count_inc (&sdnotify->rc);
-  return sdnotify;
+    g_assert(sdnotify);
+    g_ref_count_inc(&sdnotify->rc);
+    return sdnotify;
 }
 
-void
-cdm_sdnotify_unref (CdmSDNotify *sdnotify)
+void cdm_sdnotify_unref(CdmSDNotify *sdnotify)
 {
-  g_assert (sdnotify);
+    g_assert(sdnotify);
 
-  if (g_ref_count_dec (&sdnotify->rc) == TRUE)
-    {
-      if (sdnotify->source != NULL)
-        g_source_unref (sdnotify->source);
+    if (g_ref_count_dec(&sdnotify->rc) == TRUE) {
+        if (sdnotify->source != NULL)
+            g_source_unref(sdnotify->source);
 
-      g_free (sdnotify);
+        g_free(sdnotify);
     }
 }

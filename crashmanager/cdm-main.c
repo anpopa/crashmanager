@@ -24,84 +24,74 @@
 #include "cdm-application.h"
 #include "cdm-utils.h"
 
-#include <glib.h>
-#include <stdlib.h>
-#include <glib/gstdio.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include <glib.h>
+#include <glib/gstdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static GMainLoop *g_mainloop = NULL;
 
-static void
-terminate (int signum)
+static void terminate(int signum)
 {
-  g_info ("Crashmanager terminate with signal %d", signum);
-  if (g_mainloop != NULL)
-    g_main_loop_quit (g_mainloop);
+    g_info("Crashmanager terminate with signal %d", signum);
+    if (g_mainloop != NULL)
+        g_main_loop_quit(g_mainloop);
 }
 
-gint
-main (gint argc, gchar *argv[])
+gint main(gint argc, gchar *argv[])
 {
-  g_autoptr (GOptionContext) context = NULL;
-  g_autoptr (GError) error = NULL;
-  g_autoptr (CdmApplication) app = NULL;
-  g_autofree gchar *config_path = NULL;
-  gboolean version = FALSE;
-  CdmStatus status = CDM_STATUS_OK;
+    g_autoptr(GOptionContext) context = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(CdmApplication) app = NULL;
+    g_autofree gchar *config_path = NULL;
+    gboolean version = FALSE;
+    CdmStatus status = CDM_STATUS_OK;
 
-  GOptionEntry main_entries[] = {
-    { "version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", "" },
-    { "config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", "" },
-    { 0 }
-  };
+    GOptionEntry main_entries[] = {
+        {"version", 'v', 0, G_OPTION_ARG_NONE, &version, "Show program version", ""},
+        {"config", 'c', 0, G_OPTION_ARG_FILENAME, &config_path, "Override configuration file", ""},
+        {0}};
 
-  signal (SIGINT, terminate);
-  signal (SIGTERM, terminate);
+    signal(SIGINT, terminate);
+    signal(SIGTERM, terminate);
 
-  context = g_option_context_new ("- Crash manager service daemon");
-  g_option_context_set_summary (context,
-                                "The service listen for Crashhandler events and manage its output");
-  g_option_context_add_main_entries (context, main_entries, NULL);
+    context = g_option_context_new("- Crash manager service daemon");
+    g_option_context_set_summary(
+        context, "The service listen for Crashhandler events and manage its output");
+    g_option_context_add_main_entries(context, main_entries, NULL);
 
-  if (!g_option_context_parse (context, &argc, &argv, &error))
-    {
-      g_printerr ("%s\n", error->message);
-      return EXIT_FAILURE;
+    if (!g_option_context_parse(context, &argc, &argv, &error)) {
+        g_printerr("%s\n", error->message);
+        return EXIT_FAILURE;
     }
 
-  if (version)
-    {
-      g_printerr ("%s\n", CDM_VERSION);
-      return EXIT_SUCCESS;
+    if (version) {
+        g_printerr("%s\n", CDM_VERSION);
+        return EXIT_SUCCESS;
     }
 
-  cdm_logging_open ("CDM", "Crashmanager service", "CDM", "Default context");
+    cdm_logging_open("CDM", "Crashmanager service", "CDM", "Default context");
 
-  if (config_path == NULL)
-    config_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
+    if (config_path == NULL)
+        config_path = g_build_filename(CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
 
-  if (g_access (config_path, R_OK) == 0)
-    {
-      app = cdm_application_new (config_path, &error);
-      if (error != NULL)
-        {
-          g_printerr ("%s\n", error->message);
-          status = CDM_STATUS_ERROR;
+    if (g_access(config_path, R_OK) == 0) {
+        app = cdm_application_new(config_path, &error);
+        if (error != NULL) {
+            g_printerr("%s\n", error->message);
+            status = CDM_STATUS_ERROR;
+        } else {
+            g_info("Crashmanager service started for OS version '%s'", cdm_utils_get_osversion());
+            g_mainloop = cdm_application_get_mainloop(app);
+            status = cdm_application_execute(app);
         }
-      else
-        {
-          g_info ("Crashmanager service started for OS version '%s'", cdm_utils_get_osversion ());
-          g_mainloop = cdm_application_get_mainloop (app);
-          status = cdm_application_execute (app);
-        }
-    }
-  else
-    g_warning ("Cannot open configuration file %s", config_path);
+    } else
+        g_warning("Cannot open configuration file %s", config_path);
 
-  cdm_logging_close ();
+    cdm_logging_close();
 
-  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+    return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 }

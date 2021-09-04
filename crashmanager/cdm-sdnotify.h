@@ -33,29 +33,29 @@ G_BEGIN_DECLS
  * @brief The CdmSDNotify opaque data structure
  */
 typedef struct _CdmSDNotify {
-  GSource *source;  /**< Event loop source */
-  grefcount rc;     /**< Reference counter variable  */
+    GSource *source; /**< Event loop source */
+    grefcount rc;    /**< Reference counter variable  */
 } CdmSDNotify;
 
 /*
  * @brief Create a new sdnotify object
  * @return On success return a new CdmSDNotify object
  */
-CdmSDNotify *           cdm_sdnotify_new                    (void);
+CdmSDNotify *cdm_sdnotify_new(void);
 
 /**
  * @brief Aquire sdnotify object
  * @param sdnotify Pointer to the sdnotify object
  * @return The referenced sdnotify object
  */
-CdmSDNotify *           cdm_sdnotify_ref                    (CdmSDNotify *sdnotify);
+CdmSDNotify *cdm_sdnotify_ref(CdmSDNotify *sdnotify);
 
 /**
  * @brief Release sdnotify object
  * @param sdnotify Pointer to the sdnotify object
  */
-void                    cdm_sdnotify_unref                  (CdmSDNotify *sdnotify);
+void cdm_sdnotify_unref(CdmSDNotify *sdnotify);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmSDNotify, cdm_sdnotify_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmSDNotify, cdm_sdnotify_unref);
 
 G_END_DECLS

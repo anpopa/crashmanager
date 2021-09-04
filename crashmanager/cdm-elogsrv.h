@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include "cdm-types.h"
-#include "cdm-options.h"
 #include "cdm-journal.h"
+#include "cdm-options.h"
+#include "cdm-types.h"
 
 #include <glib.h>
 
@@ -35,12 +35,12 @@ G_BEGIN_DECLS
  * @brief The CdmELogSrv opaque data structure
  */
 typedef struct _CdmELogSrv {
-  GSource source;         /**< Event loop source */
-  grefcount rc;           /**< Reference counter variable  */
-  gpointer tag;           /**< Unix elogsrv socket tag  */
-  gint sockfd;            /**< Module file descriptor (elogsrv listen fd) */
-  CdmOptions *options;    /**< Own reference to global options */
-  CdmJournal *journal;    /**< Own a reference to the journal object */
+    GSource source;      /**< Event loop source */
+    grefcount rc;        /**< Reference counter variable  */
+    gpointer tag;        /**< Unix elogsrv socket tag  */
+    gint sockfd;         /**< Module file descriptor (elogsrv listen fd) */
+    CdmOptions *options; /**< Own reference to global options */
+    CdmJournal *journal; /**< Own a reference to the journal object */
 } CdmELogSrv;
 
 /*
@@ -49,30 +49,28 @@ typedef struct _CdmELogSrv {
  * @param journal A pointer to the CdmJournal object created by the main application
  * @return On success return a new CdmELogSrv object otherwise return NULL
  */
-CdmELogSrv *            cdm_elogsrv_new                     (CdmOptions *options, 
-                                                             CdmJournal *journal, 
-                                                             GError **error);
+CdmELogSrv *cdm_elogsrv_new(CdmOptions *options, CdmJournal *journal, GError **error);
 
 /**
  * @brief Aquire elogsrv object
  * @param elogsrv Pointer to the elogsrv object
  * @return The elogsrv object
  */
-CdmELogSrv *            cdm_elogsrv_ref                     (CdmELogSrv *elogsrv);
+CdmELogSrv *cdm_elogsrv_ref(CdmELogSrv *elogsrv);
 
 /**
  * @brief Start the elogsrv an listen for clients
  * @param elogsrv Pointer to the elogsrv object
  * @return If elogsrv starts listening the function return CDM_STATUS_OK
  */
-CdmStatus               cdm_elogsrv_bind_and_listen         (CdmELogSrv *elogsrv);
+CdmStatus cdm_elogsrv_bind_and_listen(CdmELogSrv *elogsrv);
 
 /**
  * @brief Release elogsrv object
  * @param elogsrv Pointer to the elogsrv object
  */
-void                    cdm_elogsrv_unref                   (CdmELogSrv *elogsrv);
+void cdm_elogsrv_unref(CdmELogSrv *elogsrv);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmELogSrv, cdm_elogsrv_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmELogSrv, cdm_elogsrv_unref);
 
 G_END_DECLS

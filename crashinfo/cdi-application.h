@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include "cdm-defaults.h"
-#include "cdm-types.h"
-#include "cdm-logging.h"
-#include "cdm-options.h"
 #include "cdi-archive.h"
 #include "cdi-journal.h"
+#include "cdm-defaults.h"
+#include "cdm-logging.h"
+#include "cdm-options.h"
+#include "cdm-types.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -39,9 +39,9 @@ G_BEGIN_DECLS
  * @brief Crashinfo application object referencing main objects
  */
 typedef struct _CdiApplication {
-  CdmOptions *options;
-  CdiJournal *journal;
-  grefcount rc;
+    CdmOptions *options;
+    CdiJournal *journal;
+    grefcount rc;
 } CdiApplication;
 
 /**
@@ -52,59 +52,54 @@ typedef struct _CdiApplication {
  * returned object. If the error is set the object is invalid and needs to be
  * released.
  */
-CdiApplication *            cdi_application_new                 (const gchar *config, 
-                                                                 GError **error);
+CdiApplication *cdi_application_new(const gchar *config, GError **error);
 
 /**
  * @brief Aquire CdiApplication object
  * @param app The object to aquire
  * @return The aquiered app object
  */
-CdiApplication *            cdi_application_ref                 (CdiApplication *app);
+CdiApplication *cdi_application_ref(CdiApplication *app);
 
 /**
  * @brief Release a CdiApplication object
  * @param app The cdi application object to release
  */
-void                        cdi_application_unref               (CdiApplication *app);
+void cdi_application_unref(CdiApplication *app);
 
 /**
  * @brief List crash entries
  * @param app The cdi application
  */
-void                        cdi_application_list_entries        (CdiApplication *app);
+void cdi_application_list_entries(CdiApplication *app);
 
 /**
  * @brief List crash archive content
  * @param app The cdi application
  * @param fpath Input file path
  */
-void                        cdi_application_list_content        (CdiApplication *app, 
-                                                                 const gchar *fpath);
+void cdi_application_list_content(CdiApplication *app, const gchar *fpath);
 
 /**
  * @brief Prnt info file
  * @param app The cdi application
  * @param fpath Input file path
  */
-void                        cdi_application_print_info          (CdiApplication *app, 
-                                                                 const gchar *fpath);
+void cdi_application_print_info(CdiApplication *app, const gchar *fpath);
 
 /**
  * @brief Print epilog file
  * @param app The cdi application
  * @param fpath Input file path
  */
-void                        cdi_application_print_epilog        (CdiApplication *app, 
-                                                                 const gchar *fpath);
+void cdi_application_print_epilog(CdiApplication *app, const gchar *fpath);
 
 /**
  * @brief Extract coredump file
  * @param app The cdi application
  * @param fpath Input file path
  */
-void                        cdi_application_extract_coredump    (CdiApplication *app, 
-                                                                 const gchar *fpath);
+void cdi_application_extract_coredump(CdiApplication *app, const gchar *fpath);
 
 /**
  * @brief Print content of a file in the archive
@@ -112,9 +107,7 @@ void                        cdi_application_extract_coredump    (CdiApplication 
  * @param fname Input file name
  * @param fpath Input file path
  */
-void                        cdi_application_print_file          (CdiApplication *app, 
-                                                                 const gchar *fname, 
-                                                                 const gchar *fpath);
+void cdi_application_print_file(CdiApplication *app, const gchar *fname, const gchar *fpath);
 
 /**
  * @brief Print backtrace
@@ -122,10 +115,8 @@ void                        cdi_application_print_file          (CdiApplication 
  * @param all If true print backtrace for all threads
  * @param fpath Input file path
  */
-void                        cdi_application_print_backtrace     (CdiApplication *app, 
-                                                                 gboolean all, const 
-                                                                 gchar *fpath);
+void cdi_application_print_backtrace(CdiApplication *app, gboolean all, const gchar *fpath);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiApplication, cdi_application_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdiApplication, cdi_application_unref);
 
 G_END_DECLS

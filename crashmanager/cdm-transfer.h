@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include "cdm-types.h"
 #include "cdm-options.h"
+#include "cdm-types.h"
 
 #include <glib.h>
 
@@ -33,54 +33,52 @@ G_BEGIN_DECLS
 /**
  * @brief Custom callback used internally by CdmTransfer as source callback
  */
-typedef gboolean        (*CdmTransferCallback)              (gpointer _transfer, 
-                                                             gpointer _entry);
+typedef gboolean (*CdmTransferCallback)(gpointer _transfer, gpointer _entry);
 
 /**
  * @brief Client callback to pass when requesting a file transfer
  */
-typedef void            (*CdmTransferEntryCallback)         (gpointer _transfer, 
-                                                             const gchar *file_path);
+typedef void (*CdmTransferEntryCallback)(gpointer _transfer, const gchar *file_path);
 
 /**
  * @brief The file transfer entry
  */
 typedef struct _CdmTransferEntry {
-  gchar *file_path;
-  gpointer user_data;
-  CdmTransferEntryCallback callback;
+    gchar *file_path;
+    gpointer user_data;
+    CdmTransferEntryCallback callback;
 } CdmTransferEntry;
 
 /**
  * @brief The CdmTransfer opaque data structure
  */
 typedef struct _CdmTransfer {
-  GSource source;                   /**< Event loop source */
-  grefcount rc;                     /**< Reference counter variable  */
-  GAsyncQueue    *queue;            /**< Async queue */
-  GThreadPool    *tpool;            /**< Transfer thread pool */
-  CdmOptions    *options;           /**< Options object */
-  CdmTransferCallback callback;     /**< Transfer callback function */
+    GSource source;               /**< Event loop source */
+    grefcount rc;                 /**< Reference counter variable  */
+    GAsyncQueue *queue;           /**< Async queue */
+    GThreadPool *tpool;           /**< Transfer thread pool */
+    CdmOptions *options;          /**< Options object */
+    CdmTransferCallback callback; /**< Transfer callback function */
 } CdmTransfer;
 
 /*
  * @brief Create a new transfer object
  * @return On success return a new CdmTransfer object
  */
-CdmTransfer *           cdm_transfer_new                    (CdmOptions *options);
+CdmTransfer *cdm_transfer_new(CdmOptions *options);
 
 /**
  * @brief Aquire transfer object
  * @param transfer Pointer to the transfer object
  * @return The referenced transfer object
  */
-CdmTransfer *           cdm_transfer_ref                    (CdmTransfer *transfer);
+CdmTransfer *cdm_transfer_ref(CdmTransfer *transfer);
 
 /**
  * @brief Release transfer object
  * @param transfer Pointer to the transfer object
  */
-void                    cdm_transfer_unref                  (CdmTransfer *transfer);
+void cdm_transfer_unref(CdmTransfer *transfer);
 
 /**
  * @brief Transfer a file
@@ -90,11 +88,11 @@ void                    cdm_transfer_unref                  (CdmTransfer *transf
  * @param user_data A pointer to provide as argument to the callback
  * @return on success return CDM_STATUS_OK
  */
-CdmStatus               cdm_transfer_file                   (CdmTransfer *transfer,
-                                                             const gchar *file_path,
-                                                             CdmTransferEntryCallback callback,
-                                                             gpointer user_data);
+CdmStatus cdm_transfer_file(CdmTransfer *transfer,
+                            const gchar *file_path,
+                            CdmTransferEntryCallback callback,
+                            gpointer user_data);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmTransfer, cdm_transfer_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmTransfer, cdm_transfer_unref);
 
 G_END_DECLS

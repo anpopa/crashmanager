@@ -32,7 +32,7 @@
  * @param efd The open file descriptor the user can write data into
  * @param signum The crash signal causing the exit
  */
-typedef void            (*cdh_epilog_oncrash_callback)      (int efd, int signum);
+typedef void (*cdh_epilog_oncrash_callback)(int efd, int signum);
 
 /*
  * @brief Register internal signal handler for all core generating signals to send
@@ -41,4 +41,4 @@ typedef void            (*cdh_epilog_oncrash_callback)      (int efd, int signum
  *        user to dump additional information. Can be NULL.
  */
 
-extern void             cdh_epilog_register_crash_handlers  (cdh_epilog_oncrash_callback callback);
+extern void cdh_epilog_register_crash_handlers(cdh_epilog_oncrash_callback callback);

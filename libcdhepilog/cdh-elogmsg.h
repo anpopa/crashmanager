@@ -31,8 +31,8 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define CDM_ELOGMSG_PROTOCOL_VERSION (0x0001)
 #define CDM_ELOGMSG_START_HASH (0xFCDF)
@@ -40,32 +40,29 @@ extern "C" {
 /**
  * @brief The elog message types
  */
-typedef enum _CdmELogMessageType {
-  CDM_ELOGMSG_INVALID,
-  CDM_ELOGMSG_NEW
-} CdmELogMessageType;
+typedef enum _CdmELogMessageType { CDM_ELOGMSG_INVALID, CDM_ELOGMSG_NEW } CdmELogMessageType;
 
 typedef struct _CdmELogMessageData {
-  int64_t process_pid;
-  int64_t process_sig;
+    int64_t process_pid;
+    int64_t process_sig;
 } CdmELogMessageData;
 
 /**
  * @brief The CdmMessageHdr opaque data structure
  */
 typedef struct _CdmELogMessageHdr {
-  uint16_t hsh;
-  uint32_t version;
-  CdmELogMessageType type;
-  uint16_t size_of_arg1;
-  uint16_t size_of_arg2;
-  uint16_t size_of_arg3;
-  uint16_t size_of_arg4;
+    uint16_t hsh;
+    uint32_t version;
+    CdmELogMessageType type;
+    uint16_t size_of_arg1;
+    uint16_t size_of_arg2;
+    uint16_t size_of_arg3;
+    uint16_t size_of_arg4;
 } CdmELogMessageHdr;
 
 typedef struct _CdmELogMessage {
-  CdmELogMessageHdr  hdr;
-  CdmELogMessageData data;
+    CdmELogMessageHdr hdr;
+    CdmELogMessageData data;
 } CdmELogMessage;
 
 /*
@@ -73,55 +70,53 @@ typedef struct _CdmELogMessage {
  * @param type The message type
  * @return The new allocated message object
  */
-CdmELogMessage *        cdm_elogmsg_new                     (CdmELogMessageType type);
+CdmELogMessage *cdm_elogmsg_new(CdmELogMessageType type);
 
 /*
  * @brief Release message
  * @param msg The message object
  */
-void                    cdm_elogmsg_free                    (CdmELogMessage *msg);
+void cdm_elogmsg_free(CdmELogMessage *msg);
 
 /*
  * @brief Validate if the elogmsg object is consistent
  * @param msg The elogmsg object
  */
-bool                    cdm_elogmsg_is_valid                (CdmELogMessage *msg);
+bool cdm_elogmsg_is_valid(CdmELogMessage *msg);
 
 /*
  * @brief Get elogmsg type
  * @param msg The elogmsg object
  */
-CdmELogMessageType      cdm_elogmsg_get_type                (CdmELogMessage *msg);
+CdmELogMessageType cdm_elogmsg_get_type(CdmELogMessage *msg);
 
 /*
  * @brief Set process id
  * @param msg The message object
  * @param pid The process id
  */
-void                    cdm_elogmsg_set_process_pid         (CdmELogMessage *msg,
-                                                             int64_t pid);
+void cdm_elogmsg_set_process_pid(CdmELogMessage *msg, int64_t pid);
 
 /*
  * @brief Get process id
  * @param msg The message object
  * @return The process id
  */
-int64_t                 cdm_elogmsg_get_process_pid          (CdmELogMessage *msg);
+int64_t cdm_elogmsg_get_process_pid(CdmELogMessage *msg);
 
 /*
  * @brief Set process exit signal
  * @param msg The message object
  * @param sig The process exit signal
  */
-void                    cdm_elogmsg_set_process_exit_signal (CdmELogMessage *msg,
-                                                             int64_t sig);
+void cdm_elogmsg_set_process_exit_signal(CdmELogMessage *msg, int64_t sig);
 
 /*
  * @brief Get process exit signal
  * @param msg The message object
  * @return The process exit signal
  */
-int64_t                 cdm_elogmsg_get_process_exit_signal (CdmELogMessage *msg);
+int64_t cdm_elogmsg_get_process_exit_signal(CdmELogMessage *msg);
 
 /*
  * @brief Read data into elogmsg object
@@ -131,8 +126,7 @@ int64_t                 cdm_elogmsg_get_process_exit_signal (CdmELogMessage *msg
  *
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-int                     cdm_elogmsg_read                    (int fd,
-                                                             CdmELogMessage *msg);
+int cdm_elogmsg_read(int fd, CdmELogMessage *msg);
 
 /*
  * @brief Write data into elogmsg object
@@ -140,8 +134,7 @@ int                     cdm_elogmsg_read                    (int fd,
  * @param fd File descriptor to write to
  * @return CDM_STATUS_OK on success, CDM_STATUS_ERROR otherwise
  */
-int                     cdm_elogmsg_write                   (int fd,
-                                                             CdmELogMessage *msg);
+int cdm_elogmsg_write(int fd, CdmELogMessage *msg);
 
 #ifdef __cplusplus
 }
