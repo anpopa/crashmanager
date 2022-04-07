@@ -34,30 +34,31 @@ G_BEGIN_DECLS
 /**
  * @brief The archive object
  */
-typedef struct _CdiArchive {
-    struct archive *archive; /**< Archive object  */
-    gchar *file_path;        /**< Archive file path for repopen */
-    grefcount rc;            /**< Reference counter variable  */
+typedef struct _CdiArchive
+{
+  struct archive *archive; /**< Archive object  */
+  gchar *file_path;        /**< Archive file path for repopen */
+  grefcount rc;            /**< Reference counter variable  */
 } CdiArchive;
 
 /**
  * @brief Create a new CdiArchive object
  * @return A pointer to the new CdiArchive object
  */
-CdiArchive *cdi_archive_new(void);
+CdiArchive *cdi_archive_new (void);
 
 /**
  * @brief Aquire the archive object
  * @param ar Pointer to the object
  * @return a pointer to archive object
  */
-CdiArchive *cdi_archive_ref(CdiArchive *ar);
+CdiArchive *cdi_archive_ref (CdiArchive *ar);
 
 /**
  * @brief Release archive object
  * @param ar Pointer to the object
  */
-void cdi_archive_unref(CdiArchive *ar);
+void cdi_archive_unref (CdiArchive *ar);
 
 /**
  * @brief Open archive for read
@@ -65,7 +66,7 @@ void cdi_archive_unref(CdiArchive *ar);
  * @param fname Absoluet path to the archive file
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_read_open(CdiArchive *ar, const gchar *fname);
+CdmStatus cdi_archive_read_open (CdiArchive *ar, const gchar *fname);
 
 /**
  * @brief List archive content to stdout
@@ -73,7 +74,7 @@ CdmStatus cdi_archive_read_open(CdiArchive *ar, const gchar *fname);
  * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_list_stdout(CdiArchive *ar);
+CdmStatus cdi_archive_list_stdout (CdiArchive *ar);
 
 /**
  * @brief Print information about crash archive
@@ -81,7 +82,7 @@ CdmStatus cdi_archive_list_stdout(CdiArchive *ar);
  * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_print_info(CdiArchive *ar);
+CdmStatus cdi_archive_print_info (CdiArchive *ar);
 
 /**
  * @brief Print epilog from crash archive
@@ -89,7 +90,7 @@ CdmStatus cdi_archive_print_info(CdiArchive *ar);
  * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_print_epilog(CdiArchive *ar);
+CdmStatus cdi_archive_print_epilog (CdiArchive *ar);
 
 /**
  * @brief Print file content to stdout
@@ -97,22 +98,22 @@ CdmStatus cdi_archive_print_epilog(CdiArchive *ar);
  * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_print_file(CdiArchive *ar, const gchar *fname);
+CdmStatus cdi_archive_print_file (CdiArchive *ar, const gchar *fname);
 
 /**
  * @brief Extract coredump in current directory. The archive has to be opened first
  * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_extract_coredump(CdiArchive *ar, const gchar *dpath);
+CdmStatus cdi_archive_extract_coredump (CdiArchive *ar, const gchar *dpath);
 
 /**
  * @brief Print coredump backtrace. The archive has to be opened first
  * @param ar Pointer to the object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdi_archive_print_backtrace(CdiArchive *ar, gboolean all);
+CdmStatus cdi_archive_print_backtrace (CdiArchive *ar, gboolean all);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdiArchive, cdi_archive_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiArchive, cdi_archive_unref);
 
 G_END_DECLS

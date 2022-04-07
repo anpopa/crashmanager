@@ -32,69 +32,71 @@ G_BEGIN_DECLS
 /**
  * @enum Option keys
  */
-typedef enum _CdmOptionsKey {
-    KEY_USER_NAME,
-    KEY_GROUP_NAME,
-    KEY_CRASHDUMP_DIR,
-    KEY_FILESYSTEM_MIN_SIZE,
-    KEY_ELEVATED_NICE_VALUE,
-    KEY_TRUNCATE_COREDUMPS,
-    KEY_RUN_DIR,
-    KEY_DATABASE_FILE,
-    KEY_KDUMPSOURCE_DIR,
-    KEY_CRASHDUMP_DIR_MIN_SIZE,
-    KEY_CRASHDUMP_DIR_MAX_SIZE,
-    KEY_CRASHFILES_MAX_COUNT,
-    KEY_IPC_SOCK_ADDR,
-    KEY_IPC_TIMEOUT_SEC,
-    KEY_ELOG_SOCK_ADDR,
-    KEY_ELOG_TIMEOUT_SEC,
-    KEY_TRANSFER_ADDRESS,
-    KEY_TRANSFER_PORT,
-    KEY_TRANSFER_PATH,
-    KEY_TRANSFER_USER,
-    KEY_TRANSFER_PASSWORD,
-    KEY_TRANSFER_PUBLIC_KEY,
-    KEY_TRANSFER_PRIVATE_KEY
+typedef enum _CdmOptionsKey
+{
+  KEY_USER_NAME,
+  KEY_GROUP_NAME,
+  KEY_CRASHDUMP_DIR,
+  KEY_FILESYSTEM_MIN_SIZE,
+  KEY_ELEVATED_NICE_VALUE,
+  KEY_TRUNCATE_COREDUMPS,
+  KEY_RUN_DIR,
+  KEY_DATABASE_FILE,
+  KEY_KDUMPSOURCE_DIR,
+  KEY_CRASHDUMP_DIR_MIN_SIZE,
+  KEY_CRASHDUMP_DIR_MAX_SIZE,
+  KEY_CRASHFILES_MAX_COUNT,
+  KEY_IPC_SOCK_ADDR,
+  KEY_IPC_TIMEOUT_SEC,
+  KEY_ELOG_SOCK_ADDR,
+  KEY_ELOG_TIMEOUT_SEC,
+  KEY_TRANSFER_ADDRESS,
+  KEY_TRANSFER_PORT,
+  KEY_TRANSFER_PATH,
+  KEY_TRANSFER_USER,
+  KEY_TRANSFER_PASSWORD,
+  KEY_TRANSFER_PUBLIC_KEY,
+  KEY_TRANSFER_PRIVATE_KEY
 } CdmOptionsKey;
 
 /**
  * @struct Option object
  */
-typedef struct _CdmOptions {
-    GKeyFile *conf;    /**< The GKeyFile object */
-    gboolean has_conf; /**< True if a runtime option object is available */
-    grefcount rc;      /**< Reference counter variable  */
+typedef struct _CdmOptions
+{
+  GKeyFile *conf;    /**< The GKeyFile object */
+  gboolean has_conf; /**< True if a runtime option object is available */
+  grefcount rc;      /**< Reference counter variable  */
 } CdmOptions;
 
 /*
  * @brief Create a new options object
  */
-CdmOptions *cdm_options_new(const gchar *conf_path);
+CdmOptions *cdm_options_new (const gchar *conf_path);
 
 /*
  * @brief Aquire options object
  */
-CdmOptions *cdm_options_ref(CdmOptions *opts);
+CdmOptions *cdm_options_ref (CdmOptions *opts);
 
 /**
  * @brief Release an options object
  */
-void cdm_options_unref(CdmOptions *opts);
+void cdm_options_unref (CdmOptions *opts);
 
 /**
  * @brief Get the GKeyFile object
  */
-GKeyFile *cdm_options_get_key_file(CdmOptions *opts);
+GKeyFile *cdm_options_get_key_file (CdmOptions *opts);
 
 /*
  * @brief Get a configuration value string for key
  */
-gchar *cdm_options_string_for(CdmOptions *opts, CdmOptionsKey key);
+gchar *cdm_options_string_for (CdmOptions *opts, CdmOptionsKey key);
 
 /*
  * @brief Get a configuration gint64 value for key
  */
-gint64 cdm_options_long_for(CdmOptions *opts, CdmOptionsKey key);
+gint64 cdm_options_long_for (CdmOptions *opts, CdmOptionsKey key);
 
 G_END_DECLS

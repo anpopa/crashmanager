@@ -34,13 +34,14 @@ G_BEGIN_DECLS
 /**
  * @brief The CdmJanitor opaque data structure
  */
-typedef struct _CdmJanitor {
-    GSource source;      /**< Event loop source */
-    grefcount rc;        /**< Reference counter variable  */
-    glong max_dir_size;  /**< Maximum allowed crash dir size */
-    glong min_dir_size;  /**< Minimum space to preserve from quota */
-    glong max_file_cnt;  /**< Maximum file count */
-    CdmJournal *journal; /**< Own a reference to journal object */
+typedef struct _CdmJanitor
+{
+  GSource source;      /**< Event loop source */
+  grefcount rc;        /**< Reference counter variable  */
+  glong max_dir_size;  /**< Maximum allowed crash dir size */
+  glong min_dir_size;  /**< Minimum space to preserve from quota */
+  glong max_file_cnt;  /**< Maximum file count */
+  CdmJournal *journal; /**< Own a reference to journal object */
 } CdmJanitor;
 
 /*
@@ -49,21 +50,21 @@ typedef struct _CdmJanitor {
  * @param journal A pointer to the CdmJournal object created by the main application
  * @return On success return a new CdmJanitor object
  */
-CdmJanitor *cdm_janitor_new(CdmOptions *options, CdmJournal *journal);
+CdmJanitor *cdm_janitor_new (CdmOptions *options, CdmJournal *journal);
 
 /**
  * @brief Aquire janitor object
  * @param janitor Pointer to the janitor object
  * @return The referenced janitor object
  */
-CdmJanitor *cdm_janitor_ref(CdmJanitor *janitor);
+CdmJanitor *cdm_janitor_ref (CdmJanitor *janitor);
 
 /**
  * @brief Release janitor object
  * @param janitor Pointer to the janitor object
  */
-void cdm_janitor_unref(CdmJanitor *janitor);
+void cdm_janitor_unref (CdmJanitor *janitor);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmJanitor, cdm_janitor_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmJanitor, cdm_janitor_unref);
 
 G_END_DECLS

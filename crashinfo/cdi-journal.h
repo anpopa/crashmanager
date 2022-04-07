@@ -34,9 +34,10 @@ G_BEGIN_DECLS
 /**
  * @brief The CdiJournal opaque data structure
  */
-typedef struct _CdiJournal {
-    sqlite3 *database; /**< The sqlite3 database object */
-    grefcount rc;      /**< Reference counter variable  */
+typedef struct _CdiJournal
+{
+  sqlite3 *database; /**< The sqlite3 database object */
+  grefcount rc;      /**< Reference counter variable  */
 } CdiJournal;
 
 /**
@@ -46,28 +47,28 @@ typedef struct _CdiJournal {
  * @param error The GError object or NULL
  * @return On success return a new CdiJournal object otherwise return NULL
  */
-CdiJournal *cdi_journal_new(CdmOptions *options, GError **error);
+CdiJournal *cdi_journal_new (CdmOptions *options, GError **error);
 
 /**
  * @brief Aquire journal object
  * @param journal Pointer to the journal object
  * @return The referenced journal object
  */
-CdiJournal *cdi_journal_ref(CdiJournal *journal);
+CdiJournal *cdi_journal_ref (CdiJournal *journal);
 
 /**
  * @brief Release an journal object
  * @param journal Pointer to the journal object
  */
-void cdi_journal_unref(CdiJournal *journal);
+void cdi_journal_unref (CdiJournal *journal);
 
 /**
  * @brief List database entries to stdout
  * @param journal The journal object
  * @param error The GError object or NULL
  */
-void cdi_journal_list_entries(CdiJournal *journal, GError **error);
+void cdi_journal_list_entries (CdiJournal *journal, GError **error);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdiJournal, cdi_journal_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdiJournal, cdi_journal_unref);
 
 G_END_DECLS

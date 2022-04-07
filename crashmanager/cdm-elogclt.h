@@ -34,15 +34,16 @@ G_BEGIN_DECLS
 /**
  * @brief The CdmELogClt opaque data structure
  */
-typedef struct _CdmELogClt {
-    GSource source;                   /**< Event loop source */
-    gpointer tag;                     /**< Unix server socket tag  */
-    grefcount rc;                     /**< Reference counter variable  */
-    gint sockfd;                      /**< Module file descriptor (client fd) */
-    CdmJournal *journal;              /**< Own a reference to the journal object */
-    CdmELogMessageType last_msg_type; /**< Last processed message type */
-    int64_t process_pid;              /**< Process PID*/
-    int64_t process_sig;              /**< Process exit signal*/
+typedef struct _CdmELogClt
+{
+  GSource source;                   /**< Event loop source */
+  gpointer tag;                     /**< Unix server socket tag  */
+  grefcount rc;                     /**< Reference counter variable  */
+  gint sockfd;                      /**< Module file descriptor (client fd) */
+  CdmJournal *journal;              /**< Own a reference to the journal object */
+  CdmELogMessageType last_msg_type; /**< Last processed message type */
+  int64_t process_pid;              /**< Process PID*/
+  int64_t process_sig;              /**< Process exit signal*/
 } CdmELogClt;
 
 /*
@@ -52,21 +53,21 @@ typedef struct _CdmELogClt {
  * @param journal A pointer to the CdmJournal object created by the main application
  * @return On success return a new CdmELogClt object
  */
-CdmELogClt *cdm_elogclt_new(gint clientfd, CdmJournal *journal);
+CdmELogClt *cdm_elogclt_new (gint clientfd, CdmJournal *journal);
 
 /**
  * @brief Aquire client object
  * @param client Pointer to the client object
  * @return The referenced client object
  */
-CdmELogClt *cdm_elogclt_ref(CdmELogClt *client);
+CdmELogClt *cdm_elogclt_ref (CdmELogClt *client);
 
 /**
  * @brief Release client object
  * @param client Pointer to the client object
  */
-void cdm_elogclt_unref(CdmELogClt *client);
+void cdm_elogclt_unref (CdmELogClt *client);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmELogClt, cdm_elogclt_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmELogClt, cdm_elogclt_unref);
 
 G_END_DECLS

@@ -40,62 +40,65 @@ G_BEGIN_DECLS
  * @enum dbusown_event_data
  * @brief DBusOwn event data type
  */
-typedef enum _DBusOwnEventType { DBUS_OWN_EMIT_NEW_CRASH } DBusOwnEventType;
+typedef enum _DBusOwnEventType
+{
+  DBUS_OWN_EMIT_NEW_CRASH
+} DBusOwnEventType;
 
-typedef gboolean (*CdmDBusOwnCallback)(gpointer _dbusown, gpointer _event);
+typedef gboolean (*CdmDBusOwnCallback) (gpointer _dbusown, gpointer _event);
 
 /**
  * @struct CdmDBusOwnEvent
  * @brief The file transfer event
  */
-typedef struct _CdmDBusOwnEvent {
-    DBusOwnEventType type; /**< The event type the element holds */
-    gchar *proc_name;
-    gchar *proc_context;
-    gchar *proc_crashid;
+typedef struct _CdmDBusOwnEvent
+{
+  DBusOwnEventType type; /**< The event type the element holds */
+  gchar *proc_name;
+  gchar *proc_context;
+  gchar *proc_crashid;
 } CdmDBusOwnEvent;
 
 /**
  * @struct CdmDBusOwn
  * @brief The CdmDBusOwn opaque data structure
  */
-typedef struct _CdmDBusOwn {
-    GSource source;              /**< Event loop source */
-    GAsyncQueue *queue;          /**< Async queue */
-    CdmDBusOwnCallback callback; /**< Callback function */
-    grefcount rc;                /**< Reference counter variable  */
-    CdmOptions *options;
-    guint owner_id;              /**< DBUS owner id */
-    GDBusConnection *connection; /**< DBUS connection */
+typedef struct _CdmDBusOwn
+{
+  GSource source;              /**< Event loop source */
+  GAsyncQueue *queue;          /**< Async queue */
+  CdmDBusOwnCallback callback; /**< Callback function */
+  grefcount rc;                /**< Reference counter variable  */
+  CdmOptions *options;
+  guint owner_id;              /**< DBUS owner id */
+  GDBusConnection *connection; /**< DBUS connection */
 } CdmDBusOwn;
 
 /*
  * @brief Create a new dbusown object
  * @return On success return a new CdmDBusOwn object otherwise return NULL
  */
-CdmDBusOwn *cdm_dbusown_new(CdmOptions *options);
+CdmDBusOwn *cdm_dbusown_new (CdmOptions *options);
 
 /**
  * @brief Aquire dbusown object
  * @param d Pointer to the dbusown object
  */
-CdmDBusOwn *cdm_dbusown_ref(CdmDBusOwn *d);
+CdmDBusOwn *cdm_dbusown_ref (CdmDBusOwn *d);
 
 /**
  * @brief Release dbusown object
  * @param d Pointer to the dbusown object
  */
-void cdm_dbusown_unref(CdmDBusOwn *d);
+void cdm_dbusown_unref (CdmDBusOwn *d);
 
 /**
  * @brief Build DBus proxy
  * @param d Pointer to the dbusown object
  */
-void cdm_dbusown_emit_new_crash(CdmDBusOwn *d,
-                                const gchar *pname,
-                                const gchar *ctxname,
-                                const gchar *crashid);
+void cdm_dbusown_emit_new_crash (CdmDBusOwn *d, const gchar *pname, const gchar *ctxname,
+                                 const gchar *crashid);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmDBusOwn, cdm_dbusown_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmDBusOwn, cdm_dbusown_unref);
 
 G_END_DECLS

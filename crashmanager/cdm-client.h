@@ -41,34 +41,35 @@ G_BEGIN_DECLS
 /**
  * @brief The CdmClient opaque data structure
  */
-typedef struct _CdmClient {
-    GSource source; /**< Event loop source */
-    gpointer tag;   /**< Unix server socket tag  */
-    grefcount rc;   /**< Reference counter variable  */
-    gint sockfd;    /**< Module file descriptor (client fd) */
-    guint64 id;     /**< Client instance id */
+typedef struct _CdmClient
+{
+  GSource source; /**< Event loop source */
+  gpointer tag;   /**< Unix server socket tag  */
+  grefcount rc;   /**< Reference counter variable  */
+  gint sockfd;    /**< Module file descriptor (client fd) */
+  guint64 id;     /**< Client instance id */
 
-    CdmTransfer *transfer; /**< Own a reference to the transfer object */
-    CdmJournal *journal;   /**< Own a reference to the journal object */
+  CdmTransfer *transfer; /**< Own a reference to the transfer object */
+  CdmJournal *journal;   /**< Own a reference to the journal object */
 #ifdef WITH_GENIVI_NSM
-    CdmLifecycle *lifecycle; /**< Own a reference to the lifecycle object */
+  CdmLifecycle *lifecycle; /**< Own a reference to the lifecycle object */
 #endif
 #ifdef WITH_DBUS_SERVICES
-    CdmDBusOwn *dbusown; /**< Own a reference to dbusown object */
+  CdmDBusOwn *dbusown; /**< Own a reference to dbusown object */
 #endif
-    CdmMessageType last_msg_type; /**< Last processed message type */
+  CdmMessageType last_msg_type; /**< Last processed message type */
 
-    int64_t process_pid;
-    int64_t process_exit_signal;
-    uint64_t process_timestamp;
-    gchar *lifecycle_state;
-    gchar *process_name;
-    gchar *thread_name;
-    gchar *context_name;
-    gchar *process_crash_id;
-    gchar *process_vector_id;
-    gchar *process_context_id;
-    gchar *coredump_file_path;
+  int64_t process_pid;
+  int64_t process_exit_signal;
+  uint64_t process_timestamp;
+  gchar *lifecycle_state;
+  gchar *process_name;
+  gchar *thread_name;
+  gchar *context_name;
+  gchar *process_crash_id;
+  gchar *process_vector_id;
+  gchar *process_context_id;
+  gchar *coredump_file_path;
 } CdmClient;
 
 /*
@@ -78,20 +79,20 @@ typedef struct _CdmClient {
  * @param journal A pointer to the CdmJournal object created by the main application
  * @return On success return a new CdmClient object
  */
-CdmClient *cdm_client_new(gint clientfd, CdmTransfer *transfer, CdmJournal *journal);
+CdmClient *cdm_client_new (gint clientfd, CdmTransfer *transfer, CdmJournal *journal);
 
 /**
  * @brief Aquire client object
  * @param client Pointer to the client object
  * @return The referenced client object
  */
-CdmClient *cdm_client_ref(CdmClient *client);
+CdmClient *cdm_client_ref (CdmClient *client);
 
 /**
  * @brief Release client object
  * @param client Pointer to the client object
  */
-void cdm_client_unref(CdmClient *client);
+void cdm_client_unref (CdmClient *client);
 
 #ifdef WITH_GENIVI_NSM
 /**
@@ -99,7 +100,7 @@ void cdm_client_unref(CdmClient *client);
  * @param client Pointer to the client object
  * @param lifecycle Pointer to the lifecycle object
  */
-void cdm_client_set_lifecycle(CdmClient *client, CdmLifecycle *lifecycle);
+void cdm_client_set_lifecycle (CdmClient *client, CdmLifecycle *lifecycle);
 #endif
 #ifdef WITH_DBUS_SERVICES
 /**
@@ -107,9 +108,9 @@ void cdm_client_set_lifecycle(CdmClient *client, CdmLifecycle *lifecycle);
  * @param server Pointer to the client object
  * @param dbusown Pointer to the dbusown object
  */
-void cdm_client_set_dbusown(CdmClient *client, CdmDBusOwn *dbusown);
+void cdm_client_set_dbusown (CdmClient *client, CdmDBusOwn *dbusown);
 #endif
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(CdmClient, cdm_client_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (CdmClient, cdm_client_unref);
 
 G_END_DECLS

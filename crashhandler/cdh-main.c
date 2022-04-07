@@ -29,26 +29,30 @@
 #include <signal.h>
 #endif
 
-gint main(gint argc, gchar *argv[])
+gint
+main (gint argc, gchar *argv[])
 {
-    g_autofree gchar *conf_path = NULL;
-    CdmStatus status = CDM_STATUS_OK;
+  g_autofree gchar *conf_path = NULL;
+  CdmStatus status = CDM_STATUS_OK;
 
 #ifdef WITH_DEBUG_ATTACH
-    raise(SIGSTOP);
+  raise (SIGSTOP);
 #endif
 
-    cdm_logging_open("CDH", "Crashhandler instance", "CDH", "Default context");
+  cdm_logging_open ("CDH", "Crashhandler instance", "CDH", "Default context");
 
-    conf_path = g_build_filename(CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
-    if (g_access(conf_path, R_OK) == 0) {
-        g_autoptr(CdhApplication) app = cdh_application_new(conf_path);
-        status = cdh_application_execute(app, argc, argv);
-    } else {
-        status = CDM_STATUS_ERROR;
+  conf_path = g_build_filename (CDM_CONFIG_DIRECTORY, CDM_CONFIG_FILE_NAME, NULL);
+  if (g_access (conf_path, R_OK) == 0)
+    {
+      g_autoptr (CdhApplication) app = cdh_application_new (conf_path);
+      status = cdh_application_execute (app, argc, argv);
+    }
+  else
+    {
+      status = CDM_STATUS_ERROR;
     }
 
-    cdm_logging_close();
+  cdm_logging_close ();
 
-    return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+  return status == CDM_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 }

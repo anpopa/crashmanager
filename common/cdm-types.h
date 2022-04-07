@@ -32,28 +32,38 @@ G_BEGIN_DECLS
 #define CDM_EPILOG_FRAME_CNT (4)
 
 #ifndef CDM_UNUSED
-#define CDM_UNUSED(x) (void) (x)
+#define CDM_UNUSED(x) (void)(x)
 #endif
 
 #ifndef ARCHIVE_NAME_PATTERN
 #define ARCHIVE_NAME_PATTERN "%s/%s.%ld.%lu.cdh.tar.gz"
 #endif
 
-#define CDM_EVENT_SOURCE(x) (GSource *) (x)
+#define CDM_EVENT_SOURCE(x) (GSource *)(x)
 
-enum { CID_RETURN_ADDRESS = 1 << 0, CID_IP_FILE_OFFSET = 1 << 1, CID_RA_FILE_OFFSET = 1 << 2 };
+enum
+{
+  CID_RETURN_ADDRESS = 1 << 0,
+  CID_IP_FILE_OFFSET = 1 << 1,
+  CID_RA_FILE_OFFSET = 1 << 2
+};
 
-typedef enum _CdmStatus { CDM_STATUS_ERROR = -1, CDM_STATUS_OK } CdmStatus;
+typedef enum _CdmStatus
+{
+  CDM_STATUS_ERROR = -1,
+  CDM_STATUS_OK
+} CdmStatus;
 
-typedef struct _CdmRegisters {
+typedef struct _CdmRegisters
+{
 #ifdef __aarch64__
-    uint64_t pc;
-    uint64_t lr;
+  uint64_t pc;
+  uint64_t lr;
 #elif __x86_64__
-    uint64_t rip;
-    uint64_t rbp;
+  uint64_t rip;
+  uint64_t rbp;
 #else
-    static_assert(false, "Don't know whow to handle this arhitecture");
+  static_assert (false, "Don't know whow to handle this arhitecture");
 #endif
 } CdmRegisters;
 

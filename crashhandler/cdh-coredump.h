@@ -36,46 +36,47 @@ G_BEGIN_DECLS
 /**
  * @brief The coredump generation object
  */
-typedef struct _CdhCoredump {
-    CdhContext *context; /**< Context object owned */
-    CdhArchive *archive; /**< Archive object owned */
+typedef struct _CdhCoredump
+{
+  CdhContext *context; /**< Context object owned */
+  CdhArchive *archive; /**< Archive object owned */
 #if defined(WITH_CRASHMANAGER)
-    CdhManager *manager; /**< Manager object owned */
+  CdhManager *manager; /**< Manager object owned */
 #endif
-    grefcount rc; /**< Reference counter variable  */
+  grefcount rc; /**< Reference counter variable  */
 } CdhCoredump;
 
 /**
  * @brief Create a new CdhCoredump object
  * @return A pointer to the new object
  */
-CdhCoredump *cdh_coredump_new(CdhContext *context, CdhArchive *archive);
+CdhCoredump *cdh_coredump_new (CdhContext *context, CdhArchive *archive);
 
 /**
  * @brief Aquire CdhCoredump object
  * @param cd Pointer to the CdhCoredump object
  * @return Pointer to the CdhCoredump object
  */
-CdhCoredump *cdh_coredump_ref(CdhCoredump *cd);
+CdhCoredump *cdh_coredump_ref (CdhCoredump *cd);
 
 /**
  * @brief Release a CdhCoredump object
  * @param cd Pointer to the cdh_context object
  */
-void cdh_coredump_unref(CdhCoredump *cd);
+void cdh_coredump_unref (CdhCoredump *cd);
 
 #if defined(WITH_CRASHMANAGER)
 /* @brief Set coredump manager object
  * @param cd Coredump object
  * @param manager Manager object
  */
-void cdh_coredump_set_manager(CdhCoredump *cd, CdhManager *manager);
+void cdh_coredump_set_manager (CdhCoredump *cd, CdhManager *manager);
 #endif
 
 /* @brief Generate coredump file
  * @param cd Coredump object
  * @return CDM_STATUS_OK on success
  */
-CdmStatus cdh_coredump_generate(CdhCoredump *cd);
+CdmStatus cdh_coredump_generate (CdhCoredump *cd);
 
 G_END_DECLS
