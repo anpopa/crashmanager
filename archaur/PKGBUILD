@@ -1,5 +1,5 @@
 pkgname=crashmanager
-pkgver=r88.0b9abdf
+pkgver=r98.4e7c9be
 pkgrel=1
 epoch=
 pkgdesc="Linux crash manager"

@@ -21,3 +21,7 @@ debian/tmp/
 rpm/.build*
 rpm/crashmanager-*
 rpm/x86_64/
+
+archaur/crashmanager*
+archaur/pkg/
+archaur/src/
