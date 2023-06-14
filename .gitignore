@@ -4,6 +4,9 @@ build/
 configure/
 *.swp
 
+.kdev4/
+CrashManager.kdev4
+
 # Debian build
 debian/crashmanager-dbg.debhelper.log
 debian/crashmanager-dbg.substvars

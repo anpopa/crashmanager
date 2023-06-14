@@ -44,9 +44,9 @@ static gint get_virtual_memory_phdr_nr (CdhCoredump *cd, Elf64_Addr address);
 
 static const gchar *get_nt_file_region_name (const gchar *string_tab_start, gulong nr);
 
-static gint get_nt_file_region (CdhCoredump *cd, Elf64_Addr address, Elf64_Addr *region_start,
-                                Elf64_Addr *region_end, Elf64_Off *file_start,
-                                const gchar **region_name);
+static CdmStatus get_nt_file_region (CdhCoredump *cd, Elf64_Addr address, Elf64_Addr *region_start,
+                                     Elf64_Addr *region_end, Elf64_Off *file_start,
+                                     const gchar **region_name);
 
 static Elf64_Addr read_virtual_memory (CdhCoredump *cd, Elf64_Addr address, gint phdr_nr);
 
